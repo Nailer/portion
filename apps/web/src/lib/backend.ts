@@ -56,7 +56,17 @@ export type Intent =
   | { kind: 'slash'; id: number }
   | { kind: 'topUp'; id: number; amount: bigint }
   | { kind: 'operator'; fn: 'closeSale' | 'windDown' | 'withdrawBond'; id: number }
+  | { kind: 'dexBuy'; id: number; pusdIn: bigint }
+  | { kind: 'dexSell'; id: number; sharesIn: number }
+  | { kind: 'dexSeed'; id: number; shares: number; pusd: bigint }
   | { kind: 'tokenize'; form: TokenizeForm };
+
+export interface PoolView {
+  shares: bigint;
+  pusd: bigint;
+  /** pUSD units per share */
+  price: bigint;
+}
 
 export interface ProofView {
   deedLocked: boolean;
@@ -112,6 +122,8 @@ export interface Backend {
   balances(address: string): Promise<Balances>;
   shareBalance(assetId: number, address: string): Promise<bigint>;
   rules(): Promise<Rules>;
+  pool(listing: ListingView): Promise<PoolView | null>;
+  quote(listing: ListingView, side: 'buy' | 'sell', amountIn: bigint): Promise<bigint | null>;
   prepare(intent: Intent, who: Passport): Promise<Prepared>;
   docUrl(hash: string): string;
   docMeta(hash: string): Promise<DocMeta | null>;

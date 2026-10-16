@@ -1,14 +1,16 @@
 import type { ApiPromise } from '@polkadot/api';
 import {
+  createPoolAndSeed, quoteExactIn, reserves, swapExactIn, withId, FALLBACK_LIMITS,
   PortionClient, assetBalance, contentHash, generateCover, nativeFree, parseUnits, storeTx, submit, MAX_DOC_BYTES,
   TESTNET, type Deployment, type ListingView, type Passport, type Plan, type PlanStep, type TxStage,
 } from '@portion/sdk';
 import {
   api as http, API_BASE, UserError,
   type ActionResult, type ActivityRow, type Backend, type Balances, type DocMeta, type DripResult, type Intent,
-  type Prepared, type ProofView, type Rules, type StageName, type TokenizeForm,
+  type PoolView, type Prepared, type ProofView, type Rules, type StageName, type TokenizeForm,
 } from './backend';
 
+const usdLabel = (v: bigint) => `${(Number(v) / 1e6).toFixed(2)} pUSD`;
 const stageMap: Record<TxStage, StageName> = { signing: 'signing', broadcast: 'broadcast', inBlock: 'inBlock', finalized: 'done', failed: 'failed' };
 
 export class LiveBackend implements Backend {
@@ -59,6 +61,17 @@ export class LiveBackend implements Backend {
   }
   async rules() {
     return (this.rulesCache ??= await this.need().rules());
+  }
+
+  async pool(l: ListingView): Promise<PoolView | null> {
+    const r = await reserves(this.chain, withId(l.assetId), withId(this.need().deployment.pusdAssetId));
+    if (!r || r[0] === 0n) return null;
+    return { shares: r[0], pusd: r[1], price: r[1] / r[0] };
+  }
+  async quote(l: ListingView, side: 'buy' | 'sell', amountIn: bigint) {
+    const pusd = withId(this.need().deployment.pusdAssetId);
+    const share = withId(l.assetId);
+    return quoteExactIn(this.chain, side === 'buy' ? pusd : share, side === 'buy' ? share : pusd, amountIn);
   }
 
   docUrl(hash: string) {
@@ -177,6 +190,46 @@ export class LiveBackend implements Backend {
       }
       case 'operator':
         return this.wrap({ closeSale: 'Close the sale', windDown: 'Wind the listing down', withdrawBond: 'Withdraw the bond' }[intent.fn], c.planOperator(intent.fn, intent.id), who);
+      case 'dexSeed': {
+        const l = await c.listing(intent.id);
+        const have = await c.shareBalance(l.assetId, who.address);
+        if (have < BigInt(intent.shares)) throw new UserError('You hold fewer unstaked shares than that. Only your own spare shares can seed the pool.');
+        await this.ensurePusd(who, intent.pusd);
+        await this.ensureGas(who, 3n * 10n ** 14n);
+        const tx = createPoolAndSeed(this.chain, withId(l.assetId), withId(this.need().deployment.pusdAssetId), BigInt(intent.shares), intent.pusd, who.address);
+        return this.wrap(`Open a market for ${l.name}`, { tx, steps: [
+          { key: 'pool', lane: 'native', pallet: 'AssetConversion', method: 'createPool', title: 'Create the share / pUSD pool', detail: 'A native Uniswap-style pool. Setup costs 1 tPOT.' },
+          { key: 'liq', lane: 'native', pallet: 'AssetConversion', method: 'addLiquidity', title: `Add ${intent.shares} shares and ${usdLabel(intent.pusd)} of liquidity`, detail: 'Sets the opening price and lets anyone trade shares with no order book.' },
+        ] }, who, 'You can withdraw the liquidity later. LP tokens go to your Passport.');
+      }
+      case 'dexBuy': {
+        const l = await c.listing(intent.id);
+        await this.ensurePusd(who, intent.pusdIn);
+        const q = await this.quote(l, 'buy', intent.pusdIn);
+        if (!q) throw new UserError('There is no market for this listing yet.');
+        const minOut = (q * 97n) / 100n;
+        if (minOut < 1n) throw new UserError('That amount is too small to buy a whole share.');
+        const calls = [
+          swapExactIn(this.chain, [withId(this.need().deployment.pusdAssetId), withId(l.assetId)], intent.pusdIn, minOut, who.address),
+          this.chain.tx.assets.approveTransfer(l.assetId, c.contractAccount, minOut),
+          this.chain.tx.revive.call(this.need().deployment.portion, 0n, FALLBACK_LIMITS.weight, FALLBACK_LIMITS.deposit, c.contract.encode('stake', [l.id, minOut])),
+        ];
+        return this.wrap(`Buy ${l.name} on the market`, { tx: this.chain.tx.utility.batchAll(calls), steps: [
+          { key: 'swap', lane: 'native', pallet: 'AssetConversion', method: 'swapExactTokensForTokens', title: `Swap ${usdLabel(intent.pusdIn)} for about ${q} shares`, detail: 'Trades against the pool at the current price. The swap fails if the price moves more than 3%.' },
+          { key: 'ap', lane: 'native', pallet: 'Assets', method: 'approveTransfer', title: 'Approve the vault', detail: 'So the shares you just bought can start earning.' },
+          { key: 'stake', lane: 'evm', pallet: 'Revive', method: 'call', title: 'Stake them to earn revenue', detail: 'Portion.stake(): shares in the vault receive their portion of every payment.' },
+        ] }, who, 'Includes the pool’s 0.3% fee. No Portion fee applies to market trades.');
+      }
+      case 'dexSell': {
+        const l = await c.listing(intent.id);
+        const have = await c.shareBalance(l.assetId, who.address);
+        if (have < BigInt(intent.sharesIn)) throw new UserError('Those shares are inside the vault. Take them out first, then sell.');
+        const q = await this.quote(l, 'sell', BigInt(intent.sharesIn));
+        if (!q) throw new UserError('There is no market for this listing yet.');
+        return this.wrap(`Sell ${intent.sharesIn} shares of ${l.name}`, { tx: swapExactIn(this.chain, [withId(l.assetId), withId(this.need().deployment.pusdAssetId)], BigInt(intent.sharesIn), (q * 97n) / 100n, who.address), steps: [
+          { key: 'swap', lane: 'native', pallet: 'AssetConversion', method: 'swapExactTokensForTokens', title: `Swap ${intent.sharesIn} shares for about ${usdLabel(q)}`, detail: 'Trades against the pool at the current price.' },
+        ] }, who);
+      }
       case 'tokenize':
         return this.prepareTokenize(intent.form, who);
     }

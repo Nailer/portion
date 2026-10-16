@@ -55,6 +55,14 @@ export function ListingPage() {
   const { backend, tick } = useApp();
   const { passport, balances } = usePassport();
   const { act, openPassport } = useRunner();
+  const [shares, setShares] = useState(10);
+  const [tab, setTab] = useState<'buy' | 'trade' | 'mine'>('buy');
+  const [dexIn, setDexIn] = useState('20');
+  const [sellN, setSellN] = useState('1');
+  const [seedShares, setSeedShares] = useState('50');
+  const [seedPusd, setSeedPusd] = useState('');
+  const [depositAmt, setDepositAmt] = useState('');
+  const [topUpAmt, setTopUpAmt] = useState('');
 
   const { data: l, error, loading } = useAsync(() => backend!.listing(id), [backend, id, tick]);
   const { data: rules } = useAsync(() => backend!.rules(), [backend]);
@@ -63,12 +71,13 @@ export function ListingPage() {
   const { data: proof } = useAsync(async () => (l ? backend!.proof(id) : null), [l?.id, tick]);
   const { data: revenue } = useAsync(() => backend!.revenue(id), [id, tick]);
   const { data: activity } = useAsync(() => backend!.activity({ listing: id, limit: 12 }), [id, tick]);
+  const { data: pool } = useAsync(async () => (l ? backend!.pool(l) : null), [l?.id, tick]);
+  const { data: spare } = useAsync(async () => (l && passport ? backend!.shareBalance(l.assetId, passport.address) : 0n), [l?.id, passport?.address, tick]);
+  const dexInUnits = Number(dexIn) > 0 ? parseUnits(dexIn, 6) : 0n;
+  const { data: buyQuote } = useAsync(async () => (l && pool && dexInUnits > 0n ? backend!.quote(l, 'buy', dexInUnits) : null), [l?.id, pool?.shares, pool?.pusd, dexIn]);
+  const { data: sellQuote } = useAsync(async () => (l && pool && Number(sellN) > 0 ? backend!.quote(l, 'sell', BigInt(Math.floor(Number(sellN)))) : null), [l?.id, pool?.shares, pool?.pusd, sellN]);
   const { data: positions } = useAsync(async () => (passport ? backend!.positions(passport.address) : []), [passport?.address, tick]);
 
-  const [shares, setShares] = useState(10);
-  const [tab, setTab] = useState<'buy' | 'mine'>('buy');
-  const [depositAmt, setDepositAmt] = useState('');
-  const [topUpAmt, setTopUpAmt] = useState('');
 
   const me = positions?.find((p) => p.id === id);
   const isOperator = !!(passport && l && passport.h160.toLowerCase() === l.operator.toLowerCase());
@@ -195,7 +204,8 @@ export function ListingPage() {
         <aside className="panel" aria-label="Buy shares">
           <div className="tabs" role="tablist">
             <button role="tab" aria-selected={tab === 'buy'} onClick={() => setTab('buy')}>Buy</button>
-            <button role="tab" aria-selected={tab === 'mine'} onClick={() => setTab('mine')}>Your shares{staked ? ` (${staked})` : ''}</button>
+            <button role="tab" aria-selected={tab === 'trade'} onClick={() => setTab('trade')}>Trade</button>
+            <button role="tab" aria-selected={tab === 'mine'} onClick={() => setTab('mine')}>Yours{staked ? ` (${staked})` : ''}</button>
           </div>
 
           <div className="wheel-wrap">
@@ -227,6 +237,45 @@ export function ListingPage() {
               ) : <button className="btn primary" onClick={openPassport}>Open a Passport to buy</button>}
             </>
           ) : <p className="notice">{l.health === 'WoundDown' ? 'This listing has been wound down.' : 'The primary sale is closed. Shares may still trade on the native DEX.'}</p>)}
+
+          {tab === 'trade' && (
+            <div style={{ display: 'grid', gap: 14 }}>
+              {pool ? (
+                <>
+                  <div className="sum-line"><span>Market price</span><b>{usd(pool.price)} per share</b></div>
+                  <div className="sum-line"><span>Pool depth</span><b>{pool.shares.toString()} shares · {usd(pool.pusd, 0)}</b></div>
+                  <div className="field" style={{ marginBottom: 0 }}>
+                    <label htmlFor="dexin">Spend</label>
+                    <div className="input-affix"><input id="dexin" type="number" min="0" step="any" value={dexIn} onChange={(ev) => setDexIn(ev.target.value)} /><span>pUSD</span></div>
+                    <p className="hint">{buyQuote ? `Buys about ${buyQuote.toString()} share${buyQuote === 1n ? '' : 's'} and stakes them so they earn.` : 'Enter an amount.'}</p>
+                  </div>
+                  <button className="btn primary" disabled={!buyQuote || buyQuote < 1n} onClick={() => (passport ? act({ kind: 'dexBuy', id, pusdIn: dexInUnits }) : openPassport())}>Buy on the market and start earning</button>
+                  {spare !== undefined && spare > 0n && (
+                    <div className="field" style={{ marginBottom: 0 }}>
+                      <label htmlFor="selln">Sell shares you hold outside the vault ({spare.toString()})</label>
+                      <input id="selln" type="number" min="1" max={Number(spare)} value={sellN} onChange={(ev) => setSellN(ev.target.value)} />
+                      <p className="hint">{sellQuote ? `You would receive about ${usd(sellQuote)}.` : ''}</p>
+                      <button className="btn ghost sm" style={{ marginTop: 8 }} onClick={() => act({ kind: 'dexSell', id, sharesIn: Math.floor(Number(sellN)) })}>Sell</button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="notice">No one has opened a market for this listing yet, so shares can only be bought from the operator.</p>
+                  {isOperator && (
+                    <>
+                      <div className="two">
+                        <div className="field" style={{ marginBottom: 0 }}><label htmlFor="ss">Shares</label><input id="ss" type="number" min="1" value={seedShares} onChange={(ev) => setSeedShares(ev.target.value)} /></div>
+                        <div className="field" style={{ marginBottom: 0 }}><label htmlFor="sp">pUSD</label><input id="sp" type="number" min="0" step="any" value={seedPusd || String(Number(seedShares) * e.price)} onChange={(ev) => setSeedPusd(ev.target.value)} /></div>
+                      </div>
+                      <p className="hint" style={{ color: 'var(--ink-3)', fontSize: 13 }}>Opening price: {usd(BigInt(Math.round((Number(seedPusd || Number(seedShares) * e.price) / Math.max(1, Number(seedShares))) * 1e6)))} per share. You need this many unstaked shares in your Passport.</p>
+                      <button className="btn primary" onClick={() => act({ kind: 'dexSeed', id, shares: Math.floor(Number(seedShares)), pusd: parseUnits(String(seedPusd || Number(seedShares) * e.price), 6) })}>Open the market</button>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {tab === 'mine' && (
             passport ? (

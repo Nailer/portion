@@ -1,5 +1,5 @@
 import { generateCover, HEALTH, assetErc20Address, type Deployment, type ListingView, type Passport, type PlanStep, type PositionView } from '@portion/sdk';
-import type { ActionResult, ActivityRow, Backend, Balances, DocMeta, DripResult, Intent, Prepared, ProofView, Rules, StageName, TokenizeForm } from '../lib/backend';
+import type { ActionResult, ActivityRow, Backend, Balances, DocMeta, DripResult, Intent, PoolView, Prepared, ProofView, Rules, StageName, TokenizeForm } from '../lib/backend';
 import { UserError } from '../lib/backend';
 
 /**
@@ -41,6 +41,7 @@ export class DemoBackend implements Backend {
   private docs = new Map<string, { data: string; json?: any }>();
   private listeners = new Set<() => void>();
   private revenueLog = new Map<number, { ts: number; amount: bigint; kind: 'revenue' | 'slash' }[]>();
+  private pools = new Map<number, { s: bigint; p: bigint }>();
 
   constructor() {
     const t = this.now();
@@ -71,6 +72,7 @@ export class DemoBackend implements Backend {
         (this.revenueLog.get(i) ?? this.revenueLog.set(i, []).get(i)!).push({ ts, amount: net, kind: 'revenue' });
       }
       this.ls.push(l);
+      if (i < 2) this.pools.set(i, { s: BigInt(Math.round(s.shares * 0.05)), p: BigInt(Math.round(s.shares * 0.05)) * price * 105n / 100n });
       this.pushEvent('Listed', i, l.operator, { name: s.name, totalShares: s.shares }, t - (i + 2) * 86_400);
     });
   }
@@ -110,6 +112,12 @@ export class DemoBackend implements Backend {
   async balances(a: string): Promise<Balances> { const x = this.acct(a); return { pot: x.pot, pusd: x.pusd }; }
   async shareBalance(assetId: number, a: string) { const l = this.ls.find((x) => x.assetId === assetId); return l ? (this.acct(a).shares.get(l.id) ?? 0n) : 0n; }
   async rules() { return RULES; }
+  async pool(l: ListingView): Promise<PoolView | null> { const p = this.pools.get(l.id); return p && p.s > 0n ? { shares: p.s, pusd: p.p, price: p.p / p.s } : null; }
+  async quote(l: ListingView, side: 'buy' | 'sell', amountIn: bigint) {
+    const p = this.pools.get(l.id); if (!p) return null;
+    const [rin, rout] = side === 'buy' ? [p.p, p.s] : [p.s, p.p];
+    const inFee = amountIn * 997n; return (inFee * rout) / (rin * 1000n + inFee);
+  }
   docUrl(hash: string) { return this.docs.get(hash)?.data ?? ''; }
   async docMeta(hash: string): Promise<DocMeta | null> { return this.docs.has(hash) ? { hash, block: this.block - 900, index: 1, size: 1400, expiresAtBlock: this.block + 99_000, blocksLeft: 99_000, daysLeft: 6.9 } : null; }
   async docJson(hash: string) { return this.docs.get(hash)?.json ?? null; }
@@ -194,6 +202,29 @@ export class DemoBackend implements Backend {
           if (intent.fn === 'windDown') { l.closedAt = this.now(); l.saleOpen = false; l.vault.forSale = 0; }
           if (intent.fn === 'closeSale') { l.saleOpen = false; l.vault.forSale = 0; }
           if (intent.fn === 'withdrawBond') { if (!l.closedAt || this.now() < l.closedAt + 2 * l.cadence) throw new Error('StillWindingDown'); acct.pusd += l.vault.bond; l.vault.bond = 0n; }
+        });
+      }
+      case 'dexSeed': {
+        const l = this.ls[intent.id]; const have = acct.shares.get(l.id) ?? 0n;
+        if (have < BigInt(intent.shares)) throw new UserError('You hold fewer unstaked shares than that. Only your own spare shares can seed the pool.');
+        if (acct.pusd < intent.pusd) throw new UserError('You do not have enough pUSD. Get some from the faucet.', 'faucet');
+        return done({ title: `Open a market for ${l.name}`, cost: 'You can withdraw the liquidity later.', steps: [lane('pool', 'native', 'AssetConversion', 'createPool', 'Create the share / pUSD pool', 'A native Uniswap-style pool.'), lane('liq', 'native', 'AssetConversion', 'addLiquidity', 'Add liquidity', 'Sets the opening price.')] }, () => {
+          acct.shares.set(l.id, have - BigInt(intent.shares)); acct.pusd -= intent.pusd; this.pools.set(l.id, { s: BigInt(intent.shares), p: intent.pusd });
+        });
+      }
+      case 'dexBuy': {
+        const l = this.ls[intent.id]; if (acct.pusd < intent.pusdIn) throw new UserError('You do not have enough pUSD. Get some from the faucet.', 'faucet');
+        const out = await this.quote(this.view(l), 'buy', intent.pusdIn); if (!out || out < 1n) throw new UserError('That amount is too small to buy a whole share.');
+        return done({ title: `Buy ${l.name} on the market`, cost: 'Includes the pool’s 0.3% fee. No Portion fee applies.', steps: [lane('swap', 'native', 'AssetConversion', 'swapExactTokensForTokens', `Swap for about ${out} shares`, 'Trades against the pool.'), lane('stake', 'evm', 'Revive', 'call', 'Stake them to earn revenue', 'Portion.stake()')] }, () => {
+          const p = this.pools.get(l.id)!; p.p += intent.pusdIn; p.s -= out; acct.pusd -= intent.pusdIn; this.credit(l, me, out);
+        });
+      }
+      case 'dexSell': {
+        const l = this.ls[intent.id]; const have = acct.shares.get(l.id) ?? 0n;
+        if (have < BigInt(intent.sharesIn)) throw new UserError('Those shares are inside the vault. Take them out first, then sell.');
+        const out = await this.quote(this.view(l), 'sell', BigInt(intent.sharesIn)); if (!out) throw new UserError('There is no market for this listing yet.');
+        return done({ title: `Sell ${intent.sharesIn} shares`, steps: [lane('swap', 'native', 'AssetConversion', 'swapExactTokensForTokens', 'Swap shares for pUSD', 'Trades against the pool.')] }, () => {
+          const p = this.pools.get(l.id)!; p.s += BigInt(intent.sharesIn); p.p -= out; acct.shares.set(l.id, have - BigInt(intent.sharesIn)); acct.pusd += out;
         });
       }
       case 'tokenize': return this.tokenize(intent.form, who, done);
