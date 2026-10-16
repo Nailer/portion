@@ -24,7 +24,8 @@
     "deploy:bnb": "tsx scripts/deploy-bnb.ts",
     "seed": "tsx scripts/seed.ts",
     "e2e": "tsx scripts/e2e.ts",
-    "typecheck": "tsc -p scripts/tsconfig.json --noEmit && npm run typecheck -w @portion/sdk -w @portion/server -w @portion/web"
+    "typecheck": "tsc -p scripts/tsconfig.json --noEmit && npm run typecheck -w @portion/sdk -w @portion/server -w @portion/web",
+    "dev": "node scripts/dev.mjs"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

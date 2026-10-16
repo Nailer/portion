@@ -95,6 +95,7 @@ export function App() {
         <div className="banner" role="status">
           <div className="wrap">
             <b>Simulated mode.</b> <span>Nothing here is on-chain. It runs the same rules as the contract so you can explore without a network.</span>
+            <button className="btn ghost sm" onClick={() => (backend as any).advance(7 * 86_400)} title="Move the simulated clock forward so operators fall behind">Skip a week ahead</button>
             <button className="btn ghost sm" onClick={() => forceDemo(false)}>Use the live testnet</button>
           </div>
         </div>

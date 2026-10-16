@@ -13,7 +13,7 @@ Open <http://localhost:5173/?demo> for the **simulated** mode, which follows the
 
 1. Click **Open Passport → Continue as a guest**.
 2. Open **Yaba solar charging kiosk**. Drag the wheel, press **Buy**. Read the "Under the hood" sheet: those are the real calls (a native approval, then a Solidity call). Confirm.
-3. Open the **Podcast network catalogue**: its operator clock is in the "Late" band. Come back later (or run `window.__demo?.advance` from the console) and it becomes slashable.
+3. Open the **Podcast network catalogue**: its operator clock is in the "Late" band. Press **Skip a week ahead** in the banner and it becomes slashable; then press **Slash the bond** and watch the bond flow to holders.
 4. **Tokenize**: fill the form, watch the preview card and the nine-step "Under the hood" list, publish.
 5. **Portfolio**: claim, stake, see activity.
 

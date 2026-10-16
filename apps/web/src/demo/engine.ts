@@ -23,7 +23,7 @@ const SEEDS: { name: string; summary: string; category: number; shares: number; 
   { name: 'Yaba solar charging kiosk', summary: 'Phone and powerbank charging for a busy bus stop. About 120 charges a day at 150 naira each.', category: 0, shares: 1000, forSale: 600, price: 12, cadence: 7 * 86_400, minPer: 90, terms: 'Operator reports takings weekly and pays 70% of net into the vault. Panel and inverter are insured. Bond slashed after two missed weeks.' },
   { name: 'Okada fleet, 6 electric bikes', summary: 'Six e-bikes leased to riders on a daily fee. Fixed charging station on site.', category: 1, shares: 2400, forSale: 1800, price: 5, cadence: 7 * 86_400, minPer: 160, terms: 'Daily rider fees pooled by the fleet manager; weekly payout to the vault.' },
   { name: 'Cold room, Mile 12 market', summary: 'Shared cold storage for fresh produce, billed per crate per day to 40 traders.', category: 2, shares: 500, forSale: 350, price: 40, cadence: 30 * 86_400, minPer: 500, terms: 'Monthly payout. Compressor and generator maintained by the operator.' },
-  { name: 'Podcast network catalogue', summary: 'Ad and sponsorship income from a 4-show audio catalogue with 80k monthly listens.', category: 6, shares: 800, forSale: 400, price: 18, cadence: 30 * 86_400, minPer: 300, terms: 'Monthly statements from the ad platform are attached on-chain.' },
+  { name: 'Podcast network catalogue', summary: 'Ad and sponsorship income from a 4-show audio catalogue with 80k monthly listens.', category: 6, shares: 800, forSale: 400, price: 18, cadence: 14 * 86_400, minPer: 150, terms: 'Fortnightly statements from the ad platform are attached on-chain.' },
 ];
 
 export class DemoBackend implements Backend {
@@ -55,7 +55,7 @@ export class DemoBackend implements Backend {
       const l: SimListing = {
         id: i, operator: '0x' + (i + 1).toString(16).padStart(40, 'a'), operatorAddr: 'demo-op-' + i, payToken: assetErc20Address(4217),
         assetId: 200_000 + i, nftCollection: 0, nftItem: 1000 + i, category: s.category, strikes: 0, totalShares: s.shares, cadence: s.cadence,
-        createdAt: t - (i + 2) * 86_400, lastDepositAt: t - (i === 3 ? s.cadence * 1.4 : 2) * (i === 3 ? 1 : 86_400), closedAt: 0, saleOpen: true,
+        createdAt: t - (i + 2) * 86_400, lastDepositAt: t - (i === 3 ? s.cadence * 1.8 : 2) * (i === 3 ? 1 : 86_400), closedAt: 0, saleOpen: true,
         docHash: doc, coverHash: cover, minPerPeriod: U(s.minPer), name: s.name, summary: s.summary, shareToken: assetErc20Address(200_000 + i),
         vault: { totalStaked: BigInt(sold), accPerShare: 0n, totalRevenue: 0n, deposits: 0, bond: (BigInt(s.forSale) * price * 500n) / 10_000n, forSale: s.forSale - sold, sold, salePrice: price },
         stakes: new Map(),
