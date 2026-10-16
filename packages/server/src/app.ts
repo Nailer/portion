@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import type { ApiPromise } from '@polkadot/api';
 import type { DatabaseSync } from 'node:sqlite';
-import { contentHash, PortionClient, RETENTION_BLOCKS, type Deployment } from '@portion/sdk';
+import { contentHash, PortionClient, RETENTION_BLOCKS, storedInBlock, type Deployment } from '@portion/sdk';
 import { Faucet, FaucetError } from './faucet.js';
 import { snapshot, recordSample, type NetworkSnapshot } from './network.js';
 import { verifyListing } from './verify.js';
@@ -45,6 +45,23 @@ export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: 
     const bytes = new Uint8Array(row.data);
     if (contentHash(bytes) !== hash) return c.json({ error: 'stored bytes do not match their hash' }, 500);
     return new Response(bytes, { headers: { 'content-type': sniff(bytes), 'cache-control': 'public, max-age=31536000, immutable', 'x-content-hash': hash, 'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox", 'access-control-allow-origin': '*' } });
+  });
+
+  // A client can pin the bytes it just stored, so a gateway that was offline at the time still ends up with them.
+  // The server only accepts bytes it can find in the named block's body, so this cannot be used to host arbitrary files.
+  app.post('/api/doc/:hash/pin', async (c) => {
+    const hash = c.req.param('hash').toLowerCase();
+    if (db.prepare('SELECT 1 FROM docs WHERE hash = ?').get(hash)) return c.json({ ok: true, already: true });
+    const { block } = await c.req.json().catch(() => ({ block: 0 }));
+    try {
+      const bh = await api.rpc.chain.getBlockHash(Number(block));
+      const found = (await storedInBlock(api, bh.toHex())).find((s) => s.hash === hash);
+      if (!found) return c.json({ error: 'that block does not contain this document' }, 404);
+      db.prepare('INSERT OR IGNORE INTO docs(hash, block, idx, size, data) VALUES (?,?,?,?,?)').run(found.hash, found.block, found.index, found.size, Buffer.from(found.data));
+      return c.json({ ok: true });
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, 404);
+    }
   });
 
   app.get('/api/doc/:hash/meta', async (c) => {

@@ -10,3 +10,4 @@ export * from './storage';
 export * from './dex';
 export * from './portion';
 export * from './abi';
+export * from './cover';

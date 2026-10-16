@@ -28,9 +28,11 @@ export class Indexer {
 
   async start() {
     const head = (await this.api.rpc.chain.getHeader()).number.toNumber();
+    // a stale cursor (older than the node's pruning window) would stall forever, so never start further back than that
+    if (this.lastIndexed < head - 200) this.lastIndexed = 0;
     if (this.lastIndexed === 0) {
       // First run: start close to the head, or at the deployment block if we know it.
-      const from = this.deployment && (this.deployment as any).deployedBlock ? Number((this.deployment as any).deployedBlock) - 1 : Math.max(0, head - 200);
+      const from = this.deployment && (this.deployment as any).deployedBlock ? Number((this.deployment as any).deployedBlock) - 1 : Math.max(0, head - 60);
       this.lastIndexed = from;
     }
     await this.catchUp();
@@ -44,7 +46,12 @@ export class Indexer {
       const head = (await this.api.rpc.chain.getHeader()).number.toNumber();
       while (this.lastIndexed < head) {
         const next = this.lastIndexed + 1;
-        await this.indexBlock(next);
+        try {
+          await this.indexBlock(next);
+        } catch (e) {
+          // the public RPC node prunes old blocks; skip what it no longer has instead of stalling
+          if (!/4003|discarded|unknown block/i.test((e as Error).message)) throw e;
+        }
         this.lastIndexed = next;
         if (next % 20 === 0 || next === head) setKv(this.db, 'indexed_to', String(next));
       }
@@ -57,7 +64,6 @@ export class Indexer {
 
   private async indexBlock(number: number) {
     const hash = await this.api.rpc.chain.getBlockHash(number);
-    const at = await this.api.at(hash);
 
     // documents
     const stored = await storedInBlock(this.api, hash.toHex());
@@ -67,11 +73,19 @@ export class Indexer {
         .run(s.hash, s.block, s.index, s.size, Buffer.from(s.data));
     }
 
-    // contract events
+    // contract events (needs state, which a pruned node may have discarded: skip rather than stall)
     if (!this.deployment) return;
     const portion = this.deployment.portion.toLowerCase();
-    const events: any[] = (await at.query.system.events()) as any;
-    const ts = Number((await at.query.timestamp.now()).toString()) / 1000;
+    let events: any[];
+    let ts: number;
+    try {
+      const at = await this.api.at(hash);
+      events = (await at.query.system.events()) as any;
+      ts = Number((await at.query.timestamp.now()).toString()) / 1000;
+    } catch (e) {
+      console.warn(`[indexer] block ${number}: state unavailable, events skipped`);
+      return;
+    }
     for (const rec of events) {
       const ev = rec.event;
       if (!(this.api.events as any).revive.ContractEmitted.is(ev)) continue;
