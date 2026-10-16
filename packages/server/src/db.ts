@@ -42,6 +42,14 @@ export function openDb(path: string): DatabaseSync {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       ts INTEGER NOT NULL, kind TEXT NOT NULL, ref TEXT, ok INTEGER NOT NULL, tx TEXT, detail TEXT
     );
+    CREATE TABLE IF NOT EXISTS transfers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      src_chain INTEGER NOT NULL, nonce TEXT NOT NULL, dst_chain INTEGER NOT NULL,
+      sender TEXT NOT NULL, recipient TEXT NOT NULL, amount TEXT NOT NULL,
+      src_tx TEXT, src_block INTEGER, status TEXT NOT NULL, dst_tx TEXT, error TEXT, ts INTEGER NOT NULL,
+      UNIQUE(src_chain, nonce)
+    );
+    CREATE INDEX IF NOT EXISTS transfers_party ON transfers(sender, recipient);
     CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL);
   `);
   return db;
