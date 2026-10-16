@@ -1,0 +1,14 @@
+{
+  "name": "portion",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Own a portion of things that earn. Native-composition RWA platform for Portaldot V3.",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=22.13" },
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "contracts:build": "cd contracts && forge build",
+    "contracts:test": "cd contracts && forge test"
+  }
+}

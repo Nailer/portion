@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+data/*.sqlite*
+.vite/
+coverage/
