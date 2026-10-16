@@ -261,7 +261,7 @@ export class PortionClient {
 
     const calls = [
       api.tx.nfts.mint(d.deedsCollection, nftItem, operator.address, null),
-      api.tx.nfts.setMetadata(d.deedsCollection, nftItem, stringToHex(`portion:v1:${input.docHash}`)),
+      api.tx.nfts.setAttribute(d.deedsCollection, nftItem, { ItemOwner: null }, stringToHex('portion'), stringToHex(`v1:${input.docHash}`)),
       api.tx.nftFractionalization.fractionalize(d.deedsCollection, nftItem, assetId, operator.address, input.totalShares),
       this.approve(assetId, BigInt(input.sharesForSale)),
       this.approve(d.pusdAssetId, input.bond),
@@ -270,8 +270,8 @@ export class PortionClient {
 
     const steps: PlanStep[] = [
       { key: 'mint', lane: 'native', pallet: 'Nfts', method: 'mint', title: 'Mint the deed', detail: `A native NFT (#${nftItem}) in the shared Portion Deeds collection represents the asset itself.` },
-      { key: 'meta', lane: 'native', pallet: 'Nfts', method: 'setMetadata', title: 'Pin the terms hash to the deed', detail: `The NFT carries the hash of the terms and photo stored on-chain (${input.docHash.slice(0, 12)}…).` },
-      { key: 'frac', lane: 'native', pallet: 'NftFractionalization', method: 'fractionalize', title: `Split into ${input.totalShares.toLocaleString()} shares`, detail: `The pallet locks the deed and mints native asset #${assetId}. Supply is fixed by the protocol, and whoever re-collects 100% of shares can unify the deed back.` },
+      { key: 'meta', lane: 'native', pallet: 'Nfts', method: 'setAttribute', title: 'Pin the terms hash to the deed', detail: `The NFT carries the hash of the terms stored on-chain (${input.docHash.slice(0, 12)}…), written by you as the item owner.` },
+      { key: 'frac', lane: 'native', pallet: 'NftFractionalization', method: 'fractionalize', title: `Split into ${input.totalShares.toLocaleString()} shares`, detail: `The pallet disables transfers of the deed and mints native asset #${assetId} with the pallet as its only administrator. Supply is fixed, and whoever re-collects 100% of shares can unify the deed back.` },
       { key: 'ap1', lane: 'native', pallet: 'Assets', method: 'approveTransfer', title: 'Allow the registry to escrow shares for sale', detail: `Native approval, which Solidity sees as a normal ERC-20 allowance.` },
       { key: 'ap2', lane: 'native', pallet: 'Assets', method: 'approveTransfer', title: 'Allow the registry to hold your bond', detail: 'The bond is paid in pUSD and is slashed to holders if revenue stops.' },
       { key: 'evm', lane: 'evm', pallet: 'Revive', method: 'call', title: 'Register the listing in Solidity', detail: 'Portion.createListing(...) checks the share supply, pulls shares and bond, and opens the sale.' },

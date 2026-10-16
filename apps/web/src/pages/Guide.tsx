@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 const MODULES = [
   ['Nfts', 'The deed. One shared collection, minted publicly by any operator.'],
-  ['NftFractionalization', 'Locks the deed and mints a fixed supply of shares. Re-collect 100% to unify the deed back.'],
+  ['NftFractionalization', 'Disables transfers of the deed and mints a fixed supply of shares that only the pallet administers. Re-collect 100% to unify the deed back.'],
   ['Assets + AssetsPrecompiles', 'Shares and pUSD are native assets. Solidity sees them as ordinary ERC-20 tokens, with no token contract to deploy or audit.'],
   ['TransactionStorage', 'Terms and photos live on the chain itself, content-addressed, renewed by a keeper.'],
   ['Utility.batchAll', 'One signature, many modules, all or nothing, including the call into Solidity.'],
@@ -19,7 +19,7 @@ export function Guide() {
 
       <div className="section-head"><h2>The three promises</h2></div>
       <div className="findings">
-        <div className="finding good"><i className="sev" /><div><h3>It exists</h3><p>The deed is a native NFT held by the fractionalization pallet. Its terms and photo are stored with the chain's own storage module and hashed into the deed.</p></div></div>
+        <div className="finding good"><i className="sev" /><div><h3>It exists</h3><p>The deed is a native NFT whose transfers the fractionalization pallet has switched off. Its terms and photo are stored with the chain's own storage module and hashed into the deed.</p></div></div>
         <div className="finding good"><i className="sev" /><div><h3>The shares are real and fixed</h3><p>Shares are minted by the protocol, not by a contract the operator wrote. Nobody can print more.</p></div></div>
         <div className="finding good"><i className="sev" /><div><h3>The operator is accountable</h3><p>Each listing carries a bond. Miss payments for two periods and anyone can slash it to holders. The clock and the bond are on every listing page.</p></div></div>
       </div>

@@ -138,7 +138,7 @@ export function ListingPage() {
               </div>
               <div className={`proof-row ${proof ? (proof.deedLocked ? '' : 'bad') : 'wait'}`}>
                 <span className="tick">{proof ? (proof.deedLocked ? '✓' : '!') : '…'}</span>
-                <div><b>The deed NFT is locked</b><span>{proof ? (proof.deedLocked ? 'The fractionalization pallet holds the deed. It can only come back if one account collects 100% of the shares.' : 'The deed is not held by the fractionalization pallet.') : 'Reading the native pallets…'}</span></div>
+                <div><b>The deed NFT is locked in place</b><span>{proof ? (proof.deedLocked ? 'The deed still exists and its transfers are switched off by the fractionalization pallet. It is only released if one account collects 100% of the shares.' : 'The deed is not locked: it is missing or can still be transferred.') : 'Reading the native pallets…'}</span></div>
                 <span>#{l.nftItem}</span>
               </div>
               <div className={`proof-row ${proof ? (proof.supplyMatches && proof.adminIsPallet ? '' : 'bad') : 'wait'}`}>

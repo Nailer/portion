@@ -17,9 +17,10 @@ export interface NativeProof {
 }
 
 /**
- * The Solidity registry can only *see* a share token. This checks the native layer to prove the shares are backed:
- * the deed NFT must be owned by the fractionalization pallet and the asset must have been created by it.
- * Anything that fails here is shown to investors as "not deed-locked".
+* The Solidity registry can only *see* a share token. This checks the native layer to prove the shares are backed:
+ * the deed NFT must still exist with transfers disabled, it must be mapped to this very share asset by the
+ * fractionalization pallet, and only the pallet may administer that asset. Anything that fails here is shown to
+ * investors. Known limit: pallet-nfts lets an item's owner burn it, which the "still exists" check will catch.
  */
 export async function verifyListing(api: ApiPromise, l: ListingView): Promise<NativeProof> {
   const notes: string[] = [];
@@ -28,8 +29,12 @@ export async function verifyListing(api: ApiPromise, l: ListingView): Promise<Na
 
   const item: any = (await api.query.nfts.item(l.nftCollection, l.nftItem)).toJSON();
   const deedOwner = item?.owner as string | undefined;
-  const deedLocked = !!deedOwner && encodeAddress(decodeAddress(deedOwner), 42) === palletAccount;
-  if (!deedLocked) notes.push('The deed NFT is not held by the fractionalization pallet.');
+  // The pallet does not move the deed: it switches transfers off for it (the Transferable bit of the item config).
+  const cfg: any = (await api.query.nfts.itemConfigOf(l.nftCollection, l.nftItem)).toJSON();
+  const transferable = (Number(cfg?.settings ?? 1) & 1) === 1;
+  const deedLocked = !!item && !transferable;
+  if (!item) notes.push('The deed NFT no longer exists. It may have been burned.');
+  else if (transferable) notes.push('Transfers of the deed NFT are still enabled.');
 
   const map: any = (await api.query.nftFractionalization.nftToAsset([l.nftCollection, l.nftItem])).toJSON();
   const fractionalized = !!map;

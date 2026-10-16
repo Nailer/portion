@@ -271,7 +271,7 @@ input[type='range'] { width: 100%; accent-color: var(--ink); }
 .stat-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); border-top: 2px solid var(--ink); margin-top: 24px; }
 .stat { padding: 16px 20px 16px 0; border-bottom: 1px solid var(--line); }
 .stat small { display: block; color: var(--ink-3); font-size: 13px; }
-.stat b, .fact b, .total b, .row .cell b, .table .num, .big { font-variant-numeric: tabular-nums; }
+.table .num { font-variant-numeric: tabular-nums; }
 .stat b { font-size: 32px; letter-spacing: -0.04em; font-weight: 800; }
 .table { width: 100%; border-collapse: collapse; }
 .table th { text-align: left; font-weight: 500; font-size: 13px; color: var(--ink-3); padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line-strong); }

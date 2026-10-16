@@ -21,7 +21,10 @@
     "deploy:check": "tsx scripts/deploy.ts --check",
     "server": "npm run start -w @portion/server",
     "teleport:local": "tsx scripts/teleport-local.ts",
-    "deploy:bnb": "tsx scripts/deploy-bnb.ts"
+    "deploy:bnb": "tsx scripts/deploy-bnb.ts",
+    "seed": "tsx scripts/seed.ts",
+    "e2e": "tsx scripts/e2e.ts",
+    "typecheck": "tsc -p scripts/tsconfig.json --noEmit && npm run typecheck -w @portion/sdk -w @portion/server -w @portion/web"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

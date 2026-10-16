@@ -1,0 +1,81 @@
+# How to check Portion
+
+There are four ways to check it, from "no setup" to "on-chain evidence".
+
+## 1. Click through it (2 minutes, no setup)
+
+```bash
+npm install
+npm run dev          # starts the API on :8787 and the web app on :5173
+```
+
+Open <http://localhost:5173/?demo> for the **simulated** mode, which follows the same rules as the Solidity contract and needs no network. Then:
+
+1. Click **Open Passport → Continue as a guest**.
+2. Open **Yaba solar charging kiosk**. Drag the wheel, press **Buy**. Read the "Under the hood" sheet: those are the real calls (a native approval, then a Solidity call). Confirm.
+3. Open the **Podcast network catalogue**: its operator clock is in the "Late" band. Come back later (or run `window.__demo?.advance` from the console) and it becomes slashable.
+4. **Tokenize**: fill the form, watch the preview card and the nine-step "Under the hood" list, publish.
+5. **Portfolio**: claim, stake, see activity.
+
+Remove `?demo` to use the **live testnet** instead.
+
+## 2. Automated tests (no network)
+
+```bash
+npm run contracts:test      # 43 Foundry tests, including a 512-run solvency fuzz
+npm test -w @portion/sdk    # 12 unit tests (address mapping, ERC-20 addressing, passports, hashing)
+npm run teleport:local      # two local EVM chains + the relayer: both directions, replay and forgery rejected
+npm run typecheck           # scripts, sdk, server and web
+```
+
+## 3. Read-only checks against the real testnet (no tokens needed)
+
+```bash
+LIVE=1 npm test -w @portion/sdk
+```
+
+These prove, against the live V3 runtime, that: the runtime is `portaldot-v3`; our SS58 → H160 rule equals `reviveApi.address`; our fallback account rule equals `reviveApi.accountId`;
+and a native asset answers as an ERC-20 through `ReviveContract.read` (asset 1 → `TST`).
+
+Also useful:
+
+```bash
+npm run deploy:check        # dry-runs every contract deployment and prints the refundable deposit it needs
+curl localhost:8787/api/network | jq .findings    # live security analysis of the chain
+curl localhost:8787/metrics                       # Prometheus gauges for node operators
+```
+
+## 4. On-chain evidence (needs a funded deployer)
+
+```bash
+npm run keygen              # once: creates .env with keys and prints the deployer address
+# fund the printed SS58 address with ~2,000 tPOT (see the Portaldot Discord ticket flow in docs/SUBMISSION.md)
+npm run deploy              # pUSD, deeds collection, Portion, Teleport  → deployments/portaldot-testnet.json
+npm run seed                # liquidity, three listings with history, one DEX market
+npm run e2e                 # a full lifecycle with fresh accounts → deployments/e2e-report.md (block + extrinsic hashes)
+npm run e2e -- --slow       # also waits out a 2-minute cadence and proves the bond slash
+```
+
+For the BNB side of Teleport:
+
+```bash
+# fund EVM_OPS_KEY (printed by keygen) with ~0.05 tBNB from the BNB testnet faucet
+npm run deploy:bnb
+```
+
+## What each check proves
+
+| Claim | Where it is proven |
+|---|---|
+| Revenue is split pro-rata and the vault never over-pays | `contracts/test/Portion.t.sol` (`testFuzz_vaultSolvency`, pro-rata and late-joiner tests) |
+| A defaulted operator's bond goes to holders, with a keeper tip | `test_slash_*`, and `npm run e2e -- --slow` on the live chain |
+| The bridge rejects replays, forged and unsorted signatures, over-cap transfers | `contracts/test/Teleport.t.sol`, `npm run teleport:local` |
+| Both bridge directions conserve supply | `npm run teleport:local` |
+| Address mapping and precompile addressing match the real runtime | `LIVE=1 npm test -w @portion/sdk` |
+| The listing batch works on the real runtime | `npm run e2e` (needs funds) |
+
+## Known gaps in verification
+
+- The native-module batch (`Nfts`, `NftFractionalization`, `Assets`, Solidity) has been built against the live runtime's metadata and every call signature was read from it,
+  but it can only be *executed* once a funded account exists. `npm run e2e` is the test for that.
+- The Teleport relayer has been tested against local EVM chains. Its use of Portaldot's `eth_getLogs` and `eth_sendRawTransaction` is untested until deployment.
