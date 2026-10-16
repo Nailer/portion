@@ -437,6 +437,16 @@ contract PortionTest is Test {
         assertEq(a, 0);
     }
 
+    function test_getListings_pagesAndHandlesOutOfRange() public {
+        _list();
+        (Portion.Listing[] memory ls, Portion.Vault[] memory vs, Portion.Health[] memory hs) = portion.getListings(0, 10);
+        assertEq(ls.length, 1);
+        assertEq(vs[0].forSale, FOR_SALE);
+        assertEq(uint8(hs[0]), uint8(Portion.Health.Healthy));
+        (ls,,) = portion.getListings(5, 10);
+        assertEq(ls.length, 0);
+    }
+
     // ───────── admin ─────────
     function test_admin_onlyOwnerAndBounded() public {
         vm.prank(alice);

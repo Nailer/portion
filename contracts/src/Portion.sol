@@ -440,6 +440,25 @@ contract Portion {
         h = health(id);
     }
 
+    /// @notice A page of listings in one call, so the explore page needs a single dry-run.
+    function getListings(uint256 offset, uint256 limit)
+        external
+        view
+        returns (Listing[] memory ls, Vault[] memory vs, Health[] memory hs)
+    {
+        uint256 n = _listings.length;
+        uint256 end = offset >= n ? offset : (offset + limit > n ? n : offset + limit);
+        uint256 len = end - offset;
+        ls = new Listing[](len);
+        vs = new Vault[](len);
+        hs = new Health[](len);
+        for (uint256 i; i < len; i++) {
+            ls[i] = _listings[offset + i];
+            vs[i] = _vaults[offset + i];
+            hs[i] = health(offset + i);
+        }
+    }
+
     struct Position {
         uint256 id;
         uint256 staked;
