@@ -22,7 +22,7 @@ export function Create() {
   const [totalShares, setTotalShares] = useState(1000);
   const [percentForSale, setPercentForSale] = useState(60);
   const [price, setPrice] = useState('10');
-  const [cadence, setCadence] = useState<number>(CADENCES[0].seconds);
+  const [cadence, setCadence] = useState<number>(CADENCES[2].seconds);
   const [minPer, setMinPer] = useState('50');
   const [bond, setBond] = useState('');
   const [photo, setPhoto] = useState<Photo | null>(null);
@@ -165,7 +165,7 @@ export function Create() {
               <p style={{ color: 'var(--ink-2)', fontSize: 14 }}>{summary || 'Your one-line summary appears here.'}</p>
               <div className="sum-line"><span>Price per share</span><b>{usd(BigInt(Math.round(Number(price || 0) * 1e6)))}</b></div>
               <div className="sum-line"><span>Promise</span><b>{usd(BigInt(Math.round(Number(minPer || 0) * 1e6)), 0)} {cadenceLabel(cadence)}</b></div>
-              <div className="sum-line"><span>Yield at that promise</span><b>{(apy * 100).toFixed(0)}% a year</b></div>
+              <div className="sum-line"><span>Yield at that promise</span><b>{apy > 5 ? 'over 500%' : `${(apy * 100).toFixed(0)}%`} a year</b></div>
             </div>
           </div>
           <div className="hood">
