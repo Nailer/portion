@@ -22,6 +22,12 @@ export const config = {
     perIpPerDay: Number(process.env.DRIP_PER_IP ?? 5),
     globalPerDay: Number(process.env.DRIP_GLOBAL ?? 200),
   },
+  evm: {
+    portaldotRpc: process.env.PORTALDOT_EVM_RPC ?? 'https://test-evm-rpc-v3.portaldot.dev',
+    bnbRpc: process.env.BNB_RPC ?? 'https://data-seed-prebsc-1-s1.bnbchain.org:8545',
+    opsKey: process.env.EVM_OPS_KEY ?? '',
+    relayerKeys: [1, 2, 3].map((i) => process.env[`RELAYER_${i}_KEY`]).filter((k): k is string => !!k),
+  },
   keepers: {
     enabled: process.env.KEEPERS !== 'off',
     intervalMs: Number(process.env.KEEPER_INTERVAL_MS ?? 30_000),

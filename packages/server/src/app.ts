@@ -16,7 +16,7 @@ function sniff(data: Uint8Array): string {
   return 'application/octet-stream';
 }
 
-export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: Deployment; faucet?: Faucet; startedAt: number }) {
+export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: Deployment; faucet?: Faucet; startedAt: number; relayerRunning?: boolean }) {
   const { api, db, deployment, faucet } = ctx;
   const app = new Hono();
   app.use('*', cors());
@@ -119,6 +119,26 @@ export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: 
   });
   app.get('/api/keepers', (c) => {
     const rows = db.prepare('SELECT id, ts, kind, ref, ok, tx, detail FROM keeper_log ORDER BY id DESC LIMIT 60').all();
+    return c.json(rows);
+  });
+
+  // ───────── teleport ─────────
+  app.get('/api/teleport/config', (c) => {
+    if (!deployment?.teleport || !deployment.bnb) return c.json({ enabled: false });
+    return c.json({
+      enabled: true,
+      relayerRunning: !!ctx.relayerRunning,
+      home: { chainId: deployment.chainId, teleport: deployment.teleport, token: client?.pusdToken },
+      bnb: deployment.bnb,
+      threshold: 2,
+      relayers: 3,
+    });
+  });
+  app.get('/api/teleport/transfers', (c) => {
+    const who = c.req.query('address')?.toLowerCase();
+    const rows = who
+      ? db.prepare('SELECT * FROM transfers WHERE sender = ? OR recipient = ? ORDER BY id DESC LIMIT 20').all(who, who)
+      : db.prepare('SELECT * FROM transfers ORDER BY id DESC LIMIT 20').all();
     return c.json(rows);
   });
 

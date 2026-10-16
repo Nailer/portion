@@ -20,7 +20,8 @@
     "deploy": "tsx scripts/deploy.ts",
     "deploy:check": "tsx scripts/deploy.ts --check",
     "server": "npm run start -w @portion/server",
-    "teleport:local": "tsx scripts/teleport-local.ts"
+    "teleport:local": "tsx scripts/teleport-local.ts",
+    "deploy:bnb": "tsx scripts/deploy-bnb.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

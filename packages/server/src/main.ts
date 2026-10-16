@@ -8,6 +8,7 @@ import { Indexer } from './indexer.js';
 import { Faucet } from './faucet.js';
 import { Keepers } from './keepers.js';
 import { buildApp } from './app.js';
+import { Relayer, evmSide } from './relayer.js';
 
 await cryptoWaitReady();
 const deployment = loadDeployment();
@@ -22,7 +23,16 @@ if (!config.deployerMnemonic) console.warn('[portion] DEPLOYER_MNEMONIC missing:
 const treasury = config.deployerMnemonic ? keyring.addFromUri(config.deployerMnemonic) : undefined;
 
 const faucet = treasury ? new Faucet(api, db, treasury, deployment) : undefined;
-const app = buildApp({ api, db, deployment, faucet, startedAt: Date.now() });
+let relayer: Relayer | undefined;
+if (deployment?.teleport && deployment.bnb && config.evm.opsKey && config.evm.relayerKeys.length >= 2) {
+  relayer = new Relayer(db, [
+    evmSide({ name: 'Portaldot V3', rpc: config.evm.portaldotRpc, chainId: deployment.chainId, gasKey: config.evm.opsKey, teleport: deployment.teleport, confirmations: 1, maxLogRange: 500 }),
+    evmSide({ name: 'BNB Chain testnet', rpc: config.evm.bnbRpc, chainId: deployment.bnb.chainId, gasKey: config.evm.opsKey, teleport: deployment.bnb.teleport, confirmations: 3, maxLogRange: 2000 }),
+  ], config.evm.relayerKeys);
+  relayer.start();
+  console.log('[portion] Teleport relayer running');
+}
+const app = buildApp({ api, db, deployment, faucet, startedAt: Date.now(), relayerRunning: !!relayer });
 
 new Indexer(api, db, deployment).start().catch((e) => console.error('[indexer] failed to start', e));
 if (config.keepers.enabled && config.keeperMnemonic) {
