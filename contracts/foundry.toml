@@ -7,8 +7,9 @@ solc_version = "0.8.28"
 # Conservative target: Portaldot V3 runs EVM bytecode through pallet-revive's REVM backend.
 evm_version = "paris"
 optimizer = true
-optimizer_runs = 200
+optimizer_runs = 1
 bytecode_hash = "none"
+via_ir = true
 fs_permissions = [{ access = "read", path = "./out" }]
 
 [fuzz]

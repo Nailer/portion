@@ -1,0 +1,19 @@
+{
+  "name": "@portion/sdk",
+  "version": "0.1.0",
+  "description": "Dual-VM client for Portaldot V3: address mapping, atomic native+EVM batches, on-chain documents.",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": { ".": "./src/index.ts", "./abi": "./src/abi.ts" },
+  "dependencies": {
+    "@polkadot/api": "^16.4.0",
+    "@polkadot/keyring": "^13.5.0",
+    "@polkadot/util": "^13.5.0",
+    "@polkadot/util-crypto": "^13.5.0",
+    "ethers": "^6.13.0"
+  },
+  "devDependencies": { "typescript": "^5.6.0", "vitest": "^2.1.0" },
+  "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit" }
+}
