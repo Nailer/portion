@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useApp } from '../state/app';
 
 const MODULES = [
   ['Nfts', 'The deed. One shared collection, minted publicly by any operator.'],
@@ -12,10 +13,22 @@ const MODULES = [
 ] as const;
 
 export function Guide() {
+  const { forceDemo } = useApp();
   return (
     <div>
       <h1 className="page-title">How Portion works</h1>
       <p className="page-lede">Portion helps asset operators manage funding and share deposited income with funders. The chain records listings, shares and payments; verification of physical equipment and legal rights requires checks outside the chain.</p>
+
+      <section className="journey-guide" aria-labelledby="first-visit">
+        <div><span className="eyebrow">START HERE</span><h2 id="first-visit">Try a whole business journey.</h2><p>The public preview uses simulated money. No wallet extension or real funds are needed. Stay in the same tab and avoid reloading until you finish.</p><Link className="btn primary" to="/operator" onClick={() => forceDemo(true)}>Start the walkthrough →</Link></div>
+        <ol>
+          <li><b>01</b><span>Choose <strong>Operator</strong> in the banner. Open <strong>Workspace</strong> and use <strong>Create demo solar asset</strong>. Review, then Confirm and Close.</span></li>
+          <li><b>02</b><span>Choose <strong>Funder</strong>. Find your new solar asset under <strong>Explore</strong>, buy 10 shares for 100 pUSD, then Confirm and Close.</span></li>
+          <li><b>03</b><span>Choose <strong>Operator</strong> again. In <strong>Workspace</strong>, press <strong>Pay revenue</strong> and review a 20 pUSD payment. Confirm and Close.</span></li>
+          <li><b>04</b><span>Choose <strong>Funder</strong> again. In <strong>Portfolio</strong>, claim the 19.90 pUSD allocation. Confirm, Close and check your balance.</span></li>
+        </ol>
+      </section>
+      <p className="notice">Why use it? Operators want funding and one place to manage payments. Funders want clear terms and a record of income paid to them. Portion currently demonstrates that process; it does not offer real investments or guaranteed earnings.</p>
 
       <div className="section-head"><h2>What you can check</h2></div>
       <div className="findings">
@@ -40,7 +53,7 @@ export function Guide() {
       <div className="findings">
         <div className="finding warning"><i className="sev" /><div><h3>Revenue is reported, not proven</h3><p>The chain cannot see a kiosk's takings. The bond and cadence rules make non-payment expensive and visible; they do not make it impossible. A real deployment would add payment-rail attestations.</p></div></div>
         <div className="finding warning"><i className="sev" /><div><h3>Teleport trusts a relayer quorum</h3><p>The v0 bridge needs two of three relayers to agree. Portaldot already produces BEEFY/MMR commitments, which is the planned path to a light-client bridge.</p></div></div>
-        <div className="finding info"><i className="sev" /><div><h3>This is a testnet</h3><p>Tokens have no value and the network is being upgraded during the hackathon. If it is unreachable, the app falls back to a clearly labelled simulation.</p></div></div>
+        <div className="finding info"><i className="sev" /><div><h3>Current stage: interactive prototype</h3><p>The public preview opens in a labelled simulation. Portion’s contracts have not been deployed to the testnet yet. Simulation data resets on reload and is not shared between visitors. You can choose the live testnet to inspect the network, but live funding and payouts remain unavailable.</p></div></div>
       </div>
     </div>
   );

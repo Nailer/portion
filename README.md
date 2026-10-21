@@ -34,6 +34,8 @@ to deploy or audit. Terms and photo are stored by the chain's own `TransactionSt
 See [docs/research.md](docs/research.md) for the ecosystem research and why this idea, [docs/architecture.md](docs/architecture.md) for the design,
 and [docs/TESTING.md](docs/TESTING.md) for how to check every claim.
 
+New here? Follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). The public preview is a labelled browser simulation; live Portion contracts are not deployed. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
+
 ## Run it
 
 Requirements: Node 22.13+ on the 22.x LTS line, Node 24, or Node 26+, and [Foundry](https://getfoundry.sh) only if you want to rebuild or test the contracts.
