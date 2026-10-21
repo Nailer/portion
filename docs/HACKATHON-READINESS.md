@@ -30,12 +30,12 @@ The key technical demonstration is a native NFT → fractional native shares →
 
 | Requirement | Current state |
 |---|---|
-| Public GitHub repository | No Git remote is configured in this checkout; publication remains outstanding |
-| At least 3 event-window commits | Existing history contains multiple commits from 16–17 October; newer development changes also need recorded checkpoints |
+| Public GitHub repository | Published at https://github.com/Nailer/portion |
+| At least 3 event-window commits | Original 16–17 October history preserved; current development grouped into dated feature/fix commits on 21 October |
 | Complete README, architecture and runnable instructions | Present; update alongside final live evidence |
 | Demonstrable prototype / core flow | Simulation lifecycle tested with separate operator/funder accounts |
 | Portaldot testnet deployment info: address and tx hash | Blocked by test-token budget; read-only preflight is not a deployment |
-| Check-in demo link or video of at most 3 minutes | Local working app available; public demo/video remains outstanding |
+| Check-in demo link or video of at most 3 minutes | Public simulated frontend at https://portion-one.vercel.app; video remains outstanding |
 | Final runnable code and testnet information | Code runnable locally; finalize after deployment |
 | Final demo video of at most 3 minutes | Not produced |
 | Pitch deck PDF or public link | Outline exists; deck not produced |

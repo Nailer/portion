@@ -118,3 +118,15 @@ Remaining before live proof: resolve the fixed 500 tPOT deployment budget throug
 - All 79 local tests passed: 46 contracts (including 512 solvency fuzz runs), 12 SDK, 14 web, 7 server. Four opt-in live SDK tests were skipped by the standard local test command. The constructor estimate above was checked separately against the live runtime.
 
 Next: investigate a substantially smaller deployment architecture or the organiser's intended deployment/funding path. Do not remove bond/claim protections or claim testnet deployment to make the budget appear solved. The polished simulation remains available while this is resolved.
+
+## Stage 6 — publish the reviewable prototype
+
+- Preserved the 12 existing commits and grouped previously uncommitted work into feature/fix commits dated 21 October, without backdating or recreating earlier work. Published the public repository at https://github.com/Nailer/portion.
+- Published the frontend at https://portion-one.vercel.app in `pleasants-projects/portion`. New visitors start in labelled simulation; saved choices and explicit `?demo` / `?live` links are respected. The API, indexer and spending jobs are not hosted by this frontend deployment.
+- Added an in-app first-visit guide plus WALKTHROUGH.md with separate funder, operator and judge instructions. Added HOSTING.md documenting scope and publishing steps. The footer now links to Business lab rather than a metrics service absent from the public frontend.
+- The first cloud build exposed optional Polkadot dependencies absent from the npm 11 lockfile. Regenerated it using npm 12's resolver; Vercel's clean `npm ci` and production build then passed. No app dependency versions were changed by this correction.
+- Vercel's GitHub connection was rejected for missing repository access. CLI publishing succeeded, but automatic Git-triggered deployments still need the Vercel GitHub integration granted access to this repository.
+- Web tests: 16 passed, including explicit link/saved/default mode precedence. Project-wide typecheck and local production build passed. Public `/`, `/guide`, `/operator`, `/portfolio`, `/create` and `/business` returned HTTP 200.
+- Completed the full simulation in the public Vercel site: operator created Solar neighbourhood hub with a 50 pUSD bond; a separate funder bought 10 shares for 100; operator balance rose from 1,950 to 2,049; operator deposited 20, allocating 19.90 after fees; funder claimed it and finished at 1,919.90 with zero pending. Saved screenshot evidence outside the repository. No blockchain transactions were submitted.
+
+Remaining: automatic Git deployment connection, funded Portaldot contract deployment and live lifecycle proof, business pilot validation and final submission materials. Publishing the frontend does not resolve these requirements.

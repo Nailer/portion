@@ -34,7 +34,7 @@ to deploy or audit. Terms and photo are stored by the chain's own `TransactionSt
 See [docs/research.md](docs/research.md) for the ecosystem research and why this idea, [docs/architecture.md](docs/architecture.md) for the design,
 and [docs/TESTING.md](docs/TESTING.md) for how to check every claim.
 
-New here? Follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). The public preview is a labelled browser simulation; live Portion contracts are not deployed. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
+New here? Open the [public preview](https://portion-one.vercel.app) and follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). Source: [Nailer/portion](https://github.com/Nailer/portion). The public preview is a labelled browser simulation; live Portion contracts are not deployed. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
 
 ## Run it
 

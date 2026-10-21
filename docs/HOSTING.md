@@ -1,5 +1,9 @@
 # Public preview hosting
 
+Public URL: https://portion-one.vercel.app. Source repository: https://github.com/Nailer/portion. Vercel project: `pleasants-projects/portion`. Production deployment `dpl_32iQqwKSqKWWJSDCfGKmBsvhBrcD` built from source commit `f7d5bc8` on 21 October 2026.
+
+CLI publishing is working. Vercel's attempt to connect the GitHub repository was rejected for missing repository access, so automatic deployments on Git pushes are not enabled. Grant the Vercel GitHub integration access to `Nailer/portion` and reconnect it to enable that workflow. Until then, publish authorised updates with `vercel deploy --prod --scope pleasants-projects`.
+
 The repository root contains `vercel.json`. Vercel installs the workspace with `npm ci`, builds `@portion/web` with `VITE_DEFAULT_MODE=demo`, and serves `apps/web/dist`. The SPA rewrite lets direct links such as `/guide` and `/operator` load correctly.
 
 New visitors start in a labelled browser simulation. A saved mode choice is respected. `?demo` explicitly selects simulation; `?live` explicitly selects the live testnet. Neither changes deployment status. No deployment wallet keys belong in Vercel environment variables, and no blockchain transactions run during the web build.

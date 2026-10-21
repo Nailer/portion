@@ -1,0 +1,34 @@
+{
+  "kind": "public-frontend-preview",
+  "verifiedOn": "2026-10-21",
+  "url": "https://portion-one.vercel.app",
+  "repository": "https://github.com/Nailer/portion",
+  "sourceCommit": "f7d5bc84b7e3a0dc1ac62ce9e5b1baa77c33f72e",
+  "vercelProject": "pleasants-projects/portion",
+  "vercelDeploymentId": "dpl_32iQqwKSqKWWJSDCfGKmBsvhBrcD",
+  "readyState": "READY",
+  "defaultMode": "demo",
+  "gitAutoDeployConnected": false,
+  "apiHosted": false,
+  "portionContractsDeployed": false,
+  "blockchainTransactionsSubmitted": false,
+  "checks": {
+    "webTestsPassed": 16,
+    "workspaceTypecheck": true,
+    "localProductionBuild": true,
+    "vercelCleanInstallAndBuild": true,
+    "publicRoutesReturning200": ["/", "/guide", "/operator", "/portfolio", "/create", "/business"],
+    "publicBrowserLifecycle": {
+      "mode": "simulation",
+      "assetCreated": "Solar neighbourhood hub",
+      "sharesBought": 10,
+      "purchasePUSD": "100",
+      "operatorSaleProceedsPUSD": "99",
+      "revenueDepositPUSD": "20",
+      "claimedPUSD": "19.90",
+      "funderFinalBalancePUSD": "1919.90",
+      "funderPendingPUSD": "0"
+    }
+  },
+  "note": "Frontend hosting and simulation evidence only. This is not a blockchain deployment or a live investment lifecycle."
+}
