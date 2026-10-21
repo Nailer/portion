@@ -26,10 +26,9 @@ export function PassportDialog() {
   return (
     <div className="overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) closePassport(); }}>
       <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="pp-title">
-        <h2 id="pp-title">Open your Passport</h2>
+        <h2 id="pp-title">Your account starts here.</h2>
         <p className="sheet-sub">
-          Portion signs for you with a Passport: one account that works for both Solidity contracts and Portaldot's native modules. You do not
-          need to understand address mapping. {backend?.mode === 'demo' ? 'In this simulation nothing touches a real chain.' : ''}
+          Choose an account to hold your test funds and shares. {backend?.mode === 'demo' ? 'For the walkthrough, you can also use the separate Operator and Funder buttons in the simulation banner.' : 'Guest accounts are stored in this browser. Save the recovery phrase before using them for testnet activity.'}
         </p>
         <div className="choices">
           <button className="choice" disabled={busy} onClick={() => go(createGuest)}>
@@ -38,7 +37,7 @@ export function PassportDialog() {
           </button>
           <button className="choice" disabled={busy} onClick={() => go(connectMetaMask)}>
             <b>Use MetaMask</b>
-            <span>One free signature derives your Passport, so the same wallet always opens the same account on any device.</span>
+            <span>Use a signature to unlock a Portion account linked to your wallet. This does not transfer funds.</span>
           </button>
           <button className="choice" disabled={busy} onClick={() => setShowImport((v) => !v)}>
             <b>Import a recovery phrase</b>

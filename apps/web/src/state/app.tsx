@@ -34,6 +34,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string>();
   const [tick, setTick] = useState(0);
 
+  useEffect(() => { localStorage.setItem('portion.demo', demo ? '1' : '0'); }, [demo]);
+
   useEffect(() => {
     let dead = false;
     let cleanup: (() => void) | undefined;

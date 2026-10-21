@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { CATEGORIES, parseUnits, type ListingView } from '@portion/sdk';
 import { useApp } from '../state/app';
 import { usePassport } from '../state/passport';
@@ -9,6 +9,8 @@ import { Health } from '../components/Health';
 import { Crumb, Empty, Spinner, useAsync } from '../components/ui';
 import { ago, cadenceLabel, economics, pot, span, usd } from '../lib/format';
 import type { ActivityRow } from '../lib/backend';
+
+const safeAmount = (value: string) => { try { const n = parseUnits(value,6); return n > 0n ? n : 0n; } catch { return 0n; } };
 
 function RevenueChart({ rows }: { rows: { ts: number; amount: bigint; kind: 'revenue' | 'slash' }[] }) {
   if (!rows.length) return <p className="note">No revenue has been paid in yet.</p>;
@@ -55,7 +57,11 @@ export function ListingPage() {
   const { backend, tick } = useApp();
   const { passport, balances } = usePassport();
   const { act, openPassport } = useRunner();
-  const [shares, setShares] = useState(10);
+  const [searchParams] = useSearchParams();
+  const [shares, setShares] = useState(() => {
+    const requested = Number(searchParams.get('shares') ?? 10);
+    return Number.isSafeInteger(requested) && requested > 0 ? requested : 10;
+  });
   const [tab, setTab] = useState<'buy' | 'trade' | 'mine'>('buy');
   const [dexIn, setDexIn] = useState('20');
   const [sellN, setSellN] = useState('1');
@@ -73,7 +79,7 @@ export function ListingPage() {
   const { data: activity } = useAsync(() => backend!.activity({ listing: id, limit: 12 }), [id, tick]);
   const { data: pool } = useAsync(async () => (l ? backend!.pool(l) : null), [l?.id, tick]);
   const { data: spare } = useAsync(async () => (l && passport ? backend!.shareBalance(l.assetId, passport.address) : 0n), [l?.id, passport?.address, tick]);
-  const dexInUnits = Number(dexIn) > 0 ? parseUnits(dexIn, 6) : 0n;
+  const dexInUnits = safeAmount(dexIn);
   const { data: buyQuote } = useAsync(async () => (l && pool && dexInUnits > 0n ? backend!.quote(l, 'buy', dexInUnits) : null), [l?.id, pool?.shares, pool?.pusd, dexIn]);
   const { data: sellQuote } = useAsync(async () => (l && pool && Number(sellN) > 0 ? backend!.quote(l, 'sell', BigInt(Math.floor(Number(sellN)))) : null), [l?.id, pool?.shares, pool?.pusd, sellN]);
   const { data: positions } = useAsync(async () => (passport ? backend!.positions(passport.address) : []), [passport?.address, tick]);
@@ -108,9 +114,9 @@ export function ListingPage() {
 
           <div className="facts">
             <div className="fact"><small>Price per share</small><b>{usd(l.vault.salePrice)}</b></div>
-            <div className="fact"><small>Whole thing valued at</small><b>{usd(BigInt(Math.round(e.raise * 1e6)), 0)}</b></div>
+            <div className="fact"><small>Total share price reference</small><b>{usd(BigInt(Math.round(e.raise * 1e6)), 0)}</b></div>
             <div className="fact"><small>Promised minimum</small><b>{usd(l.minPerPeriod, 0)} {cadenceLabel(l.cadence)}</b></div>
-            <div className="fact"><small>Yield at that minimum</small><b>{(e.apyAtFloor * 100).toFixed(0)}% a year</b></div>
+            <div className="fact"><small>Fee on deposited revenue</small><b>{(rules?.revenueFeeBps ?? 50) / 100}%</b></div>
             <div className="fact"><small>Paid so far</small><b>{usd(l.vault.totalRevenue)}</b></div>
             <div className="fact"><small>Operator bond</small><b>{usd(l.vault.bond)}</b></div>
           </div>
@@ -129,7 +135,7 @@ export function ListingPage() {
           </section>
 
           <section className="block">
-            <h2>Proof it exists</h2>
+            <h2>Onchain listing checks</h2>
             <div className="proof">
               <div className={`proof-row ${docMeta ? '' : 'wait'}`}>
                 <span className="tick">{docMeta ? '✓' : '…'}</span>
@@ -177,24 +183,25 @@ export function ListingPage() {
 
           {isOperator && (
             <section className="block">
-              <h2>You run this listing</h2>
+              <h2>You run this listing</h2><p className="notice" style={{marginBottom:20}}>Manage all your assets and payments in the <Link to="/operator">operator workspace →</Link></p>
               <div className="two">
                 <div className="field">
                   <label htmlFor="dep">Pay revenue in (pUSD)</label>
                   <div className="input-affix"><input id="dep" type="number" min="0" step="any" value={depositAmt} onChange={(ev) => setDepositAmt(ev.target.value)} /><span>pUSD</span></div>
                   <p className="hint">At least {usd(l.minPerPeriod, 0)} resets the clock. Holders can claim immediately.</p>
-                  <button className="btn primary sm" style={{ marginTop: 10 }} disabled={!depositAmt || Number(depositAmt) <= 0} onClick={() => act({ kind: 'deposit', id, amount: parseUnits(depositAmt, 6) })}>Pay in revenue</button>
+                  <button className="btn primary sm" style={{ marginTop: 10 }} disabled={safeAmount(depositAmt) === 0n} onClick={() => act({ kind: 'deposit', id, amount: safeAmount(depositAmt) })}>Pay in revenue</button>
                 </div>
                 <div className="field">
                   <label htmlFor="bond">Top up the bond (pUSD)</label>
                   <div className="input-affix"><input id="bond" type="number" min="0" step="any" value={topUpAmt} onChange={(ev) => setTopUpAmt(ev.target.value)} /><span>pUSD</span></div>
                   <p className="hint">Re-arms accountability after a slash.</p>
-                  <button className="btn ghost sm" style={{ marginTop: 10 }} disabled={!topUpAmt || Number(topUpAmt) <= 0} onClick={() => act({ kind: 'topUp', id, amount: parseUnits(topUpAmt, 6) })}>Top up</button>
+                  <button className="btn ghost sm" style={{ marginTop: 10 }} disabled={safeAmount(topUpAmt) === 0n || l.health === 'WoundDown'} onClick={() => act({ kind: 'topUp', id, amount: safeAmount(topUpAmt) })}>Top up</button>
                 </div>
               </div>
+              <p className="notice" style={{ margin: '16px 0' }}>Closing is blocked while any earning shares remain staked. An overdue bond must be settled first. Unstaking returns shares, not the money paid to buy them.</p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {l.saleOpen && <button className="btn ghost sm" onClick={() => act({ kind: 'operator', fn: 'closeSale', id })}>Close the sale</button>}
-                {l.health !== 'WoundDown' && <button className="btn ghost sm" onClick={() => act({ kind: 'operator', fn: 'windDown', id })}>Wind the listing down</button>}
+                {l.health !== 'WoundDown' && <button className="btn ghost sm" disabled={l.vault.totalStaked > 0n || (l.health === 'Defaulted' && l.vault.bond > 0n)} onClick={() => act({ kind: 'operator', fn: 'windDown', id })}>Wind the listing down</button>}
                 {l.health === 'WoundDown' && l.vault.bond > 0n && <button className="btn ghost sm" onClick={() => act({ kind: 'operator', fn: 'withdrawBond', id })}>Withdraw the bond</button>}
               </div>
             </section>
@@ -223,12 +230,12 @@ export function ListingPage() {
             <>
               <div className="stepper">
                 <button aria-label="Fewer shares" onClick={() => setShares((s) => Math.max(1, s - 1))}>−</button>
-                <input type="number" aria-label="Number of shares" min={1} max={l.vault.forSale} value={shares} onChange={(ev) => setShares(Math.max(1, Math.min(l.vault.forSale, Number(ev.target.value) || 1)))} />
+                <input type="number" aria-label="Number of shares" min={1} max={l.vault.forSale} value={shares} onChange={(ev) => setShares(Math.max(1, Math.min(l.vault.forSale, Math.floor(Number(ev.target.value)) || 1)))} />
                 <button aria-label="More shares" onClick={() => setShares((s) => Math.min(l.vault.forSale, s + 1))}>+</button>
               </div>
-              <div className="sum-line"><span>Earns at least</span><b>{usd(BigInt(Math.round(shares * e.perShareFloor * 1e6)))} {cadenceLabel(l.cadence)}</b></div>
-              <div className="sum-line"><span>Portion fee ({(rules?.saleFeeBps ?? 100) / 100}%)</span><b>{usd(fee)}</b></div>
-              <div className="total"><span>You pay</span><b>{usd(cost)}</b></div>
+              <div className="sum-line"><span>If all shares are staked</span><b>{usd(l.minPerPeriod * BigInt(10000 - (rules?.revenueFeeBps ?? 50)) / 10000n * BigInt(shares) / BigInt(l.totalShares))} {cadenceLabel(l.cadence)}</b></div>
+              <div className="sum-line"><span>Included Portion fee ({(rules?.saleFeeBps ?? 100) / 100}%)</span><b>{usd(fee)}</b></div>
+              <div className="total"><span>You pay</span><b>{usd(cost)}</b></div><p className="hint" style={{fontSize:11,color:'var(--ink-3)',lineHeight:1.8}}>The payment illustration assumes the stated deposit and every share staked. Actual allocations use the shares staked when money arrives. Income and principal repayment are not guaranteed.</p>
               {passport ? (
                 <>
                   <button className="btn primary" onClick={() => act({ kind: 'buy', id, shares })}>Buy {shares} share{shares === 1 ? '' : 's'}</button>
@@ -269,7 +276,7 @@ export function ListingPage() {
                         <div className="field" style={{ marginBottom: 0 }}><label htmlFor="sp">pUSD</label><input id="sp" type="number" min="0" step="any" value={seedPusd || String(Number(seedShares) * e.price)} onChange={(ev) => setSeedPusd(ev.target.value)} /></div>
                       </div>
                       <p className="hint" style={{ color: 'var(--ink-3)', fontSize: 13 }}>Opening price: {usd(BigInt(Math.round((Number(seedPusd || Number(seedShares) * e.price) / Math.max(1, Number(seedShares))) * 1e6)))} per share. You need this many unstaked shares in your Passport.</p>
-                      <button className="btn primary" onClick={() => act({ kind: 'dexSeed', id, shares: Math.floor(Number(seedShares)), pusd: parseUnits(String(seedPusd || Number(seedShares) * e.price), 6) })}>Open the market</button>
+                      <button className="btn primary" onClick={() => act({ kind: 'dexSeed', id, shares: Math.floor(Number(seedShares)), pusd: safeAmount(String(seedPusd || Number(seedShares) * e.price)) })}>Open the market</button>
                     </>
                   )}
                 </>

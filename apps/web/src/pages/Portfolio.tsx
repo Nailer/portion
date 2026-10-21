@@ -3,103 +3,46 @@ import { useApp } from '../state/app';
 import { usePassport } from '../state/passport';
 import { useRunner } from '../state/runner';
 import { Health } from '../components/Health';
-import { Empty, Spinner, useAsync } from '../components/ui';
-import { ago, cadenceLabel, economics, pot, usd } from '../lib/format';
+import { Spinner, useAsync } from '../components/ui';
+import { ago, cadenceLabel, pot, usd } from '../lib/format';
 
 export function Portfolio() {
-  const { backend, tick } = useApp();
-  const { passport, balances } = usePassport();
-  const { act, openPassport } = useRunner();
-  const { data: listings } = useAsync(() => backend!.listings(), [backend, tick]);
-  const { data: positions, loading } = useAsync(async () => (passport ? backend!.positions(passport.address) : []), [passport?.address, backend, tick]);
-  const { data: activity } = useAsync(async () => (passport ? backend!.activity({ actor: passport.h160.toLowerCase(), limit: 12 }) : []), [passport?.address, tick]);
-  const { data: loose } = useAsync(async () => {
-    if (!passport || !listings) return [];
-    const rows = await Promise.all(listings.map(async (l) => ({ l, bal: await backend!.shareBalance(l.assetId, passport.address) })));
-    return rows.filter((r) => r.bal > 0n);
-  }, [passport?.address, listings, tick]);
-
-  if (!passport) {
-    return (
-      <Empty title="Open a Passport to see what you own" action={<button className="btn primary" onClick={openPassport}>Open a Passport</button>}>
-        Your Passport holds your shares, your pUSD and your claim on every listing you have bought into.
-      </Empty>
-    );
-  }
-  if (loading && !positions) return <div className="empty"><Spinner /></div>;
-
-  const byId = new Map((listings ?? []).map((l) => [l.id, l]));
-  const rows = (positions ?? []).filter((p) => byId.has(p.id));
-  const value = rows.reduce((a, p) => a + BigInt(p.staked) * byId.get(p.id)!.vault.salePrice, 0n);
-  const pending = rows.reduce((a, p) => a + p.pending, 0n);
-  const claimable = rows.filter((p) => p.pending > 0n).map((p) => p.id);
-  const running = (listings ?? []).filter((l) => l.operator.toLowerCase() === passport.h160.toLowerCase());
+  const { backend, tick, refresh } = useApp();
+  const { passport, balances, demoRole } = usePassport();
+  const { act, openPassport, busy } = useRunner();
+  const { data, error, loading } = useAsync(async () => {
+    if (!passport) return null;
+    const address = passport.address;
+    const [listings, positions, activity] = await Promise.all([backend!.listings(), backend!.positions(address), backend!.activity({ actor: passport.h160.toLowerCase(), limit: 20 })]);
+    const loose = (await Promise.all(listings.map(async l => ({ l, balance: await backend!.shareBalance(l.assetId, address) })))).filter(r => r.balance > 0n);
+    return { address, listings, positions, activity, loose };
+  }, [passport?.address, backend, tick]);
+  const current = data?.address === passport?.address ? data : null;
+  const byId = new Map((current?.listings ?? []).map(l => [l.id,l]));
+  const rows = (current?.positions ?? []).filter(p=>byId.has(p.id));
+  const value = rows.reduce((n,p)=>n + BigInt(p.staked) * byId.get(p.id)!.vault.salePrice,0n);
+  const pending = rows.reduce((n,p)=>n+p.pending,0n);
+  const claimable = rows.filter(p=>p.pending>0n).map(p=>p.id);
+  const running = (current?.listings ?? []).filter(l=>l.operator.toLowerCase()===passport?.h160.toLowerCase());
   const now = backend!.now();
-
-  return (
-    <div>
-      <h1 className="page-title">Your portfolio</h1>
-      <div className="stat-strip">
-        <div className="stat"><small>Shares, at today's sale price</small><b>{usd(value)}</b></div>
-        <div className="stat"><small>Revenue waiting for you</small><b>{usd(pending)}</b></div>
-        <div className="stat"><small>Cash in your Passport</small><b>{balances ? usd(balances.pusd) : '…'}</b><small>{balances ? pot(balances.pot, 2) : ''}</small></div>
-      </div>
-
-      <div className="section-head"><h2>What you own</h2>{claimable.length > 0 && <button className="btn primary sm" onClick={() => act({ kind: 'claim', ids: claimable })}>Claim all {usd(pending)} in one go</button>}</div>
-      {rows.length === 0 ? (
-        <Empty title="You do not own any shares yet" action={<Link className="btn primary" to="/">Browse the market</Link>}>Buy a slice of something that earns and it will show up here with the revenue it has paid you.</Empty>
-      ) : (
-        <table className="table">
-          <thead><tr><th>Listing</th><th className="num">Shares</th><th className="num">Waiting</th><th>Operator record</th><th /></tr></thead>
-          <tbody>
-            {rows.map((p) => {
-              const l = byId.get(p.id)!;
-              const e = economics(l);
-              return (
-                <tr key={p.id}>
-                  <td><Link to={`/listing/${l.id}`}><b>{l.name}</b></Link><br /><small style={{ color: 'var(--ink-3)' }}>pays {cadenceLabel(l.cadence)} · {(e.apyAtFloor * 100).toFixed(0)}% a year at the minimum</small></td>
-                  <td className="num">{p.staked.toLocaleString()}</td>
-                  <td className="num">{usd(p.pending)}</td>
-                  <td style={{ minWidth: 160 }}><Health l={l} compact /></td>
-                  <td className="num"><button className="btn ghost sm" disabled={p.pending === 0n} onClick={() => act({ kind: 'claim', ids: [p.id] })}>Claim</button></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
-
-      {(loose?.length ?? 0) > 0 && (
-        <>
-          <div className="section-head"><h2>Shares outside the vault</h2><p>Shares you hold but are not earning yet, for example ones bought on the native DEX. Stake them to start earning.</p></div>
-          <table className="table"><tbody>
-            {loose!.map(({ l, bal }) => (
-              <tr key={l.id}><td><b>{l.name}</b></td><td className="num">{bal.toString()} shares</td><td className="num"><button className="btn primary sm" onClick={() => act({ kind: 'stake', id: l.id, amount: Number(bal) })}>Stake to earn</button></td></tr>
-            ))}
-          </tbody></table>
-        </>
-      )}
-
-      {running.length > 0 && (
-        <>
-          <div className="section-head"><h2>Listings you run</h2></div>
-          <table className="table"><tbody>
-            {running.map((l) => (
-              <tr key={l.id}>
-                <td><Link to={`/listing/${l.id}`}><b>{l.name}</b></Link><br /><small style={{ color: 'var(--ink-3)' }}>bond {usd(l.vault.bond)} · paid so far {usd(l.vault.totalRevenue)}</small></td>
-                <td style={{ minWidth: 180 }}><Health l={l} /></td>
-                <td className="num"><Link className="btn ghost sm" to={`/listing/${l.id}`}>Manage</Link></td>
-              </tr>
-            ))}
-          </tbody></table>
-        </>
-      )}
-
-      <div className="section-head"><h2>Recent activity</h2></div>
-      <ul className="activity">
-        {(activity ?? []).map((a) => <li key={a.id}><span>{a.kind.replace(/([A-Z])/g, ' $1').trim()}{a.listingId !== null ? ` · ${byId.get(a.listingId)?.name ?? `listing #${a.listingId}`}` : ''}</span><time>{ago(a.ts, now)}</time></li>)}
-        {activity && !activity.length && <li><span>Nothing yet.</span></li>}
-      </ul>
-    </div>
-  );
+  return <div className="workspace portfolio-workspace">
+    <div className="workspace-topline"><span className="eyebrow"><i className="live-indicator"/>{backend!.mode === 'demo' ? 'SIMULATED' : 'TESTNET'} FUNDER WORKSPACE</span><button className="link-btn" onClick={refresh}>Refresh data ↻</button></div>
+    <header className="workspace-heading"><div><h1>Your portions.<br/><span>Your perspective.</span></h1><p>Follow your shares, see deposited income, and claim what’s ready.</p></div><Link className="btn ghost" to="/">Explore more assets <span>↗</span></Link></header>
+    {!passport ? <div className="workspace-empty"><div className="empty-orbit" aria-hidden="true">◔</div><h2>A little ownership starts here.</h2><p>Connect your wallet to see your shares and deposited revenue.</p><button className="btn primary" onClick={openPassport}>Connect wallet</button></div> : <>
+      {backend!.mode === 'demo' && demoRole === 'operator' && <div className="workspace-info"><span>You’re using the demo operator. Switch to Funder above to view that account’s shares and claims.</span><Link to="/operator">Manage your operation →</Link></div>}
+      <section className="workspace-stats" aria-label="Portfolio overview"><div><span>Reference value of staked shares</span><b>{usd(value)}</b><small>At listing sale prices · not a resale quote</small></div><div><span>Assets in your portfolio</span><b>{String(rows.length).padStart(2,'0')}</b><small>{rows.reduce((n,p)=>n+p.staked,0).toLocaleString()} staked shares in total</small></div><div><span>Available test balance</span><b>{balances ? usd(balances.pusd) : '—'}</b><small>{balances ? pot(balances.pot,2) : 'Reading your wallet'}</small></div><div className="stat-dark"><span>Income ready to claim</span><b>{usd(pending)}</b><button className="stat-claim" disabled={!claimable.length || busy} onClick={()=>act({kind:'claim',ids:claimable})}>{claimable.length ? 'Review and claim all ↗' : 'Waiting for deposits'}</button></div></section>
+      {loading && !current && <div className="workspace-empty"><Spinner label="Loading your portfolio"/></div>}
+      {error && <div className="workspace-info" role="alert"><p>We couldn’t read your portfolio. {error.message}</p><button className="btn ghost sm" onClick={refresh}>Try again</button></div>}
+      {!loading && current && rows.length === 0 && <div className="workspace-empty"><div className="empty-orbit" aria-hidden="true">◔</div><h2>Choose your first portion.</h2><p>When you buy shares, they appear here. Income becomes claimable after a deposit; previous deposits belong to the people staked at that time.</p><Link className="btn primary" to="/">Find an asset <span>↗</span></Link></div>}
+      {!!rows.length && <><div className="workspace-section-head"><div><div className="eyebrow">THE THINGS YOU’RE PART OF</div><h2>Your earning shares.</h2></div><span className="record-label">{rows.length} ASSETS</span></div><div className="position-grid">{rows.map(p=>{
+        const l = byId.get(p.id)!;
+        const pct = l.vault.totalStaked > 0n ? Number(BigInt(p.staked)*10000n/l.vault.totalStaked)/100 : 0;
+        return <article className="position-card" key={p.id}><div className="position-cover"><img src={backend!.docUrl(l.coverHash)} alt=""/><Health l={l} compact/></div><div className="position-body"><span className="eyebrow">PORTION / {String(l.id+1).padStart(3,'0')}</span><Link to={`/listing/${l.id}`}><h3>{l.name}</h3></Link><div className="position-numbers"><div><small>Shares staked</small><b>{p.staked.toLocaleString()}</b></div><div><small>Ready to claim</small><b>{usd(p.pending)}</b></div></div><div className="position-pool"><span>Your share of the current earning pool</span><b>{pct}%</b><div className="funded"><i style={{width:`${pct}%`}}/></div></div><div className="position-footer"><span>Scheduled {cadenceLabel(l.cadence)}</span><button className="btn primary sm" disabled={p.pending===0n || busy} onClick={()=>act({kind:'claim',ids:[p.id]})}>Claim income ↗</button></div><Link className="position-details" to={`/listing/${l.id}`}>View asset and manage shares →</Link></div></article>;
+      })}</div></>}
+      {!!current?.loose.length && <section className="workspace-activity"><div className="workspace-section-head"><div><div className="eyebrow">OUTSIDE THE EARNING POOL</div><h2>Shares in your wallet.</h2></div></div><p className="workspace-caption">These shares are not staked. Staking makes them eligible for future deposits. It does not recover missed deposits or repay the purchase price.</p><ul>{current.loose.map(({l,balance})=><li key={l.id}><span className="activity-icon">◔</span><div><Link to={`/listing/${l.id}`}><b>{l.name}</b></Link><span>{balance.toString()} unstaked shares</span></div><button className="btn ghost sm" disabled={busy || l.health === 'WoundDown'} onClick={()=>act({kind:'stake',id:l.id,amount:Number(balance)})}>{l.health === 'WoundDown' ? 'Listing closed' : 'Stake shares ↗'}</button></li>)}</ul></section>}
+      {!!running.length && <div className="workspace-info"><span>You also operate {running.length} {running.length===1?'asset':'assets'}. Manage deposits, deadlines and funding in the operator workspace.</span><Link className="btn dark sm" to="/operator">Open workspace →</Link></div>}
+      {current && <section className="workspace-activity"><div className="workspace-section-head"><div><div className="eyebrow">FOLLOW THE RECORD</div><h2>Your recent activity.</h2></div><span className="record-label">LATEST AVAILABLE RECORDS</span></div>{current.activity.length ? <ul>{current.activity.map(a=><li key={a.id}><span className="activity-icon">{a.kind==='Claimed'?'↙':'↗'}</span><div><b>{a.kind==='Bought'?'Shares purchased':a.kind==='Claimed'?'Income claimed':a.kind.replace(/([A-Z])/g,' $1').trim()}</b><span>{a.listingId !== null ? byId.get(a.listingId)?.name ?? `Asset ${a.listingId}` : 'Account activity'}</span></div><strong>{a.data.cost ? usd(a.data.cost) : a.data.net ? usd(a.data.net) : a.data.amount && !['Staked','Unstaked'].includes(a.kind) ? usd(a.data.amount) : '—'}</strong><time>{ago(a.ts,now)}</time></li>)}</ul> : <p className="workspace-caption">No recent records available. Testnet history depends on the indexer being available.</p>}</section>}
+      <p className="workspace-disclosure">Distributions depend on operator payments. Staked shares have no guaranteed resale value, and the contract does not automatically return purchase principal. All current activity uses test tokens.</p>
+    </>}
+  </div>;
 }

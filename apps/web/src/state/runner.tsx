@@ -10,6 +10,7 @@ import { explorerBlock, pot, usd } from '../lib/format';
 type Phase = 'preparing' | 'confirm' | 'running' | 'result' | 'error';
 
 interface Runner {
+  busy: boolean;
   act(intent: Intent, opts?: { onDone?: (r: ActionResult) => void }): void;
   /** Same confirm → run → result flow for actions that are not Portion intents (pools, teleport). */
   actPrepared(prepare: () => Promise<Prepared>, opts?: { onDone?: (r: ActionResult) => void }): void;
@@ -67,7 +68,9 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
   const run = async () => {
     if (!prepared) return;
     setPhase('running'); setStage('signing'); setDetail(undefined);
-    const r = await prepared.run((s, d) => { setStage(s); setDetail(d); });
+    let r: ActionResult;
+    try { r = await prepared.run((s, d) => { setStage(s); setDetail(d); }); }
+    catch (e) { r = { ok: false, error: (e as Error).message || 'The transaction could not be completed.' }; }
     setResult(r);
     setPhase(r.ok ? 'result' : 'error');
     if (!r.ok) setError({ message: r.error ?? 'The transaction failed.' });
@@ -90,7 +93,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
   }, [phase, close]);
 
   return (
-    <Ctx.Provider value={{ act, actPrepared, openPassport: () => setPassportOpen(true), passportOpen, closePassport: () => setPassportOpen(false) }}>
+    <Ctx.Provider value={{ busy: phase !== null, act, actPrepared, openPassport: () => setPassportOpen(true), passportOpen, closePassport: () => setPassportOpen(false) }}>
       {children}
       {phase && (
         <div className="overlay" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget && phase !== 'running') close(); }}>
@@ -101,9 +104,9 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
               <>
                 <h2 id="sheet-title">{prepared.title}</h2>
                 <p className="sheet-sub">
-                  One signature from your Passport. {prepared.steps.length > 1 ? 'These steps run as one unit: if any step fails, none of them happen.' : ''}
+                  {backend?.mode === 'demo' ? 'Simulation only. No real funds move.' : prepared.steps.some(s => s.lane === 'storage') ? 'Documents are stored first, then the listing is created in an atomic batch. The separate transactions each require a signature.' : 'Review the transaction before signing with your Passport.'}
                 </p>
-                <StepList steps={prepared.steps} state={phase === 'running' ? 'running' : 'idle'} />
+                <details className="transaction-details"><summary>See what happens in this transaction ({prepared.steps.length} {prepared.steps.length === 1 ? 'step' : 'steps'})</summary><StepList steps={prepared.steps} state={phase === 'running' ? 'running' : 'idle'} /></details>
                 {prepared.cost && <p className="sheet-cost">{prepared.cost}</p>}
                 <div className="sheet-actions">
                   {phase === 'confirm' ? (
@@ -122,7 +125,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
               <>
                 <h2 id="sheet-title">Done</h2>
                 <p className="sheet-sub">{prepared.title} went through{result.blockNumber ? ` in block ${result.blockNumber.toLocaleString()}` : ''}.</p>
-                <StepList steps={prepared.steps} state="done" />
+                <details className="transaction-details"><summary>View completed steps</summary><StepList steps={prepared.steps} state="done" /></details>
                 <ul className="tx-links">
                   {(result.txs ?? (result.txHash ? [{ label: 'Transaction', hash: result.txHash, block: result.blockNumber }] : [])).map((t) => (
                     <li key={t.hash}>

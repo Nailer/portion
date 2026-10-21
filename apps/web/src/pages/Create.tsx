@@ -1,11 +1,13 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { CADENCES, CATEGORIES, generateCover } from '@portion/sdk';
+import { CADENCES, CATEGORIES, generateCover, parseUnits } from '@portion/sdk';
 import { useApp } from '../state/app';
 import { usePassport } from '../state/passport';
 import { useRunner } from '../state/runner';
 import { StepList } from '../components/StepList';
 import { compressImage } from '../lib/image';
 import { tokenizeSteps } from '../lib/steps';
+import { DEMO_SOLAR } from '../lib/operator';
 import { cadenceLabel, usd } from '../lib/format';
 
 interface Photo { bytes: Uint8Array; mime: string; url: string }
@@ -15,6 +17,7 @@ export function Create() {
   const { passport } = usePassport();
   const { act, openPassport } = useRunner();
 
+  const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [summary, setSummary] = useState('');
   const [category, setCategory] = useState(0);
@@ -36,18 +39,24 @@ export function Create() {
   useEffect(() => { setBond((b) => (b === '' || Number(b) < minBond ? (Math.ceil(minBond * 100) / 100).toString() : b)); }, [minBond]);
 
   const emblem = useMemo(() => 'data:image/svg+xml;utf8,' + encodeURIComponent(generateCover(name || 'New listing', category)), [name, category]);
-  const apy = raise > 0 ? ((Number(minPer) * 0.995 * ((365 * 86_400) / cadence)) / (totalShares * Number(price))) : 0;
+  const safeUnits = (v: string) => { try { return parseUnits(v, 6); } catch { return 0n; } };
+  const netRaise = safeUnits(price) * BigInt(forSale) * BigInt(10000 - (rules?.saleFeeBps ?? 100)) / 10000n;
+  useEffect(() => () => { if (photo?.url) URL.revokeObjectURL(photo.url); }, [photo?.url]);
 
   const errors: Record<string, string> = {};
   if (!name.trim()) errors.name = 'Give it a name people will recognise.';
-  else if (name.length > 64) errors.name = 'Keep the name under 64 characters.';
-  if (summary.length > 280) errors.summary = 'Keep the summary under 280 characters.';
+  else if (new TextEncoder().encode(name.trim()).length > 64) errors.name = 'Keep the name under 64 bytes (shorter for accented or non-Latin text).';
+  if (new TextEncoder().encode(summary.trim()).length > 280) errors.summary = 'Keep the summary under 280 bytes.';
   if (!terms.trim()) errors.terms = 'Explain how you earn and when you will pay.';
-  if (!(Number(price) > 0)) errors.price = 'Set a price per share.';
-  if (!(Number(minPer) > 0)) errors.minPer = 'Promise a minimum payment per period.';
+  if (safeUnits(price) <= 0n) errors.price = 'Set a positive price with at most six decimal places.';
+  if (safeUnits(minPer) <= 0n) errors.minPer = 'Set a positive minimum with at most six decimal places.';
   if (cadence < (rules?.minCadence ?? 60)) errors.cadence = 'That period is too short.';
-  if (Number(bond) < minBond) errors.bond = `The bond must be at least ${usd(BigInt(Math.ceil(minBond * 1e6)))} (${(rules?.minBondBps ?? 500) / 100}% of the raise).`;
+  if (safeUnits(bond) <= 0n || Number(bond) < minBond) errors.bond = `The bond must be at least ${usd(BigInt(Math.ceil(minBond * 1e6)))} (${(rules?.minBondBps ?? 500) / 100}% of the raise).`;
+  if (!Number.isSafeInteger(totalShares) || totalShares < 10 || totalShares > 1000000) errors.shares = 'Use a whole number between 10 and 1,000,000.';
   const valid = Object.keys(errors).length === 0;
+  const groups = [['name','summary','terms'],['shares','price'],['cadence','minPer','bond']];
+  const next = () => { setTouched(true); if (!(groups[step] ?? []).some(k => errors[k])) {setStep(Math.min(3,step+1));setTouched(false);} };
+  const useExample = () => { setName(DEMO_SOLAR.name);setSummary(DEMO_SOLAR.summary);setTerms(DEMO_SOLAR.terms);setCategory(0);setTotalShares(100);setPercentForSale(100);setPrice('10');setCadence(604800);setMinPer('20');setBond('50');setTouched(false); };
 
   const onPhoto = async (f?: File | null) => {
     setPhotoErr(undefined);
@@ -72,16 +81,20 @@ export function Create() {
 
   return (
     <div className="create">
-      <h1>Tokenize something that earns</h1>
-      <p className="page-lede">Describe it, set the terms, and publish. One signature mints the deed, splits it into shares, stores the paperwork on-chain and opens the sale.</p>
+      <Link className="crumb" to="/operator">← Your operator workspace</Link>
+      <div className="eyebrow" style={{marginTop:28}}>CREATE AN ASSET LISTING</div>
+      <h1>Put your next asset<br/><span>in motion.</span></h1>
+      <p className="page-lede">Describe the business, choose your funding terms, and set a payment schedule. Review everything before publishing.</p>
+      {backend?.mode === 'demo' && <button className="link-btn create-example" type="button" onClick={useExample}>Fill with the demo solar example ↗</button>}
+      <nav className="create-progress" aria-label="Listing creation steps">{['Your asset','Funding','Payments','Review'].map((label,i)=><button key={label} type="button" disabled={i>step} aria-current={step===i?'step':undefined} onClick={()=>{setStep(i);setTouched(false);}}><span>{i<step?'✓':String(i+1).padStart(2,'0')}</span>{label}</button>)}</nav>
 
       <div className="create-grid" style={{ marginTop: 32 }}>
-        <form onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
-          <fieldset className="fieldset">
+        <form onSubmit={(e) => { e.preventDefault(); step < 3 ? next() : submit(); }} noValidate>
+          <fieldset className="fieldset" hidden={step !== 0}>
             <legend>What is it?</legend>
             <div className="field">
               <label htmlFor="name">Name</label>
-              <input id="name" type="text" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Yaba solar charging kiosk" />
+              <input id="name" type="text" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder="Neighbourhood solar hub" />
               {show('name') && <p className="err">{show('name')}</p>}
             </div>
             <div className="field">
@@ -110,13 +123,13 @@ export function Create() {
             </div>
           </fieldset>
 
-          <fieldset className="fieldset">
+          <fieldset className="fieldset" hidden={step !== 1}>
             <legend>How much do you want to sell?</legend>
             <div className="two">
               <div className="field">
                 <label htmlFor="shares">Total shares</label>
-                <input id="shares" type="number" min={10} max={1_000_000} value={totalShares} onChange={(e) => setTotalShares(Math.max(10, Math.min(1_000_000, Number(e.target.value) || 10)))} />
-                <p className="hint">Fixed forever once minted.</p>
+                <input id="shares" type="number" min={10} max={1_000_000} value={totalShares} onChange={(e) => setTotalShares(Math.max(10, Math.min(1_000_000, Math.trunc(Number(e.target.value)) || 10)))} />
+                <p className="hint">The native share supply is fixed after issuance.</p>{show('shares') && <p className="err">{show('shares')}</p>}
               </div>
               <div className="field">
                 <label htmlFor="price">Price per share</label>
@@ -131,7 +144,7 @@ export function Create() {
             </div>
           </fieldset>
 
-          <fieldset className="fieldset">
+          <fieldset className="fieldset" hidden={step !== 2}>
             <legend>What are you promising?</legend>
             <div className="two">
               <div className="field">
@@ -151,9 +164,11 @@ export function Create() {
             </div>
           </fieldset>
 
-          <div style={{ marginTop: 28, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn primary" type="submit">{passport ? 'Review and tokenize' : 'Open a Passport to continue'}</button>
-            {touched && !valid && <span className="err" style={{ color: 'var(--tomato)' }}>Fix the highlighted fields first.</span>}
+          {step === 3 && <section className="create-review"><span className="eyebrow">THE LAST LOOK</span><h2>Here’s what you’re publishing.</h2><dl><dt>Asset</dt><dd>{name}</dd><dt>Offered shares</dt><dd>{forSale.toLocaleString()} of {totalShares.toLocaleString()}</dd><dt>Price per share</dt><dd>{usd(safeUnits(price))}</dd><dt>Maximum raise before fees</dt><dd>{usd(safeUnits(price)*BigInt(forSale))}</dd><dt>Estimated proceeds if sold out</dt><dd>{usd(netRaise)}</dd><dt>Deposit schedule</dt><dd>{usd(safeUnits(minPer))} {cadenceLabel(cadence)}</dd><dt>Bond locked separately</dt><dd>{usd(safeUnits(bond))}</dd></dl><p className="notice">The bond uses your existing funds. Customer income is reported by you. Publishing does not verify physical equipment or establish funders’ legal rights. Define those rights in an enforceable agreement before accepting real money.</p><p className="terms">{terms}</p></section>}
+          <div className="create-controls">
+            {step>0 && <button className="btn ghost" type="button" onClick={()=>{setStep(step-1);setTouched(false);}}>← Back</button>}
+            <button className="btn primary" type="submit">{step<3 ? 'Continue →' : passport ? 'Review and publish ↗' : 'Connect wallet to publish'}</button>
+            {touched && !valid && <span className="err" role="alert" style={{ color: 'var(--tomato)' }}>Check the highlighted fields before continuing.</span>}
           </div>
         </form>
 
@@ -163,15 +178,15 @@ export function Create() {
             <div className="body">
               <h3>{name || 'Your listing'}</h3>
               <p style={{ color: 'var(--ink-2)', fontSize: 14 }}>{summary || 'Your one-line summary appears here.'}</p>
-              <div className="sum-line"><span>Price per share</span><b>{usd(BigInt(Math.round(Number(price || 0) * 1e6)))}</b></div>
-              <div className="sum-line"><span>Promise</span><b>{usd(BigInt(Math.round(Number(minPer || 0) * 1e6)), 0)} {cadenceLabel(cadence)}</b></div>
-              <div className="sum-line"><span>Yield at that promise</span><b>{apy > 5 ? 'over 500%' : `${(apy * 100).toFixed(0)}%`} a year</b></div>
+              <div className="sum-line"><span>Price per share</span><b>{usd(safeUnits(price))}</b></div>
+              <div className="sum-line"><span>Promise</span><b>{usd(safeUnits(minPer), 0)} {cadenceLabel(cadence)}</b></div>
+              <div className="sum-line"><span>Offered shares</span><b>{forSale.toLocaleString()}</b></div><div className="sum-line"><span>Estimated proceeds after sale fee</span><b>{usd(netRaise)}</b></div><p className="hint">Preview only. Funding depends on purchases; revenue depends on the operator’s business.</p>
             </div>
           </div>
           <div className="hood">
-            <h2>Under the hood</h2>
+            <details><summary>See the onchain steps</summary><h2>Under the hood</h2>
             <p>Tokenizing runs these calls. The last six form one atomic batch, so a failure anywhere leaves nothing half-done.</p>
-            <StepList steps={tokenizeSteps(totalShares)} atomicFrom={2} />
+            <StepList steps={tokenizeSteps(totalShares)} atomicFrom={2} /></details>
           </div>
         </div>
       </div>

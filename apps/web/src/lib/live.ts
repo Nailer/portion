@@ -23,7 +23,7 @@ export class LiveBackend implements Backend {
     readonly chain: ApiPromise,
     readonly deployment?: Deployment,
   ) {
-    if (deployment) this.client = new PortionClient(chain, deployment);
+    if (deployment?.portion && Number.isSafeInteger(deployment.pusdAssetId) && deployment.deedsCollection !== undefined) this.client = new PortionClient(chain, deployment);
   }
 
   get deployed() {
