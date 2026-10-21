@@ -4,7 +4,7 @@ import type { ApiPromise } from '@polkadot/api';
 import { connect } from '../src/chain';
 import { ReviveContract } from '../src/revive';
 import { ERC20_ABI } from '../src/abi';
-import { assetErc20Address, h160ToFallbackSs58, ss58ToH160 } from '../src/addresses';
+import { assetErc20Address, resolveH160Account, ss58ToH160 } from '../src/addresses';
 
 const live = process.env.LIVE === '1';
 let api: ApiPromise;
@@ -27,10 +27,11 @@ describe.runIf(live)('live testnet', () => {
     expect(ss58ToH160(ss58)).toBe(chain);
   });
 
-  it('fallback account derivation agrees with the runtime API', async () => {
+  it('registered H160 resolves back to its native account', async () => {
     const h = '0xdd62efd46da4acc4b8b2c7e3bf1685b2c9cee167';
     const chain = (await (api.call as any).reviveApi.accountId(h)).toString();
-    expect(h160ToFallbackSs58(h)).toBe(chain);
+    expect(await resolveH160Account(api,h)).toBe(chain);
+    expect(ss58ToH160(chain)).toBe(h);
   });
 
   it('a native asset is readable as an ERC-20 from Solidity-land', async () => {

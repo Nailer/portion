@@ -1,8 +1,8 @@
 import type { ApiPromise } from '@polkadot/api';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import type { DatabaseSync } from 'node:sqlite';
-import { decodeAddress } from '@polkadot/util-crypto';
-import { h160ToFallbackSs58, isH160, nativeFree, submit, ss58ToH160, type Deployment } from '@portion/sdk';
+import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
+import { resolveH160Account, isH160, nativeFree, submit, ss58ToH160, type Deployment } from '@portion/sdk';
 import { config } from './config.js';
 
 export class FaucetError extends Error {
@@ -15,18 +15,21 @@ export class FaucetError extends Error {
 }
 
 /** Accepts either a Substrate address or a MetaMask-style 0x address and returns the account to fund. */
-export function resolveTarget(input: string): { ss58: string; h160: string; viaEvm: boolean } {
+export async function resolveTarget(input: string, api: ApiPromise): Promise<{ ss58: string; h160: string; viaEvm: boolean }> {
   const s = input.trim();
   if (isH160(s)) {
-    const ss58 = h160ToFallbackSs58(s);
+    const ss58 = await resolveH160Account(api,s);
     return { ss58, h160: s.toLowerCase(), viaEvm: true };
   }
+  let canonical: string;
   try {
-    decodeAddress(s);
+    const raw = decodeAddress(s);
+    if (raw.length !== 32) throw new Error('Expected a native account.');
+    canonical = encodeAddress(raw,42);
   } catch {
     throw new FaucetError('That does not look like a Portaldot (SS58) or 0x address.');
   }
-  return { ss58: s, h160: ss58ToH160(s), viaEvm: false };
+  return { ss58: canonical, h160: ss58ToH160(canonical), viaEvm: false };
 }
 
 export class Faucet {
@@ -61,7 +64,7 @@ export class Faucet {
   }
 
   private async doDrip(input: string, ip: string) {
-    const target = resolveTarget(input);
+    const target = await resolveTarget(input,this.api);
     const now = Math.floor(Date.now() / 1000);
 
     const last = this.db.prepare('SELECT ts FROM drips WHERE address = ? ORDER BY ts DESC LIMIT 1').get(target.ss58) as { ts: number } | undefined;

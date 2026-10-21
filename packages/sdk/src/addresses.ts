@@ -1,3 +1,4 @@
+import type { ApiPromise } from '@polkadot/api';
 import { decodeAddress, encodeAddress, keccakAsU8a } from '@polkadot/util-crypto';
 import { hexToU8a, u8aToHex } from '@polkadot/util';
 import { ASSET_PRECOMPILE_PREFIX } from './constants';
@@ -42,4 +43,11 @@ export function assetErc20Address(assetId: number, prefix = ASSET_PRECOMPILE_PRE
 
 export function shortAddr(a: string, head = 6, tail = 4): string {
   return a.length <= head + tail + 1 ? a : `${a.slice(0, head)}…${a.slice(-tail)}`;
+}
+
+/** Resolve an H160 using the chain's registered mapping; fallback padding alone is not enough for mapped accounts. */
+export async function resolveH160Account(api: ApiPromise, h160: string): Promise<string> {
+  if (!isH160(h160)) throw new Error('Invalid H160 address.');
+  const account = await (api.call as any).reviveApi.accountId(h160);
+  return encodeAddress(decodeAddress(account.toString()),42);
 }
