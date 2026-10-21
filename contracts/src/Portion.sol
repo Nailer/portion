@@ -36,6 +36,8 @@ contract Portion {
     error NothingToSlash();
     error StillWindingDown();
     error AlreadyWoundDown();
+    error ActiveStakes();
+    error UnsettledDefault();
     error InsufficientStake();
     error Reentrancy();
 
@@ -200,28 +202,24 @@ contract Portion {
 
         id = _listings.length;
         _idPlusOneByAsset[p.assetId] = id + 1;
-        _listings.push(
-            Listing({
-                operator: msg.sender,
-                payToken: p.payToken,
-                assetId: p.assetId,
-                nftCollection: p.nftCollection,
-                nftItem: p.nftItem,
-                category: p.category,
-                strikes: 0,
-                totalShares: p.totalShares,
-                cadence: p.cadence,
-                createdAt: uint64(block.timestamp),
-                lastDepositAt: uint64(block.timestamp),
-                closedAt: 0,
-                saleOpen: p.sharesForSale > 0,
-                docHash: p.docHash,
-                coverHash: p.coverHash,
-                minPerPeriod: p.minPerPeriod,
-                name: p.name,
-                summary: p.summary
-            })
-        );
+        _listings.push();
+        Listing storage l = _listings[id];
+        l.operator = msg.sender;
+        l.payToken = p.payToken;
+        l.assetId = p.assetId;
+        l.nftCollection = p.nftCollection;
+        l.nftItem = p.nftItem;
+        l.category = p.category;
+        l.totalShares = p.totalShares;
+        l.cadence = p.cadence;
+        l.createdAt = uint64(block.timestamp);
+        l.lastDepositAt = uint64(block.timestamp);
+        l.saleOpen = p.sharesForSale > 0;
+        l.docHash = p.docHash;
+        l.coverHash = p.coverHash;
+        l.minPerPeriod = p.minPerPeriod;
+        l.name = p.name;
+        l.summary = p.summary;
         Vault storage v = _vaults[id];
         v.forSale = p.sharesForSale;
         v.salePrice = p.salePrice;
@@ -276,6 +274,7 @@ contract Portion {
     /// @notice Lock shares you already hold (for example bought on the native DEX) to earn revenue.
     function stake(uint256 id, uint256 amount) external nonReentrant {
         Listing storage l = _get(id);
+        if (l.closedAt != 0) revert AlreadyWoundDown();
         if (amount == 0) revert BadParams();
         _credit(id, msg.sender, amount);
         IERC20(shareToken(l.assetId)).safeTransferFrom(msg.sender, address(this), amount);
@@ -336,6 +335,7 @@ contract Portion {
     function topUpBond(uint256 id, uint256 amount) external nonReentrant {
         Listing storage l = _get(id);
         if (msg.sender != l.operator) revert NotOperator();
+        if (l.closedAt != 0) revert AlreadyWoundDown();
         if (amount == 0) revert BadParams();
         Vault storage v = _vaults[id];
         v.bond += amount;
@@ -369,12 +369,16 @@ contract Portion {
         emit Slashed(id, msg.sender, toHolders, tip, l.strikes);
     }
 
-    /// @notice Operator ends the listing. Holders keep full claim rights; the bond unlocks after two cadences.
+    /// @notice Close only after all earning shares leave the vault and any defaulted bond is settled.
+    /// @dev Unstaking is not repayment of purchase principal. Existing revenue claims remain payable.
+    ///      The remaining bond unlocks after two cadences; new stakes and bond top-ups are then blocked.
     function windDown(uint256 id) external nonReentrant {
         Listing storage l = _get(id);
         if (msg.sender != l.operator) revert NotOperator();
         if (l.closedAt != 0) revert AlreadyWoundDown();
         Vault storage v = _vaults[id];
+        if (v.totalStaked != 0) revert ActiveStakes();
+        if (health(id) == Health.Defaulted && v.bond != 0) revert UnsettledDefault();
         uint256 back = v.forSale;
         l.closedAt = uint64(block.timestamp);
         l.saleOpen = false;

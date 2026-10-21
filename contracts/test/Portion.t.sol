@@ -100,8 +100,25 @@ contract PortionTest is Test {
         (Portion.Listing memory l, Portion.Vault memory v, Portion.Health h) = portion.getListing(id);
         assertEq(l.operator, operator);
         assertEq(l.assetId, ASSET);
+        Portion.CreateParams memory expected = _params();
+        assertEq(l.payToken, expected.payToken);
+        assertEq(l.nftCollection, expected.nftCollection);
+        assertEq(l.nftItem, expected.nftItem);
+        assertEq(l.category, expected.category);
+        assertEq(l.totalShares, expected.totalShares);
+        assertEq(l.cadence, expected.cadence);
+        assertEq(l.minPerPeriod, expected.minPerPeriod);
+        assertEq(l.docHash, expected.docHash);
+        assertEq(l.coverHash, expected.coverHash);
+        assertEq(l.name, expected.name);
+        assertEq(l.summary, expected.summary);
+        assertEq(l.createdAt, block.timestamp);
+        assertEq(l.lastDepositAt, block.timestamp);
+        assertEq(l.closedAt, 0);
+        assertEq(l.strikes, 0);
         assertTrue(l.saleOpen);
         assertEq(v.forSale, FOR_SALE);
+        assertEq(v.salePrice, expected.salePrice);
         assertEq(v.bond, (uint256(FOR_SALE) * PRICE * 500) / 10_000);
         assertEq(uint8(h), uint8(Portion.Health.Healthy));
         (bool found, uint256 got) = portion.idOfAsset(ASSET);
@@ -387,6 +404,9 @@ contract PortionTest is Test {
         vm.expectRevert(Portion.StillWindingDown.selector);
         portion.withdrawBond(id);
 
+        _deposit(operator, id, 100e6);
+        vm.prank(alice);
+        portion.unstake(id, 100);
         vm.prank(operator);
         portion.windDown(id);
         assertEq(uint8(portion.health(id)), uint8(Portion.Health.WoundDown));
@@ -405,10 +425,58 @@ contract PortionTest is Test {
         portion.withdrawBond(id);
         assertEq(pay.balanceOf(operator) - before_, v0.bond);
 
-        // holders can still claim revenue after wind-down
-        _deposit(operator, id, 100e6);
+        // Revenue earned before unstaking remains claimable after wind-down and bond withdrawal.
+        uint256 pending = portion.pending(id, alice);
+        assertGt(pending, 0);
+        uint256 aliceBefore = pay.balanceOf(alice);
         vm.prank(alice);
         portion.claim(id);
+        assertEq(pay.balanceOf(alice) - aliceBefore, pending);
+    }
+
+    function test_windDown_cannotRemoveProtectionFromActiveStakers() public {
+        uint256 id = _list();
+        _buy(alice, id, 100);
+        vm.prank(operator);
+        vm.expectRevert(Portion.ActiveStakes.selector);
+        portion.windDown(id);
+
+        vm.warp(block.timestamp + 2 * CADENCE + 1);
+        vm.prank(operator);
+        vm.expectRevert(Portion.ActiveStakes.selector);
+        portion.windDown(id);
+        // Attempted closure cannot block an otherwise valid slash.
+        portion.slash(id);
+        assertGt(portion.pending(id, alice), 0);
+        vm.prank(operator);
+        vm.expectRevert(Portion.ActiveStakes.selector);
+        portion.windDown(id);
+    }
+
+    function test_windDown_requiresSettlementOfDefaultWithNoStakers() public {
+        uint256 id = _list();
+        vm.warp(block.timestamp + 2 * CADENCE + 1);
+        vm.prank(operator);
+        vm.expectRevert(Portion.UnsettledDefault.selector);
+        portion.windDown(id);
+        portion.slash(id);
+        vm.prank(operator);
+        portion.windDown(id);
+        assertEq(uint8(portion.health(id)), uint8(Portion.Health.WoundDown));
+    }
+
+    function test_closedListing_cannotAcceptNewStakesOrBondTopUps() public {
+        uint256 id = _list();
+        vm.prank(operator);
+        portion.windDown(id);
+        vm.startPrank(operator);
+        shares.approve(address(portion), 1);
+        vm.expectRevert(Portion.AlreadyWoundDown.selector);
+        portion.stake(id, 1);
+        pay.approve(address(portion), 1e6);
+        vm.expectRevert(Portion.AlreadyWoundDown.selector);
+        portion.topUpBond(id, 1e6);
+        vm.stopPrank();
     }
 
     // ───────── views ─────────
