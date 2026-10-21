@@ -22,9 +22,11 @@ Remove `?demo` to use the **live testnet** instead.
 ## 2. Automated tests (no network)
 
 ```bash
-npm run contracts:test      # 43 Foundry tests, including a 512-run solvency fuzz
+npm run contracts:test      # 46 Foundry tests, including a 512-run solvency fuzz
+npm test -w @portion/web    # 14 web regression tests
 npm test -w @portion/sdk    # 12 unit tests (address mapping, ERC-20 addressing, passports, hashing)
 npm run teleport:local      # two local EVM chains + the relayer: both directions, replay and forgery rejected
+npm test -w @portion/server # 4 faucet recipient-safety tests
 npm run typecheck           # scripts, sdk, server and web
 ```
 
@@ -40,7 +42,7 @@ and a native asset answers as an ERC-20 through `ReviveContract.read` (asset 1 �
 Also useful:
 
 ```bash
-npm run deploy:check        # dry-runs every contract deployment and prints the refundable deposit it needs
+npm run deploy:check:core   # read-only core/full budget and runtime snapshot in deployments/preflight.*
 curl localhost:8787/api/network | jq .findings    # live security analysis of the chain
 curl localhost:8787/metrics                       # Prometheus gauges for node operators
 ```
@@ -79,3 +81,12 @@ npm run deploy:bnb
 - The native-module batch (`Nfts`, `NftFractionalization`, `Assets`, Solidity) has been built against the live runtime's metadata and every call signature was read from it,
   but it can only be *executed* once a funded account exists. `npm run e2e` is the test for that.
 - The Teleport relayer has been tested against local EVM chains. Its use of Portaldot's `eth_getLogs` and `eth_sendRawTransaction` is untested until deployment.
+
+
+## Operator and funder walkthrough (Stage 3)
+
+Open http://localhost:5173/operator?demo. Choose **Operator** in the simulation banner. Either use **Create demo solar asset** or **List a new asset → Fill with the demo solar example** and review all four steps. After publishing, open the asset and switch to **Funder**. Buy 10 shares, close the receipt, then switch back to **Operator** and open **Workspace**.
+
+Review and pay 20 pUSD from the workspace. Switch to **Funder → Portfolio**, review a claim for 19.9 pUSD and confirm. Cash should be 1,919.9 after the original 100 pUSD purchase and the claim; pending income should be zero. The operator receives 99 from the sale, pays 20 in revenue and retains a 50 bond in the contract. This is simulated activity only.
+
+Use in-app links while testing: reloading resets the in-memory assets and demo accounts.

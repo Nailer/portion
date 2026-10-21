@@ -12,6 +12,10 @@ Built for the **Portaldot Hacker House 2026**. It targets all four tracks with o
 | **Node Operations & Tooling** | Network console with a decentralization analysis, Pool Studio, permissionless auto-compound keeper, Prometheus metrics |
 | **Multi-Chain & Cross-Chain** | Teleport: pUSD between Portaldot and BNB Chain testnet with a 2-of-3 relayer committee |
 
+## Business direction
+
+Portion aims to become global infrastructure for companies managing funding and payouts for productive assets. The current contract charges 1% of share sales and 0.5% of revenue deposits. Company management plans are a pricing hypothesis, not a feature currently charging customers. The [business plan](docs/BUSINESS.md) records costs, pilot criteria and limits; the app’s Business lab lets you test the arithmetic.
+
 ## The idea in one picture
 
 Portaldot V3 is not just "an EVM chain". Its runtime ships about 70 native modules, and almost nothing uses them. Portion composes them:
@@ -32,7 +36,7 @@ and [docs/TESTING.md](docs/TESTING.md) for how to check every claim.
 
 ## Run it
 
-Requirements: Node 22.13+, and [Foundry](https://getfoundry.sh) only if you want to rebuild or test the contracts.
+Requirements: Node 22.13+ on the 22.x LTS line, Node 24, or Node 26+, and [Foundry](https://getfoundry.sh) only if you want to rebuild or test the contracts.
 
 ```bash
 npm install
@@ -42,12 +46,15 @@ npm run dev            # API on :8787, web on :5173
 - <http://localhost:5173> uses the live Portaldot V3 testnet.
 - <http://localhost:5173/?demo> is a clearly labelled simulation that follows the contract's rules, for when the testnet is unreachable.
 
+The API starts with on-chain spending jobs disabled. Faucet and keeper services require `FAUCET=on` / `KEEPERS=on` and their own `FAUCET_MNEMONIC` / `KEEPER_MNEMONIC`; neither falls back to the deployment key. Fund those operational wallets separately only when needed. The bridge relayer also requires `RELAYER=on`. See `.env.example`. Simulation does not spend test tokens.
+
 To deploy your own instance:
 
 ```bash
 npm run keygen         # writes .env (git-ignored) and prints the deployer address
 # fund that address on the testnet
-npm run deploy && npm run seed && npm run e2e
+npm run deploy:check:core  # read-only budget report
+npm run deploy:core && npm run seed && npm run e2e
 ```
 
 ## Commands
@@ -58,7 +65,8 @@ npm run deploy && npm run seed && npm run e2e
 | `npm run contracts:build` / `contracts:test` | compile + export artifacts / Foundry tests |
 | `npm test` | contract tests + SDK tests |
 | `npm run teleport:local` | two-chain bridge test on local anvil |
-| `npm run deploy` · `deploy:bnb` · `seed` · `e2e` | live deployment, seeding and evidence |
+| `npm run deploy:check:core` / `deploy:core` | read-only core budget / resumable core deployment |
+| `npm run deploy` · `deploy:bnb` · `seed` · `e2e` | full deployment, seeding and evidence |
 | `npm run typecheck` | all packages |
 
 ## Repository layout
@@ -72,6 +80,8 @@ scripts/         keygen, deploy, seed, e2e, local Teleport test
 docs/            research, architecture, testing, submission pack
 deployments/     addresses and evidence written by the scripts
 ```
+
+See [hackathon readiness](docs/HACKATHON-READINESS.md) for verified requirements and remaining submission work, and [deployment preflight](deployments/preflight.md) for the latest read-only funding estimate.
 
 ## Honest limits
 

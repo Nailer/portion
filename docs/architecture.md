@@ -49,6 +49,10 @@
 5. `createListing` checks `totalSupply()` of the share token equals the declared supply, pulls shares and bond with the approvals, and emits `Listed`.
 6. The indexer stores the documents it sees in the block bodies and the event; the app shows the listing.
 
+## Closing rules
+
+An operator cannot wind down while any shares remain staked in the revenue vault. An overdue bond must be slashed before an empty vault can close. After closure, new stakes and bond top-ups are rejected; previously earned claims remain payable. Unstaking returns tokens, not purchase principal. This conservative prototype rule can lock the operator bond until all stakers leave; it is not a complete real-world settlement or redemption design.
+
 ## Security notes
 
 - `Portion` uses a reentrancy lock, pull-payment accounting (`accPerShare`, 1e18 precision) and checks-effects-interactions. Foundry tests include a 512-run solvency fuzz.
