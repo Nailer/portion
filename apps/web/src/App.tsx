@@ -144,7 +144,7 @@ export function App() {
       <footer className="foot">
         <div className="wrap">
           <div className="footer-brand"><Link className="brand" to="/"><Logo />Portion</Link><p>Small portions. Shared possibilities.</p><small>Built on Portaldot V3 · Test tokens only. No monetary value.</small></div>
-          <span><Link to="/guide">How it works</Link> · <Link to="/faucet">Faucet</Link> · <a href="/metrics">Metrics</a></span>
+          <span><Link to="/guide">How it works</Link> · <Link to="/faucet">Faucet</Link> · <Link to="/business">Business lab</Link></span>
         </div>
       </footer>
     </>

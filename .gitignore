@@ -11,3 +11,4 @@ contracts/broadcast/
 data/*.sqlite*
 .vite/
 coverage/
+.vercel/

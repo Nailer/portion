@@ -3,6 +3,7 @@ import { connect, TESTNET, type Deployment } from '@portion/sdk';
 import type { Backend } from '../lib/backend';
 import { LiveBackend } from '../lib/live';
 import { DemoBackend } from '../demo/engine';
+import { initialDemoMode } from '../lib/start-mode';
 
 const bundled = import.meta.glob('../../../../deployments/portaldot-testnet.json', { eager: true, import: 'default' }) as Record<string, Deployment>;
 const bundledDeployment = Object.values(bundled)[0];
@@ -28,7 +29,7 @@ function withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [demo, setDemo] = useState(() => new URLSearchParams(location.search).has('demo') || localStorage.getItem('portion.demo') === '1');
+  const [demo, setDemo] = useState(() => initialDemoMode(location.search, localStorage.getItem('portion.demo'), import.meta.env.VITE_DEFAULT_MODE));
   const [backend, setBackend] = useState<Backend | null>(null);
   const [status, setStatus] = useState<AppState['status']>('connecting');
   const [error, setError] = useState<string>();
