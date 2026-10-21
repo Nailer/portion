@@ -143,9 +143,9 @@ export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: 
   });
 
   // ───────── faucet ─────────
-  app.get('/api/faucet', async (c) => (faucet ? c.json(await faucet.status()) : c.json({ error: 'faucet disabled: no treasury key configured' }, 503)));
+  app.get('/api/faucet', async (c) => (faucet ? c.json(await faucet.status()) : c.json({ error: 'Test-token faucet is disabled to preserve the deployment budget.' }, 503)));
   app.post('/api/drip', async (c) => {
-    if (!faucet) return c.json({ error: 'faucet disabled: no treasury key configured' }, 503);
+    if (!faucet) return c.json({ error: 'Test-token faucet is disabled to preserve the deployment budget.' }, 503);
     const body = await c.req.json().catch(() => ({}) as any);
     const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
     try {

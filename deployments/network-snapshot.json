@@ -1,0 +1,79 @@
+{
+  "ts": 1792606372,
+  "chain": "PortaldotV3 Test",
+  "specVersion": 3002,
+  "best": 135047,
+  "finalized": 135044,
+  "finalityLag": 3,
+  "blockTimeSec": 6.00005,
+  "peers": 2,
+  "era": 37,
+  "sessionsPerEra": 6,
+  "validators": [
+    {
+      "address": "5F4ZyJJ8R3QHZKRLAfDXdUuVE4w3Q7uq7tCNfAtvf2XEBfYY",
+      "total": "1007111638889371440",
+      "own": "1006010318329021368",
+      "commissionPct": 0,
+      "points": 25180,
+      "stakeShare": 0.5002,
+      "pointsShare": 0.4893120870579091,
+      "nominators": 1
+    },
+    {
+      "address": "5Grj5uKAoduL2EDfgizp2MMbURJKa4rL6Q5pGUnVhhhjhwjk",
+      "total": "1006129012723198740",
+      "own": "1006028996071785516",
+      "commissionPct": 1,
+      "points": 26280,
+      "stakeShare": 0.4997,
+      "pointsShare": 0.5106879129420909,
+      "nominators": 1
+    }
+  ],
+  "nominatorCount": 2,
+  "decentralization": {
+    "validatorCount": 2,
+    "haltSet": 1,
+    "controlSet": 2,
+    "topShare": 0.5002,
+    "score": 4
+  },
+  "modules": {
+    "dexPools": 0,
+    "nominationPools": 0,
+    "assets": 3,
+    "nftCollections": 1,
+    "beefyAuthorities": 2,
+    "mmrLeaves": 135047
+  },
+  "findings": [
+    {
+      "severity": "critical",
+      "title": "Only 2 validators secure this chain",
+      "detail": "GRANDPA needs more than 2/3 of stake to finalise. With 2 validators, any 2 of them can finalise anything and 1 can halt the chain.",
+      "action": "Create or join a nomination pool and nominate new validators. Every additional independent validator moves the halt threshold."
+    },
+    {
+      "severity": "warning",
+      "title": "Top validator holds 50% of stake",
+      "detail": "Stake is concentrated.",
+      "action": "Nominate smaller validators."
+    },
+    {
+      "severity": "good",
+      "title": "Finality lag 3 blocks",
+      "detail": "GRANDPA is keeping up."
+    },
+    {
+      "severity": "info",
+      "title": "The native DEX has no pools",
+      "detail": "AssetConversion is live but empty. Portion seeds a pool for every listing that wants secondary trading."
+    },
+    {
+      "severity": "info",
+      "title": "No nomination pools exist",
+      "detail": "Native pooled staking is unused."
+    }
+  ]
+}

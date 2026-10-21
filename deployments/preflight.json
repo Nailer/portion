@@ -1,0 +1,33 @@
+{
+  "kind": "read-only-deployment-preflight",
+  "checkedAt": "2026-10-21T19:06:31.661Z",
+  "chain": "PortaldotV3 Test",
+  "runtime": "portaldot-v3",
+  "specVersion": "3002",
+  "genesisHash": "0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd",
+  "finalizedBlock": 135580,
+  "finalizedHash": "0x0bcb1f2c791c9cc017498df024538acd8523f8714e0a527ed599099c41f196d9",
+  "deployer": "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+  "freeTPOT": "500",
+  "spendableTPOT": "500",
+  "portion": {
+    "dryRunPassed": true,
+    "depositTPOT": "925.788",
+    "budgetedDepositTPOT": "1158.235",
+    "bytecodeSha256": "3a66f7fe52acb43da900435a900b61a7b20ecbee1bee3483f2a58f3ee6d8c1ef"
+  },
+  "teleport": {
+    "dryRunPassed": true,
+    "depositTPOT": "401.3745",
+    "budgetedDepositTPOT": "502.718125"
+  },
+  "operatingBufferTPOT": "40",
+  "coreBudgetTPOT": "1198.235",
+  "fullBudgetTPOT": "1700.953125",
+  "coreShortfallTPOT": "698.235",
+  "fullShortfallTPOT": "1200.953125",
+  "coreFunded": false,
+  "fullFunded": false,
+  "submittedTransactions": false,
+  "note": "Cost discovery uses a funded read-only origin. Budgets add a storage margin and operating buffer; they are not exact fees and do not fund all seed/e2e accounts. Existing deployments are skipped. This file is not evidence of deployment."
+}

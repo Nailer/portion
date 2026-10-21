@@ -19,12 +19,13 @@ console.log(`[portion] connected: ${(await api.rpc.system.chain()).toString()} s
 if (!deployment) console.warn('[portion] no deployments/portaldot-testnet.json yet: contract features are off until you run `npm run deploy`');
 
 const keyring = new Keyring({ type: 'sr25519', ss58Format: 42 });
-if (!config.deployerMnemonic) console.warn('[portion] DEPLOYER_MNEMONIC missing: faucet and keepers are disabled. Run `npm run keygen`.');
-const treasury = config.deployerMnemonic ? keyring.addFromUri(config.deployerMnemonic) : undefined;
+if (config.faucet.enabled && !config.faucet.mnemonic) console.warn('[portion] Faucet disabled: set a separately funded FAUCET_MNEMONIC.');
+if (config.keepers.enabled && !config.keeperMnemonic) console.warn('[portion] Keepers disabled: set a separately funded KEEPER_MNEMONIC.');
+const treasury = config.faucet.enabled && config.faucet.mnemonic ? keyring.addFromUri(config.faucet.mnemonic) : undefined;
 
 const faucet = treasury ? new Faucet(api, db, treasury, deployment) : undefined;
 let relayer: Relayer | undefined;
-if (deployment?.teleport && deployment.bnb && config.evm.opsKey && config.evm.relayerKeys.length >= 2) {
+if (config.relayer.enabled && deployment?.teleport && deployment.bnb && config.evm.opsKey && config.evm.relayerKeys.length >= 2) {
   relayer = new Relayer(db, [
     evmSide({ name: 'Portaldot V3', rpc: config.evm.portaldotRpc, chainId: deployment.chainId, gasKey: config.evm.opsKey, teleport: deployment.teleport, confirmations: 1, maxLogRange: 500 }),
     evmSide({ name: 'BNB Chain testnet', rpc: config.evm.bnbRpc, chainId: deployment.bnb.chainId, gasKey: config.evm.opsKey, teleport: deployment.bnb.teleport, confirmations: 3, maxLogRange: 2000 }),
@@ -39,4 +40,4 @@ if (config.keepers.enabled && config.keeperMnemonic) {
   new Keepers(api, db, keyring.addFromUri(config.keeperMnemonic), deployment, config.keepers.intervalMs).start();
 }
 
-serve({ fetch: app.fetch, port: config.port }, (i) => console.log(`[portion] API on http://localhost:${i.port}`));
+serve({ fetch: app.fetch, port: config.port, hostname: config.host }, (i) => console.log(`[portion] API on http://localhost:${i.port}`));

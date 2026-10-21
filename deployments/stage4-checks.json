@@ -1,0 +1,54 @@
+{
+  "checkedAt": "2026-10-21T18:12:47.899Z",
+  "checks": {
+    "localSuite": {
+      "command": "npm test",
+      "passed": 76,
+      "liveSkipped": 4
+    },
+    "liveReadOnlySuite": {
+      "command": "LIVE=1 npm test -w @portion/sdk",
+      "sdkUnitPassed": 12,
+      "livePassed": 4
+    },
+    "typecheck": {
+      "command": "npm run typecheck",
+      "passed": true
+    },
+    "dependencyAudit": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "webBuild": {
+      "command": "npm run build -w @portion/web",
+      "passed": true
+    },
+    "apiSmoke": {
+      "healthOk": true,
+      "deployed": false,
+      "observedHead": 135041,
+      "autoKeepersEnabled": false
+    },
+    "desktopBrowser": {
+      "viewport": "1280 \u00d7 720",
+      "routes": [
+        "/operator?demo",
+        "/create",
+        "/"
+      ],
+      "roleSwitchingPassed": true,
+      "visualReviewPassed": true
+    }
+  },
+  "deployment": {
+    "submitted": false,
+    "coreFunded": false,
+    "coreShortfallTPOT": "752.25",
+    "fullShortfallTPOT": "1254.968125"
+  },
+  "note": "Recorded from completed tool runs. No live lifecycle or deployment is claimed."
+}
