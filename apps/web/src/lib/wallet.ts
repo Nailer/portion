@@ -37,5 +37,15 @@ export function installedWallets(): WalletProviders {
 }
 
 export function walletLabel(id: string) {
+  if (isPortaldotWallet(id)) return 'Portaldot Wallet';
   return ({ talisman: 'Talisman', 'subwallet-js': 'SubWallet', 'polkadot-js': 'Polkadot.js' } as Record<string,string>)[id] ?? id;
 }
+
+/** Keep the network's wallet first without inventing an installed provider. */
+export function isPortaldotWallet(id: string) {
+  return ['portaldot', 'portaldotjs', 'portaldotwallet', 'portaldotextension'].includes(id.toLowerCase().replace(/[^a-z0-9]/g, ''));
+}
+export function orderedWallets(providers: WalletProviders) {
+  return Object.keys(providers).sort((a, b) => Number(isPortaldotWallet(b)) - Number(isPortaldotWallet(a)));
+}
+export const PORTALDOT_WALLET_URL = 'https://chromewebstore.google.com/detail/portaldot-extension/cpdecangbhmfijmlmjglfcocfpaojceo';

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRunner } from '../state/runner';
 import { usePassport } from '../state/passport';
 import { useApp } from '../state/app';
-import { installedWallets, walletLabel } from '../lib/wallet';
+import { installedWallets, walletLabel, orderedWallets, isPortaldotWallet, PORTALDOT_WALLET_URL } from '../lib/wallet';
 import { short } from '../lib/format';
 import { Dialog } from './Dialog';
 import { BrandMark, Icon } from './Icon';
@@ -15,7 +15,7 @@ export function PassportDialog() {
   const [error, setError] = useState('');
   const [providers, setProviders] = useState<string[]>([]);
   const [choosing, setChoosing] = useState(false);
-  useEffect(() => { if (passportOpen) { setProviders(Object.keys(installedWallets())); setError(''); setChoosing(false); } }, [passportOpen]);
+  useEffect(() => { if (passportOpen) { setProviders(orderedWallets(installedWallets())); setError(''); setChoosing(false); } }, [passportOpen]);
   if (!passportOpen) return null;
   const connect = async (provider: string) => {
     setBusy(true); setError('');
@@ -40,8 +40,9 @@ export function PassportDialog() {
       <h2 id="pp-title">{choosing ? 'Choose your account.' : 'Connect your wallet.'}</h2>
       <p className="auth-intro">{choosing ? 'Only accounts shared by your wallet appear here. Transactions are approved inside your wallet.' : 'Connect an existing browser wallet. Portion does not create accounts or grant balances.'}</p>
       {choosing ? <div className="wallet-accounts">{walletAccounts.map(account => <button className="auth-choice" key={account.address} disabled={busy} onClick={() => choose(account.address)}><span className="choice-symbol"><Icon name="wallet"/></span><span><b>{account.name || 'Wallet account'}</b><small>{short(account.address, 10, 8)}</small></span><Icon name="arrow"/></button>)}<button className="link-btn" onClick={() => setChoosing(false)}>← Other ways to explore</button></div> : <>
-        <div className="auth-section-label wallet-label"><span>CONNECT A BROWSER WALLET</span><Icon name="lock" size={14}/></div>
-        {providers.length ? providers.map(provider => <button className="auth-choice wallet-choice" key={provider} disabled={busy} onClick={() => void connect(provider)}><span className="choice-symbol"><Icon name="wallet"/></span><span><b>{walletLabel(provider)}</b><small>Approve access and signing in your wallet.</small></span><span className="wallet-detected">Detected</span></button>) : <div className="wallet-unavailable"><Icon name="wallet"/><div><b>No compatible wallet detected</b><p>Use a Substrate-compatible wallet in your browser. You can read the public network without connecting.</p><a href="https://polkadot.js.org/extension/" target="_blank" rel="noreferrer">View wallet options <Icon name="external" size={12}/></a></div></div>}
+        <div className="auth-section-label wallet-label"><span>CONNECT TO PORTALDOT</span><Icon name="lock" size={14}/></div>
+        {!providers.some(isPortaldotWallet) && <a className="auth-choice featured" href={PORTALDOT_WALLET_URL} target="_blank" rel="noreferrer"><span className="choice-symbol"><Icon name="wallet"/></span><span><b>Portaldot Wallet</b><small>Get the official extension, then reload Portion to connect.</small></span><Icon name="external"/></a>}
+        {providers.length ? providers.map(provider => <button className={`auth-choice wallet-choice${isPortaldotWallet(provider) ? ' featured' : ''}`} key={provider} disabled={busy} onClick={() => void connect(provider)}><span className="choice-symbol"><Icon name="wallet"/></span><span><b>{walletLabel(provider)}</b><small>Approve access and signing in your wallet.</small></span><span className="wallet-detected">Detected</span></button>) : <div className="wallet-unavailable"><Icon name="wallet"/><div><b>No compatible wallet detected</b><p>Install Portaldot Wallet using the link above. Other compatible native wallets, including Talisman, SubWallet and Polkadot.js, also appear here when detected. You can browse without connecting.</p></div></div>}
       </>}
       {busy && <p className="auth-progress" role="status">Approve the connection in your wallet…</p>}
       {error && <p className="auth-error" role="alert">{error}</p>}

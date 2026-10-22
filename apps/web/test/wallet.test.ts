@@ -1,11 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Signer } from '@polkadot/api/types';
-import { requestWallet, walletPassport, walletAddress, type InjectedWallet } from '../src/lib/wallet';
+import { requestWallet, walletPassport, walletAddress, orderedWallets, walletLabel, type InjectedWallet } from '../src/lib/wallet';
 const address = '5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4';
 const signer = { signPayload: vi.fn() } as unknown as Signer;
 const wallet: InjectedWallet = { signer, accounts: { get: async () => [{ address, name: 'Test account' }] } };
 
 describe('wallet-owned signing', () => {
+  it('puts detected Portaldot providers first without inventing an installed wallet', () => {
+    const provider = { enable: vi.fn() };
+    expect(orderedWallets({ talisman: provider, 'portaldot-js': provider, 'polkadot-js': provider })).toEqual(['portaldot-js', 'talisman', 'polkadot-js']);
+    expect(walletLabel('portaldot-js')).toBe('Portaldot Wallet');
+    expect(orderedWallets({ talisman: provider })).toEqual(['talisman']);
+  });
   it('only asks the selected extension to share public accounts', async () => {
     const enable = vi.fn().mockResolvedValue(wallet);
     const result = await requestWallet({ enable });
