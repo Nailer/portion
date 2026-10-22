@@ -24,22 +24,27 @@ export interface StoredItem {
   hash: string;
   size: number;
   block: number;
-  /** Index of the *extrinsic* in the block; this is the `index` argument to `renew`. */
+  /** TransactionStorage index emitted by Stored; this is the index required by renew. */
   index: number;
   data: Uint8Array;
 }
 
-/** Finds every document stored in a block by decoding its extrinsics (the data lives in the block body). */
+/** Only return accepted stores, using their pallet index rather than their extrinsic position. */
 export async function storedInBlock(api: ApiPromise, blockHash: string): Promise<StoredItem[]> {
-  const signed: any = await api.rpc.chain.getBlock(blockHash);
+  const [signed, at]: any[] = await Promise.all([api.rpc.chain.getBlock(blockHash), api.at(blockHash)]);
+  const records: any = await at.query.system.events();
   const number = signed.block.header.number.toNumber();
   const out: StoredItem[] = [];
-  signed.block.extrinsics.forEach((ex: any, index: number) => {
-    const { section, method } = ex.method;
-    if (section === 'transactionStorage' && method === 'store') {
-      const data = hexToU8a(ex.method.args[0].toHex());
-      out.push({ hash: contentHash(data), size: data.length, block: number, index, data });
-    }
+  signed.block.extrinsics.forEach((ex: any, extrinsicIndex: number) => {
+    if (ex.method.section !== 'transactionStorage' || ex.method.method !== 'store') return;
+    const own = [...records].filter((r: any) => r.phase.isApplyExtrinsic && r.phase.asApplyExtrinsic.toNumber() === extrinsicIndex);
+    if (own.some((r: any) => api.events.system.ExtrinsicFailed.is(r.event))) return;
+    const stored = own.find((r: any) => api.events.transactionStorage.Stored.is(r.event));
+    if (!stored) return;
+    const data = hexToU8a(ex.method.args[0].toHex());
+    const hash = contentHash(data);
+    if (hash !== stored.event.data[1].toHex().toLowerCase()) throw new Error(`Stored content hash mismatch in block ${number}, extrinsic ${extrinsicIndex}.`);
+    out.push({ hash, size: data.length, block: number, index: stored.event.data[0].toNumber(), data });
   });
   return out;
 }

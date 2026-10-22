@@ -20,6 +20,7 @@ export interface Deployment {
   teleport?: string;
   bnb?: { chainId: number; teleport: string; wpusd: string };
   deployedAt?: string;
+  deployedBlock?: number;
   txs?: Record<string, string>;
 }
 

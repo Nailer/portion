@@ -92,7 +92,7 @@ try {
     }
     if (!d.portion) {
       const out=await deployContract(api,deployer,PortionArtifact,[ss58ToH160(deployer.address),1],stage('Portion'));
-      d.portion=out.address;d.txs={...d.txs,portion:out.txHash};d.deployedAt=new Date().toISOString();d.deployedBlock=(await api.rpc.chain.getHeader()).number.toNumber();checkpoint();
+      d.portion=out.address;d.txs={...d.txs,portion:out.txHash};d.deployedAt=new Date().toISOString();d.deployedBlock=(await api.rpc.chain.getHeader(out.blockHash)).number.toNumber();checkpoint();
     }
     if (!CORE) {
       if (!d.teleport) {
