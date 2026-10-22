@@ -241,7 +241,7 @@ export function ListingPage() {
                   <button className="btn primary" onClick={() => act({ kind: 'buy', id, shares })}>Buy {shares} share{shares === 1 ? '' : 's'}</button>
                   {balances && <p className="hint" style={{ color: 'var(--ink-3)', fontSize: 13 }}>You have {usd(balances.pusd)} and {pot(balances.pot, 1)}.</p>}
                 </>
-              ) : <button className="btn primary" onClick={openPassport}>Open a Passport to buy</button>}
+              ) : <button className="btn primary" onClick={openPassport}>{backend?.mode === 'demo' ? 'Choose a demo role to buy' : 'Connect wallet to buy'}</button>}
             </>
           ) : <p className="notice">{l.health === 'WoundDown' ? 'This listing has been wound down.' : 'The primary sale is closed. Shares may still trade on the native DEX.'}</p>)}
 
@@ -292,7 +292,7 @@ export function ListingPage() {
                 <button className="btn primary" disabled={!me || me.pending === 0n} onClick={() => act({ kind: 'claim', ids: [id] })}>Claim {usd(me?.pending ?? 0n)}</button>
                 {staked > 0 && <button className="btn ghost sm" onClick={() => act({ kind: 'unstake', id, amount: staked })}>Take my shares out of the vault</button>}
               </div>
-            ) : <button className="btn primary" onClick={openPassport}>Open a Passport</button>
+            ) : <button className="btn primary" onClick={openPassport}>Connect an account</button>
           )}
         </aside>
       </div>

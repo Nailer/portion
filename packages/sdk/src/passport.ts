@@ -3,22 +3,19 @@ import type { KeyringPair } from '@polkadot/keyring/types';
 import { cryptoWaitReady, keccakAsU8a, mnemonicGenerate } from '@polkadot/util-crypto';
 import { stringToU8a, u8aConcat, hexToU8a } from '@polkadot/util';
 import { ss58ToH160 } from './addresses';
+import type { TransactionSigner } from './tx';
 
 /**
- * A "Passport" is the Substrate account Portion signs with on the user's behalf. It exists because Portaldot V3
- * has two address worlds: MetaMask users only reach Solidity, but the interesting modules (Nfts, fractionalization,
- * the DEX, pools, on-chain storage) are native extrinsics that MetaMask cannot sign.
- *
- * Three ways in, all producing the same kind of account:
- *  - guest:      random mnemonic kept in the browser (zero friction, try it in 5 seconds)
- *  - MetaMask:   key derived from one personal_sign, so the same wallet always unlocks the same Passport
- *  - import:     any mnemonic / raw seed
+ * Transaction identity for native Portaldot modules and their contract address mapping.
+ * The web app uses injected extension signers for live accounts and memory-only demo identities.
+ * Mnemonic helpers below serve local development scripts; they must not be exposed as web sign-in.
+ * Legacy signature derivation is retained only for compatibility/recovery by existing SDK consumers.
  */
 export interface Passport {
-  pair: KeyringPair;
+  pair: TransactionSigner;
   address: string; // SS58 (prefix 42)
   h160: string; // what Solidity sees
-  kind: 'guest' | 'metamask' | 'import';
+  kind: 'guest' | 'metamask' | 'import' | 'extension';
   mnemonic?: string;
 }
 
@@ -42,13 +39,14 @@ export async function passportFromMnemonic(mnemonic: string, kind: Passport['kin
   return wrap(keyring().addFromUri(mnemonic.trim()), kind, mnemonic.trim());
 }
 
-/** The exact text MetaMask is asked to sign. It must never change, or users would lose their Passport. */
+/** @deprecated Legacy SDK recovery only. Never use this message for new web sign-in. */
 export const PASSPORT_MESSAGE =
   'Unlock your Portion Passport\n\n' +
   'This signature creates a spending key for Portion in this browser. ' +
   'It does not cost gas and does not authorise any transfer by itself.\n\n' +
   'Version: 1';
 
+/** @deprecated Derives a spending key. The web app instead delegates signing to an extension. */
 export async function passportFromSignature(signatureHex: string): Promise<Passport> {
   await ensureCrypto();
   const seed = keccakAsU8a(u8aConcat(stringToU8a('portion-passport-v1'), hexToU8a(signatureHex)));

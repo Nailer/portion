@@ -11,6 +11,7 @@ interface FaucetStatus { address: string; balance: string; dripPot: string; drip
 export function Faucet() {
   const { backend, refresh } = useApp();
   const { passport } = usePassport();
+  const demo = backend?.mode === 'demo';
   const [addr, setAddr] = useState('');
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<DripResult>();
@@ -27,20 +28,20 @@ export function Faucet() {
     <div className="two-col" style={{ alignItems: 'start' }}>
       <div>
         <h1 className="page-title">Testnet faucet</h1>
-        <p className="page-lede">Portaldot V3 has no public faucet: the official guide hands tokens to registered participants by hand. This one is open to every builder. Paste a Portaldot address or a MetaMask address and it works out the right account to fund.</p>
+        <p className="page-lede">{demo ? 'Add simulated funds to an account while exploring the demo. These tokens stay in this browser session and have no monetary value.' : 'The live faucet needs a separately funded service. It is currently disabled in this public preview to preserve the deployment budget.'}</p>
         <div className="field" style={{ marginTop: 28 }}>
           <label htmlFor="addr">Address</label>
-          <input id="addr" type="text" value={addr} onChange={(e) => setAddr(e.target.value)} placeholder={passport ? `${passport.address} (your Passport)` : '5… or 0x…'} spellCheck={false} />
-          <p className="hint">Either kind works. A 0x address is funded through its mapped Substrate account, so your MetaMask balance updates.</p>
+          <input id="addr" type="text" value={addr} onChange={(e) => setAddr(e.target.value)} placeholder={passport ? `${passport.address} (your account)` : '5… or 0x…'} spellCheck={false} />
+          <p className="hint">Only public addresses belong here. Never enter a recovery phrase or private key.</p>
         </div>
-        <button className="btn primary" disabled={busy || !target} onClick={go}>{busy ? 'Sending…' : `Send ${status ? pot(status.dripPot, 0) : '3 tPOT'}${backend?.deployed ? ` and ${usd(status?.dripPusd ?? 500e6, 0)}` : ''}`}</button>
+        <button className="btn primary" disabled={busy || !target || (!demo && !status)} onClick={go}>{busy ? 'Sending…' : !demo && !status ? 'Live faucet unavailable' : `Add ${status ? pot(status.dripPot, 0) : '3 tPOT'}${backend?.deployed ? ` and ${usd(status?.dripPusd ?? 500e6, 0)}` : ''}${demo ? ' · simulated' : ''}`}</button>
         {err && <p className="sheet-error" style={{ marginTop: 16 }}>{err}</p>}
         {res && (
           <div className="mine" style={{ marginTop: 16 }}>
             <b>Sent.</b>
             <div className="line"><span>Funded account</span><code>{res.ss58}</code></div>
             <div className="line"><span>Contracts see it as</span><code>{res.h160}</code></div>
-            {res.viaEvm && <p style={{ fontSize: 14 }}>You pasted a 0x address, so we funded its mapped account. Add the network to MetaMask and the balance will appear.</p>}
+            {res.viaEvm && <p style={{ fontSize: 14 }}>The recipient was resolved to its native account. Check the funded account above.</p>}
             {backend?.mode === 'live' && res.block && <a href={explorerBlock(res.block)} target="_blank" rel="noreferrer">View block {res.block.toLocaleString()}</a>}
           </div>
         )}
@@ -49,7 +50,7 @@ export function Faucet() {
         <h2 style={{ fontSize: 22, fontWeight: 800 }}>Why two addresses?</h2>
         <p className="note" style={{ marginTop: 10, color: 'var(--ink-2)' }}>
           Portaldot V3 accounts are Substrate accounts. Solidity sees each one as a 20-byte address derived from it, and an Ethereum key maps to its own Substrate account.
-          Send tokens to the wrong one and nothing arrives. This faucet and the Passport hide that for you.
+          This service resolves the recipient before sending. Always check the funded account in the result.
         </p>
         <dl className="kv" style={{ marginTop: 20 }}>
           <dt>Network</dt><dd>Portaldot V3 Testnet</dd>

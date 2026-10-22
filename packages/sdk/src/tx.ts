@@ -2,6 +2,11 @@ import type { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { KeyringPair } from '@polkadot/keyring/types';
 import type { EventRecord } from '@polkadot/types/interfaces';
+import type { Signer } from '@polkadot/api/types';
+
+/** An injected wallet owns the key; the application only holds its public address and signer. */
+export interface WalletSigner { address: string; signer: Signer }
+export type TransactionSigner = KeyringPair | WalletSigner;
 
 export interface TxOutcome {
   ok: boolean;
@@ -39,13 +44,15 @@ export function decodeFailure(api: ApiPromise, events: EventRecord[]): string | 
 export function submit(
   api: ApiPromise,
   tx: SubmittableExtrinsic<'promise'>,
-  pair: KeyringPair,
+  pair: TransactionSigner,
   onStage?: (s: TxStage, detail?: string) => void,
 ): Promise<TxOutcome> {
   return new Promise((resolve, reject) => {
     let unsub: (() => void) | undefined;
     onStage?.('signing');
-    tx.signAndSend(pair, { nonce: -1 }, async (result) => {
+    const account = 'signer' in pair ? pair.address : pair;
+    const options = 'signer' in pair ? { nonce: -1, signer: pair.signer } : { nonce: -1 };
+    tx.signAndSend(account, options, async (result) => {
       if (result.status.isBroadcast) onStage?.('broadcast');
       if (result.dispatchError || result.status.isInBlock || result.status.isFinalized) {
         const events = result.events;

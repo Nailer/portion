@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BrandMark, Icon } from './components/Icon';
 import { NavLink, Route, Routes, Link, useLocation } from 'react-router-dom';
 import { useApp } from './state/app';
 import { usePassport } from './state/passport';
@@ -19,22 +20,15 @@ import { Operator } from './pages/Operator';
 import { DemoRoles } from './components/DemoRoles';
 import { Business } from './pages/Business';
 
-const Logo = () => (
-  <svg viewBox="0 0 64 64" aria-hidden>
-    <rect width="64" height="64" rx="14" fill="currentColor" />
-    <path d="M32 32 L32 10 A22 22 0 1 1 10 32 Z" fill="#d7f58a" />
-    <circle cx="32" cy="32" r="22" fill="none" stroke="var(--ground)" strokeWidth="3" />
-  </svg>
-);
+const Logo = BrandMark;
 
 function AccountChip() {
-  const { passport, balances, signOut, loading } = usePassport();
+  const { passport, balances, signOut, loading, demoRole } = usePassport();
   const { openPassport } = useRunner();
   const { backend } = useApp();
   const [open, setOpen] = useState(false);
-  const [reveal, setReveal] = useState(false);
   if (loading) return null;
-  if (!passport) return <button className="btn dark sm" onClick={openPassport}>Connect wallet <span aria-hidden="true">↗</span></button>;
+  if (!passport) return <button className="btn dark sm" onClick={openPassport}>{backend?.mode === 'demo' ? 'Get started' : 'Connect wallet'} <Icon name="arrow" size={16}/></button>;
   return (
     <>
       <button className="chip" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
@@ -43,20 +37,13 @@ function AccountChip() {
         <small>{short(passport.address, 4, 4)}</small>
       </button>
       {open && (
-        <div className="account-menu" role="menu">
-          <strong>Your Passport</strong>
-          <dl>
-            <dt>Balance</dt><dd>{balances ? `${usd(balances.pusd)} · ${pot(balances.pot, 2)}` : '…'}</dd>
-            <dt>Account</dt><dd className="mono">{passport.address} <CopyButton text={passport.address} /></dd>
-            <dt>Solidity sees</dt><dd className="mono">{passport.h160} <CopyButton text={passport.h160} /></dd>
-          </dl>
-          <p className="notice">One key, two address worlds. Fund the account above; contracts see the second address automatically.</p>
-          {passport.mnemonic && (
-            <div>
-              <button className="link-btn" onClick={() => setReveal((r) => !r)}>{reveal ? 'Hide recovery phrase' : 'Show recovery phrase'}</button>
-              {reveal && <p className="mono" style={{ marginTop: 8, wordBreak: 'break-word' }}>{passport.mnemonic}</p>}
-            </div>
-          )}
+        <div className="account-menu" role="dialog" aria-label="Your account">
+          <div className="account-heading"><span className="choice-symbol"><Icon name="wallet"/></span><div><strong>{backend?.mode === 'demo' ? `Demo ${demoRole ?? 'account'}` : 'Connected wallet'}</strong><small>{backend?.mode === 'demo' ? 'Simulation only' : 'Keys remain in your wallet'}</small></div><button className="dialog-close" aria-label="Close account menu" onClick={() => setOpen(false)}><Icon name="close" size={16}/></button></div>
+          <div className="account-balance"><small>Available balance</small><b>{balances ? usd(balances.pusd) : '…'}</b><span>{balances ? pot(balances.pot, 2) : ''}</span></div>
+          <details className="account-details"><summary>Account details</summary><dl>
+            <dt>Network account</dt><dd className="mono">{passport.address} <CopyButton text={passport.address} /></dd>
+            <dt>Contract address</dt><dd className="mono">{passport.h160} <CopyButton text={passport.h160} /></dd>
+          </dl></details>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Link className="btn ghost sm" to="/faucet" onClick={() => setOpen(false)}>Get tokens</Link>
             <button className="btn ghost sm" onClick={() => { signOut(); setOpen(false); }}>Sign out</button>
@@ -143,7 +130,7 @@ export function App() {
       <PassportDialog />
       <footer className="foot">
         <div className="wrap">
-          <div className="footer-brand"><Link className="brand" to="/"><Logo />Portion</Link><p>Small portions. Shared possibilities.</p><small>Built on Portaldot V3 · Test tokens only. No monetary value.</small></div>
+          <div className="footer-brand"><Link className="brand" to="/"><Logo />Portion</Link><p>Working assets. Shared ambition.</p><small>Built on Portaldot V3 · Test tokens only. No monetary value.</small></div>
           <span><Link to="/guide">How it works</Link> · <Link to="/faucet">Faucet</Link> · <Link to="/business">Business lab</Link></span>
         </div>
       </footer>

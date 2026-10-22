@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from './app';
 import { usePassport } from './passport';
 import { UserError, type ActionResult, type Intent, type Prepared, type StageName } from '../lib/backend';
+import { Dialog } from '../components/Dialog';
 import { StepList } from '../components/StepList';
 import { Spinner } from '../components/ui';
 import { explorerBlock, pot, usd } from '../lib/format';
@@ -23,7 +24,7 @@ export const useRunner = () => useContext(Ctx);
 
 const STAGE_COPY: Record<StageName, string> = {
   preparing: 'Preparing',
-  signing: 'Signing with your Passport',
+  signing: 'Waiting for approval',
   broadcast: 'Sent to the network',
   inBlock: 'Included in a block',
   done: 'Finalized',
@@ -43,18 +44,24 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
   const [passportOpen, setPassportOpen] = useState(false);
   const [dripping, setDripping] = useState(false);
   const last = useRef<{ prepare: () => Promise<Prepared>; onDone?: (r: ActionResult) => void }>();
+  const submitting = useRef(false);
+  const preparation = useRef(0);
 
-  const close = useCallback(() => { setPhase(null); setPrepared(undefined); setResult(undefined); setError(undefined); }, []);
+  const close = useCallback(() => { preparation.current++; setPhase(null); setPrepared(undefined); setResult(undefined); setError(undefined); }, []);
 
   const actPrepared = useCallback(async (prepare: () => Promise<Prepared>, opts?: { onDone?: (r: ActionResult) => void }) => {
     if (!backend) return;
     if (!passport) { setPassportOpen(true); return; }
     last.current = { prepare, onDone: opts?.onDone };
+    const request = ++preparation.current;
     setPhase('preparing'); setError(undefined); setResult(undefined);
     try {
-      setPrepared(await prepare());
+      const next = await prepare();
+      if (request !== preparation.current) return;
+      setPrepared(next);
       setPhase('confirm');
     } catch (e) {
+      if (request !== preparation.current) return;
       setError({ message: (e as Error).message, fix: e instanceof UserError ? e.fix : undefined });
       setPhase('error');
     }
@@ -66,11 +73,13 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
   }, [backend, passport, actPrepared]);
 
   const run = async () => {
-    if (!prepared) return;
+    if (!prepared || submitting.current) return;
+    submitting.current = true;
     setPhase('running'); setStage('signing'); setDetail(undefined);
     let r: ActionResult;
     try { r = await prepared.run((s, d) => { setStage(s); setDetail(d); }); }
     catch (e) { r = { ok: false, error: (e as Error).message || 'The transaction could not be completed.' }; }
+    submitting.current = false;
     setResult(r);
     setPhase(r.ok ? 'result' : 'error');
     if (!r.ok) setError({ message: r.error ?? 'The transaction failed.' });
@@ -96,15 +105,14 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider value={{ busy: phase !== null, act, actPrepared, openPassport: () => setPassportOpen(true), passportOpen, closePassport: () => setPassportOpen(false) }}>
       {children}
       {phase && (
-        <div className="overlay" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget && phase !== 'running') close(); }}>
-          <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
-            {phase === 'preparing' && <div className="sheet-center"><Spinner /><p>Checking your balances and the listing…</p></div>}
+        <Dialog onClose={close} labelledBy="sheet-title" closeDisabled={phase === 'running'} focusKey={phase} className="transaction-dialog">
+            {phase === 'preparing' && <div className="sheet-center"><h2 id="sheet-title">Preparing your review</h2><Spinner /><p>Checking your balances and the listing…</p></div>}
 
             {(phase === 'confirm' || phase === 'running') && prepared && (
               <>
                 <h2 id="sheet-title">{prepared.title}</h2>
                 <p className="sheet-sub">
-                  {backend?.mode === 'demo' ? 'Simulation only. No real funds move.' : prepared.steps.some(s => s.lane === 'storage') ? 'Documents are stored first, then the listing is created in an atomic batch. The separate transactions each require a signature.' : 'Review the transaction before signing with your Passport.'}
+                  {backend?.mode === 'demo' ? 'Simulation only. No real funds move.' : prepared.steps.some(s => s.lane === 'storage') ? 'Documents are stored first, then the listing is created in an atomic batch. The separate transactions each require a signature.' : 'Review the transaction. Your wallet will ask you to approve it.'}
                 </p>
                 <details className="transaction-details"><summary>See what happens in this transaction ({prepared.steps.length} {prepared.steps.length === 1 ? 'step' : 'steps'})</summary><StepList steps={prepared.steps} state={phase === 'running' ? 'running' : 'idle'} /></details>
                 {prepared.cost && <p className="sheet-cost">{prepared.cost}</p>}
@@ -112,7 +120,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
                   {phase === 'confirm' ? (
                     <>
                       <button className="btn ghost" onClick={close}>Cancel</button>
-                      <button className="btn primary" onClick={run} autoFocus>Confirm</button>
+                      <button className="btn primary" onClick={run}>Confirm</button>
                     </>
                   ) : (
                     <div className="progress"><Spinner /> <b>{STAGE_COPY[stage]}</b>{stageDetail ? <span>{stageDetail}</span> : null}</div>
@@ -152,8 +160,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
                 </div>
               </>
             )}
-          </div>
-        </div>
+        </Dialog>
       )}
     </Ctx.Provider>
   );
