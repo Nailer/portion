@@ -2,7 +2,7 @@
 
 ## Decision
 
-Keep the published app on its existing, labelled simulation. `PortionCore.sol` is a tested budget candidate, not a deployed replacement and not wired into the SDK or UI. Do not deploy it merely because its storage deposit is below 500 tPOT: setup, storage growth, fees and working balances also need room.
+The published app now uses real chain reads only, with undeployed asset actions blocked. `PortionCore.sol` is a tested budget candidate, not a deployed replacement and not wired into the SDK or UI. Do not deploy it merely because its storage deposit is below 500 tPOT: setup, storage growth, fees and working balances also need room.
 
 ## What changed
 
@@ -48,5 +48,5 @@ Validation: all 99 local tests passed (64 contracts, 12 SDK, 16 web, 7 server); 
 
 1. Measure the complete native setup and a small lifecycle, including listing storage and participant balances, using read-only estimates or a local node. Keep the 500 tPOT allocation intact while checking.
 2. Resolve the remaining operating budget through further measured reductions or confirmed organiser support. Do not describe 500 as sufficient yet.
-3. Add a versioned SDK adapter, document validation/resolution, event/indexer mapping and API compatibility; preserve existing simulation/UI behaviour.
+3. Add a versioned SDK adapter, document validation/resolution, event/indexer mapping and API compatibility; preserve verified live behaviour and honest unavailable states.
 4. Re-run lifecycle/accounting regression checks, review the new contract, then deploy only when its measured budget fits. Record actual contract addresses and transaction hashes after successful execution.

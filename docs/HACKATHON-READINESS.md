@@ -35,7 +35,7 @@ The key technical demonstration is a native NFT → fractional native shares →
 | Complete README, architecture and runnable instructions | Present; update alongside final live evidence |
 | Demonstrable prototype / core flow | Simulation lifecycle tested with separate operator/funder accounts |
 | Portaldot testnet deployment info: address and tx hash | Blocked by test-token budget; read-only preflight is not a deployment |
-| Check-in demo link or video of at most 3 minutes | Public simulated frontend at https://portion-one.vercel.app; video remains outstanding |
+| Check-in demo link or video of at most 3 minutes | Public frontend with real chain reads at https://portion-one.vercel.app; full deployed lifecycle and video remain outstanding |
 | Final runnable code and testnet information | Code runnable locally; finalize after deployment |
 | Final demo video of at most 3 minutes | Not produced |
 | Pitch deck PDF or public link | Outline exists; deck not produced |

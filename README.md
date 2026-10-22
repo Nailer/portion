@@ -1,6 +1,6 @@
 # Portion
 
-**Own a portion of things that earn.** Operators tokenize an income-producing thing (a solar kiosk, an e-bike fleet, a cold room) in one tap. People buy slices and earn when it takes money.
+**Own a portion of things that earn.** Portion is being built for operators to offer shares in productive equipment and distribute revenue they deposit. The contracts are not deployed yet; asset funding is unavailable.
 If the operator stops paying, their bond is slashed to the people who hold shares.
 
 Built for the **Portaldot Hacker House 2026**. It targets all four tracks with one product and one SDK:
@@ -9,12 +9,12 @@ Built for the **Portaldot Hacker House 2026**. It targets all four tracks with o
 |---|---|
 | **Ecosystem DApps** | The Portion app: market, tokenize wizard, portfolio, native-DEX trading, bond enforcement |
 | **Modular Cloud & Middleware** | `@portion/sdk` (dual-VM client), on-chain document gateway with auto-renewal, indexer, open faucet |
-| **Node Operations & Tooling** | Network console with a decentralization analysis, Pool Studio, permissionless auto-compound keeper, Prometheus metrics |
+| **Node Operations & Tooling** | Direct-RPC finalized-block console; server-side decentralization analysis, Pool Studio, permissionless auto-compound keeper, Prometheus metrics |
 | **Multi-Chain & Cross-Chain** | Teleport: pUSD between Portaldot and BNB Chain testnet with a 2-of-3 relayer committee |
 
 ## Business direction
 
-Portion aims to become global infrastructure for companies managing funding and payouts for productive assets. The current contract charges 1% of share sales and 0.5% of revenue deposits. Company management plans are a pricing hypothesis, not a feature currently charging customers. The [business plan](docs/BUSINESS.md) records costs, pilot criteria and limits; the app’s Business lab lets you test the arithmetic.
+Portion aims to become global infrastructure for companies managing funding and payouts for productive assets. Contract source implements configurable sale and revenue fees; there are no verified deployed fee rates yet. Company management plans are a pricing hypothesis, not a feature currently charging customers. The [business plan](docs/BUSINESS.md) records costs, pilot criteria and limits; the app’s Revenue model page explains what still needs commercial validation.
 
 ## The idea in one picture
 
@@ -29,14 +29,14 @@ one signature  →  Nfts.mint            the deed
 ```
 
 All or nothing. Shares and the pUSD stablecoin are *native assets* that Solidity sees as ordinary ERC-20 tokens through the runtime's `AssetsPrecompiles`, so there is no token contract
-to deploy or audit. Terms and photo are stored by the chain's own `TransactionStorage`. Secondary trading uses the built-in `AssetConversion` DEX, which had zero pools before this.
+to deploy or audit. Terms and photo are stored by the chain's own `TransactionStorage`. Secondary trading uses the built-in `AssetConversion` DEX, when a real pool exists.
 
 See [docs/research.md](docs/research.md) for the ecosystem research and why this idea, [docs/architecture.md](docs/architecture.md) for the design,
 and [docs/TESTING.md](docs/TESTING.md) for how to check every claim.
 
-New here? Open the [public preview](https://portion-one.vercel.app) and follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). Source: [Nailer/portion](https://github.com/Nailer/portion). The public preview is a labelled browser simulation; live Portion contracts are not deployed. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
+New here? Open the [public preview](https://portion-one.vercel.app) and follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). Source: [Nailer/portion](https://github.com/Nailer/portion). The public preview reads the real testnet; live Portion contracts are not deployed. No simulation or fabricated opening balances are available. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
 
-Account connection never asks for a recovery phrase. Choose a demo role with **Get started**, or approve a compatible browser-wallet connection for native testnet tools. Keys remain in the extension; the demo uses memory-only identities. See [account connection and legacy-data handling](docs/ACCOUNT-CONNECTION.md).
+Account connection never asks for a recovery phrase. Approve a compatible browser-wallet connection for native testnet tools. Keys remain in the extension. No wallet is created by the app. See [account connection and legacy-data handling](docs/ACCOUNT-CONNECTION.md).
 
 ## Run it
 
@@ -48,9 +48,8 @@ npm run dev            # API on :8787, web on :5173
 ```
 
 - <http://localhost:5173> uses the live Portaldot V3 testnet.
-- <http://localhost:5173/?demo> is a clearly labelled simulation that follows the contract's rules, for when the testnet is unreachable.
 
-The API starts with on-chain spending jobs disabled. Faucet and keeper services require `FAUCET=on` / `KEEPERS=on` and their own `FAUCET_MNEMONIC` / `KEEPER_MNEMONIC`; neither falls back to the deployment key. Fund those operational wallets separately only when needed. The bridge relayer also requires `RELAYER=on`. See `.env.example`. Simulation does not spend test tokens.
+The API starts with on-chain spending jobs disabled. Faucet and keeper services require `FAUCET=on` / `KEEPERS=on` and their own `FAUCET_MNEMONIC` / `KEEPER_MNEMONIC`; neither falls back to the deployment key. Fund those operational wallets separately only when needed. The bridge relayer also requires `RELAYER=on`. See `.env.example`.
 
 To deploy your own instance:
 
@@ -58,7 +57,8 @@ To deploy your own instance:
 npm run keygen         # writes .env (git-ignored) and prints the deployer address
 # fund that address on the testnet
 npm run deploy:check:core  # read-only budget report
-npm run deploy:core && npm run seed && npm run e2e
+npm run deploy:core # only after a successful, affordable preflight
+# Then verify actual transactions; do not populate example business listings.
 ```
 
 ## Commands
@@ -70,7 +70,7 @@ npm run deploy:core && npm run seed && npm run e2e
 | `npm test` | contract tests + SDK tests |
 | `npm run teleport:local` | two-chain bridge test on local anvil |
 | `npm run deploy:check:core` / `deploy:core` | read-only core budget / resumable core deployment |
-| `npm run deploy` · `deploy:bnb` · `seed` · `e2e` | full deployment, seeding and evidence |
+| `npm run deploy` · `deploy:bnb` · `e2e` | full deployment and evidence |
 | `npm run typecheck` | all packages |
 
 ## Repository layout
@@ -79,8 +79,8 @@ npm run deploy:core && npm run seed && npm run e2e
 contracts/       Solidity (Foundry): Portion.sol, Teleport.sol, WrappedToken.sol + tests
 packages/sdk/    @portion/sdk: addresses, passports, revive, batches, documents, DEX
 packages/server/ indexer, document gateway, faucet, keepers, network analysis, relayer
-apps/web/        React app (Vite), including a simulated mode that mirrors the contract
-scripts/         keygen, deploy, seed, e2e, local Teleport test
+apps/web/        React app (Vite), real chain reads and deployment-gated asset actions
+scripts/         keygen, deploy, e2e, local Teleport test
 docs/            research, architecture, testing, submission pack
 deployments/     addresses and evidence written by the scripts
 ```

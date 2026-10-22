@@ -1,3 +1,5 @@
+> Current status: contracts are undeployed. This is a submission plan, not evidence of live asset transactions. Runtime simulation and seeded example businesses have been removed.
+
 # Submission pack
 
 ## Dates that matter (from the DoraHacks page)
@@ -58,7 +60,7 @@ Rules that shape how we work: ≥3 commits in the window (we have many), no core
 | 2:20 | Network console: findings | "For node operators: the chain has two validators and no nominators. Portion says so, and Pool Studio lets anyone fix it." |
 | 2:40 | Teleport and the faucet, block explorer link | "Bridge pUSD to BNB Chain, and an open faucet for every builder. Portion is a front door for Portaldot V3." |
 
-Record against the **live** testnet after `npm run seed`, and show a block explorer link for one transaction.
+Record against the **live** testnet after creating a testnet listing from actual operator-supplied details, and show a block explorer link for one transaction.
 
 ## Pitch deck outline (PDF, 7 slides)
 

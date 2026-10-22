@@ -1,3 +1,5 @@
+> Earlier stages below are historical. The live-data-only update at the end supersedes all simulation instructions. For the current runnable workflow see [WALKTHROUGH.md](WALKTHROUGH.md).
+
 # Portion development stages
 
 The product: operators raise funding for productive assets; participants buy shares and claim allocations of deposited revenue. Testnet software, with an explicitly labelled simulation.
@@ -152,3 +154,8 @@ Next: measure the remaining native onboarding/lifecycle costs and evaluate the c
 - Reviewed desktop (1280×720) and mobile (390×844). Found and fixed an intrinsic-width overflow in the mobile creation form; measured width is now 390/390. Also checked mobile account/workspace/business layouts, Escape focus restoration, zero secret-entry fields and all five loaded asset covers in the public walkthrough.
 - Published source commit 8ca3ee9 as Vercel deployment dpl_95pP5FeZ2ceYQw5VZs77mk5bdC7K at https://portion-one.vercel.app. Repeated the public simulation: new account dialog → operator listing → separate funder buys 10 shares for 100 → operator receives 99 → deposits 20 → funder claims 19.90 and finishes at 1,919.90 with zero pending.
 - Real extension approval/signing was not exercised in the browser, which has no injected wallet. Those branches were tested with mocks and checked against the extension interface. Live Portion funding/payouts remain unavailable pending testnet deployment. Screenshots saved outside the repository; temporary viewport override reset.
+
+
+## Live-data-only update (22 October 2026)
+
+Supersedes earlier simulation walkthroughs: runtime simulation, role switching, generated visitor wallets, opening balances, example business calculator and seed-listing script have been removed. Network console now reads finalized blocks directly. Financial routes require a verified deployment; missing token balances and service history are unavailable. Current steps: [WALKTHROUGH.md](WALKTHROUGH.md). Contract deployment and the real asset lifecycle remain unfinished.

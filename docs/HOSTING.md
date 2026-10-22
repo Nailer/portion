@@ -1,15 +1,9 @@
-# Public preview hosting
+# Hosting scope
 
-Public URL: https://portion-one.vercel.app. Source repository: https://github.com/Nailer/portion. Vercel project: `pleasants-projects/portion`. Latest verified production deployment: `dpl_95pP5FeZ2ceYQw5VZs77mk5bdC7K`, built from source commit `8ca3ee9` on 22 October 2026, with the rebrand and secret-free account connection. The first preview was published on 21 October; its historical evidence remains in `deployments/web-preview.json`.
+Vercel builds `@portion/web` with `npm run build -w @portion/web` and serves `apps/web/dist`. SPA rewrites support direct page links. There is no simulation mode, automatic account creation or balance allocation.
 
-CLI publishing is working. Vercel's attempt to connect the GitHub repository was rejected for missing repository access, so automatic deployments on Git pushes are not enabled. Grant the Vercel GitHub integration access to `Nailer/portion` and reconnect it to enable that workflow. Until then, publish authorised updates with `vercel deploy --prod --scope pleasants-projects`.
+The frontend connects directly to the configured Portaldot testnet RPC for wallet balances, finalized network readings and native staking data. A configured deployment is checked against the network, contract rules and payment asset before financial pages are enabled. No deployed Portion configuration exists at present.
 
-The repository root contains `vercel.json`. Vercel installs the workspace with `npm ci`, builds `@portion/web` with `VITE_DEFAULT_MODE=demo`, and serves `apps/web/dist`. The SPA rewrite lets direct links such as `/guide` and `/operator` load correctly.
+Vercel does not host the persistent Hono/SQLite API, indexer, document gateway, keeper, faucet or bridge relayer. Missing service data is unavailable, not a zero-valued record. Deploy those services separately and configure the frontend API URL before enabling their workflows. No wallet secrets belong in public frontend variables.
 
-New visitors start in a labelled browser simulation. A saved mode choice is respected. `?demo` explicitly selects simulation; `?live` explicitly selects the live testnet. Neither changes deployment status. No deployment wallet keys belong in Vercel environment variables, and no blockchain transactions run during the web build.
-
-This publishes the frontend. It does **not** publish the persistent Hono/SQLite API, indexer, gateway, keepers or bridge relayer. Those require a separately hosted service and configured API routing before public live use. The browser can connect directly to Portaldot for supported reads, but Portion's core contracts are not deployed yet. Vercel hosting is not evidence of a blockchain deployment.
-
-`.vercelignore` excludes local environment files, database files, installed dependencies and Foundry build/cache outputs from CLI uploads. `.vercel/` remains Git-ignored. The GitHub repository must not include deployment mnemonics or private operational keys.
-
-Before publishing, run `npm test`, `npm run typecheck`, and `VITE_DEFAULT_MODE=demo npm run build -w @portion/web`. After publishing, test direct routes and complete the operator → funder → payment → claim journey in the deployed site. See [WALKTHROUGH.md](WALKTHROUGH.md).
+Check with `npm test`, `npm run typecheck`, and `npm run build -w @portion/web`. Publish with `vercel deploy --prod --yes --scope pleasants-projects`. GitHub integration is not connected, so a Git push alone does not publish the site. See [WALKTHROUGH.md](WALKTHROUGH.md) for available actions and remaining deployment work.
