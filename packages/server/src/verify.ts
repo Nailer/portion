@@ -12,6 +12,8 @@ export interface NativeProof {
   supplyMatches: boolean;
   supply?: string;
   adminIsPallet: boolean;
+  rolesControlled: boolean;
+  finalizedHash: string;
   verified: boolean;
   notes: string[];
 }
@@ -24,31 +26,40 @@ export interface NativeProof {
  */
 export async function verifyListing(api: ApiPromise, l: ListingView): Promise<NativeProof> {
   const notes: string[] = [];
+  const finalizedHash = await api.rpc.chain.getFinalizedHead();
+  const state = await api.at(finalizedHash);
   const palletId = (api.consts.nftFractionalization.palletId as any).toU8a();
   const palletAccount = encodeAddress(u8aConcat(stringToU8a('modl'), palletId, new Uint8Array(32 - 4 - palletId.length)), 42);
 
-  const item: any = (await api.query.nfts.item(l.nftCollection, l.nftItem)).toJSON();
+  const item: any = (await state.query.nfts.item(l.nftCollection, l.nftItem)).toJSON();
   const deedOwner = item?.owner as string | undefined;
   // The pallet does not move the deed: it switches transfers off for it (the Transferable bit of the item config).
-  const cfg: any = (await api.query.nfts.itemConfigOf(l.nftCollection, l.nftItem)).toJSON();
-  const transferable = (Number(cfg?.settings ?? 1) & 1) === 1;
-  const deedLocked = !!item && !transferable;
+  const cfg: any = (await state.query.nfts.itemConfigOf(l.nftCollection, l.nftItem)).toJSON();
+  // ItemSettings stores DISABLED capabilities: bit 0 set means transfers are locked.
+  const settings = cfg?.settings;
+  const transfersDisabled = settings !== undefined && Number.isSafeInteger(Number(settings)) && (BigInt(settings) & 1n) === 1n;
+  const deedLocked = !!item && transfersDisabled;
   if (!item) notes.push('The deed NFT no longer exists. It may have been burned.');
-  else if (transferable) notes.push('Transfers of the deed NFT are still enabled.');
+  else if (!transfersDisabled) notes.push('The deed transfer lock could not be established from its item settings.');
 
-  const map: any = (await api.query.nftFractionalization.nftToAsset([l.nftCollection, l.nftItem])).toJSON();
+  const map: any = (await state.query.nftFractionalization.nftToAsset([l.nftCollection, l.nftItem])).toJSON();
   const fractionalized = !!map;
   const assetMatches = fractionalized && Number(map.assetId ?? map.asset ?? map[0]) === l.assetId;
   const fractions = fractionalized ? String(BigInt(map.fractions ?? map[1] ?? 0)) : undefined;
   if (!fractionalized) notes.push('This deed was never fractionalized natively.');
   else if (!assetMatches) notes.push('The deed is fractionalized into a different asset than the listing claims.');
 
-  const asset: any = (await api.query.assets.asset(l.assetId)).toJSON();
+  const asset: any = (await state.query.assets.asset(l.assetId)).toJSON();
   const supply = asset ? String(BigInt(asset.supply)) : undefined;
   const supplyMatches = supply === String(l.totalShares);
   if (!supplyMatches) notes.push('Share supply does not match the listing.');
   const adminIsPallet = !!asset && encodeAddress(decodeAddress(asset.admin), 42) === palletAccount;
-  if (!adminIsPallet) notes.push('The share asset can still be administered by someone other than the pallet.');
+  const rolesControlled = !!asset && ['owner', 'issuer', 'admin', 'freezer'].every(role => {
+    try { return encodeAddress(decodeAddress(asset[role]), 42) === palletAccount; } catch { return false; }
+  });
+  if (!rolesControlled) notes.push('Not all asset permissions are controlled by the fractionalization pallet. Issuance, freezing or ownership may be controlled elsewhere.');
+  const fractionsMatch = fractions === String(l.totalShares);
+  if (fractionalized && !fractionsMatch) notes.push('The original fraction count does not match the listing.');
 
   return {
     deedLocked,
@@ -59,7 +70,9 @@ export async function verifyListing(api: ApiPromise, l: ListingView): Promise<Na
     supplyMatches,
     supply,
     adminIsPallet,
-    verified: deedLocked && assetMatches && supplyMatches && adminIsPallet,
+    rolesControlled,
+    finalizedHash: finalizedHash.toHex(),
+    verified: deedLocked && assetMatches && supplyMatches && rolesControlled && fractionsMatch,
     notes,
   };
 }

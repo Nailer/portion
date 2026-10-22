@@ -6,6 +6,7 @@ import { contentHash, PortionClient, RETENTION_BLOCKS, storedInBlock, type Deplo
 import { Faucet, FaucetError } from './faucet.js';
 import { snapshot, recordSample, type NetworkSnapshot } from './network.js';
 import { verifyListing } from './verify.js';
+import type { IndexerStatus } from './indexer.js';
 
 function sniff(data: Uint8Array): string {
   if (data[0] === 0xff && data[1] === 0xd8) return 'image/jpeg';
@@ -16,7 +17,7 @@ function sniff(data: Uint8Array): string {
   return 'application/octet-stream';
 }
 
-export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: Deployment; faucet?: Faucet; startedAt: number; relayerRunning?: boolean }) {
+export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: Deployment; faucet?: Faucet; startedAt: number; relayerRunning?: boolean; indexerStatus?: () => IndexerStatus }) {
   const { api, db, deployment, faucet } = ctx;
   const app = new Hono();
   app.use('*', cors());
@@ -32,7 +33,7 @@ export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: 
 
   app.get('/api/health', async (c) => {
     const head = (await api.rpc.chain.getHeader()).number.toNumber();
-    return c.json({ ok: true, head, uptimeSeconds: Math.floor((Date.now() - ctx.startedAt) / 1000), deployed: !!deployment });
+    return c.json({ ok: true, head, uptimeSeconds: Math.floor((Date.now() - ctx.startedAt) / 1000), deployed: !!deployment, indexer: ctx.indexerStatus?.() ?? null });
   });
 
   app.get('/api/deployment', (c) => c.json(deployment ?? null));
@@ -53,6 +54,9 @@ export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: 
     const hash = c.req.param('hash').toLowerCase();
     if (db.prepare('SELECT 1 FROM docs WHERE hash = ?').get(hash)) return c.json({ ok: true, already: true });
     const { block } = await c.req.json().catch(() => ({ block: 0 }));
+    if (!Number.isSafeInteger(block) || block < 1) return c.json({ error: 'A positive block number is required.' }, 400);
+    const finalized = await api.rpc.chain.getFinalizedHead();
+    if (block > (await api.rpc.chain.getHeader(finalized)).number.toNumber()) return c.json({ error: 'Document block is not finalized yet.' }, 409);
     try {
       const bh = await api.rpc.chain.getBlockHash(Number(block));
       const found = (await storedInBlock(api, bh.toHex())).find((s) => s.hash === hash);
@@ -66,12 +70,13 @@ export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: 
 
   app.get('/api/doc/:hash/meta', async (c) => {
     const hash = c.req.param('hash').toLowerCase();
-    const row = db.prepare('SELECT block, idx, size, renewed_block, renewed_idx FROM docs WHERE hash = ?').get(hash) as any;
+    const row = db.prepare('SELECT block, idx, size, renewed_block, renewed_idx, data FROM docs WHERE hash = ?').get(hash) as any;
     if (!row) return c.json({ error: 'unknown document' }, 404);
     const head = (await api.rpc.chain.getHeader()).number.toNumber();
+    if (contentHash(new Uint8Array(row.data)) !== hash) return c.json({ error: 'Document bytes do not match their hash.' }, 500);
     const anchor = row.renewed_block ?? row.block;
     const expiresAt = anchor + RETENTION_BLOCKS;
-    return c.json({ hash, block: row.block, index: row.idx, size: row.size, renewedBlock: row.renewed_block, expiresAtBlock: expiresAt, blocksLeft: expiresAt - head, daysLeft: Math.max(0, (expiresAt - head) * 6) / 86_400, hashVerified: true });
+    return c.json({ hash, block: row.block, index: row.idx, size: row.size, renewedBlock: row.renewed_block, expiresAtBlock: expiresAt, blocksLeft: expiresAt - head, hashVerified: true });
   });
 
   // ───────── listings, proofs, activity ─────────
@@ -87,6 +92,8 @@ export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: 
   });
 
   app.get('/api/activity', (c) => {
+    const indexing = ctx.indexerStatus?.();
+    if (!deployment || !indexing?.ready || !indexing.historyComplete) return c.json({ error: 'Complete finalized activity history is unavailable.', indexing: indexing ?? null }, 503);
     const listing = c.req.query('listing');
     const actor = c.req.query('actor')?.toLowerCase();
     const limit = Math.min(Number(c.req.query('limit') ?? 30), 200);
@@ -103,6 +110,8 @@ export function buildApp(ctx: { api: ApiPromise; db: DatabaseSync; deployment?: 
   });
 
   app.get('/api/listings/:id/revenue', (c) => {
+    const indexing = ctx.indexerStatus?.();
+    if (!deployment || !indexing?.ready || !indexing.historyComplete) return c.json({ error: 'Complete finalized revenue history is unavailable.', indexing: indexing ?? null }, 503);
     const id = Number(c.req.param('id'));
     const rows = db.prepare("SELECT ts, block, data FROM events WHERE listing_id = ? AND kind IN ('RevenueDeposited','Slashed') ORDER BY id").all(id) as any[];
     return c.json(rows.map((r) => {

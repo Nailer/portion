@@ -33,9 +33,10 @@ if (config.relayer.enabled && deployment?.teleport && deployment.bnb && config.e
   relayer.start();
   console.log('[portion] Teleport relayer running');
 }
-const app = buildApp({ api, db, deployment, faucet, startedAt: Date.now(), relayerRunning: !!relayer });
+const indexer = new Indexer(api, db, deployment);
+const app = buildApp({ api, db, deployment, faucet, startedAt: Date.now(), relayerRunning: !!relayer, indexerStatus: () => indexer.status() });
 
-new Indexer(api, db, deployment).start().catch((e) => console.error('[indexer] failed to start', e));
+indexer.start().catch((e) => console.error('[indexer] failed to start', e));
 if (config.keepers.enabled && config.keeperMnemonic) {
   new Keepers(api, db, keyring.addFromUri(config.keeperMnemonic), deployment, config.keepers.intervalMs).start();
 }

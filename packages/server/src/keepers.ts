@@ -82,7 +82,11 @@ export class Keepers {
         const out = await submit(this.api, renewTx(this.api, block, idx), this.pair);
         if (out.ok) {
           const rec: any = out.events.find((e) => (this.api.events as any).transactionStorage.Renewed.is(e.event));
-          const newIdx = rec ? Number(rec.event.data[0].toString()) : 0;
+          if (!rec || rec.event.data[1].toHex().toLowerCase() !== hash.toLowerCase()) {
+            this.log('renewer', hash.slice(0, 12), false, out.txHash, 'Renewal receipt did not confirm this document. Retention was not updated.');
+            continue;
+          }
+          const newIdx = Number(rec.event.data[0].toString());
           this.db.prepare('UPDATE docs SET renewed_block = ?, renewed_idx = ? WHERE hash = ?').run(out.blockNumber ?? head, newIdx, hash);
         }
         this.log('renewer', `${hash.slice(0, 12)}… (listing #${l.id})`, out.ok, out.txHash, out.ok ? 'retention extended' : out.error);
