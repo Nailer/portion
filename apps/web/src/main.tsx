@@ -6,6 +6,8 @@ import { AppProvider } from './state/app';
 import { PassportProvider } from './state/passport';
 import { RunnerProvider } from './state/runner';
 import './styles.css';
+import './workspaces.css';
+import './brand.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
