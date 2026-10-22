@@ -1,11 +1,11 @@
 {
   "kind": "read-only-core-candidate-comparison",
-  "checkedAt": "2026-10-22T11:04:30.121Z",
+  "checkedAt": "2026-10-22T15:07:46.516Z",
   "genesisHash": "0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd",
   "runtime": "portaldot-v3",
   "specVersion": "3002",
-  "finalizedBlock": 145122,
-  "finalizedHash": "0x616894019202b36167287261e14e68eb32cf41b65c10a6cd95d302871c68d0fe",
+  "finalizedBlock": 147548,
+  "finalizedHash": "0x3819befc1800295de97f8acda1fb4d6b1a4401026cca2140e26dcae94626582c",
   "account": "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
   "freeTPOT": "500",
   "spendableTPOT": "500",
@@ -19,9 +19,9 @@
       "constructorDryRunPassed": true,
       "storageDepositTPOT": "925.788",
       "budgetedStorageDepositTPOT": "1158.235",
-      "estimatedDeploymentFeeTPOT": "1.19331839344629",
-      "budgetWithOperatingBufferAndDeploymentFeeTPOT": "1199.42831839344629",
-      "shortfallTPOT": "699.42831839344629",
+      "estimatedDeploymentFeeTPOT": "1.19331828873487",
+      "budgetWithOperatingBufferAndDeploymentFeeTPOT": "1199.42831828873487",
+      "shortfallTPOT": "699.42831828873487",
       "funded": false
     },
     {
@@ -31,9 +31,9 @@
       "constructorDryRunPassed": true,
       "storageDepositTPOT": "481.1685",
       "budgetedStorageDepositTPOT": "602.460625",
-      "estimatedDeploymentFeeTPOT": "0.63691621002438",
-      "budgetWithOperatingBufferAndDeploymentFeeTPOT": "643.09754121002438",
-      "shortfallTPOT": "143.09754121002438",
+      "estimatedDeploymentFeeTPOT": "0.63691611855705",
+      "budgetWithOperatingBufferAndDeploymentFeeTPOT": "643.09754111855705",
+      "shortfallTPOT": "143.09754111855705",
       "funded": false
     }
   ],

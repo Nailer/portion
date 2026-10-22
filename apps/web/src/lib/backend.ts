@@ -77,6 +77,8 @@ export interface ProofView {
   supplyMatches: boolean;
   supply?: string;
   adminIsPallet: boolean;
+  rolesControlled: boolean;
+  finalizedHash: string;
   verified: boolean;
   notes: string[];
 }
@@ -88,7 +90,7 @@ export interface DocMeta {
   size: number;
   expiresAtBlock: number;
   blocksLeft: number;
-  daysLeft: number;
+
 }
 
 export interface ActivityRow {
@@ -159,6 +161,9 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
       /* not json */
     }
     throw new UserError(msg);
+  }
+  if (!res.headers.get('content-type')?.toLowerCase().includes('application/json')) {
+    throw new UserError('The service did not return API data. This feature is unavailable until its backend is reachable.');
   }
   return res.json() as Promise<T>;
 }

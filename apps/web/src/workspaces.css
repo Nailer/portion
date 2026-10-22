@@ -189,3 +189,11 @@
 .console > h2 { margin-top: 32px; }
 .console > p, .console > ol { line-height: 1.8; }
 .console .kv dd { overflow-wrap: anywhere; min-width: 0; }
+
+.readiness-section { margin-top: 48px; }
+.readiness-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.readiness-grid article { border: 1px solid var(--line); border-radius: 16px; padding: 24px; background: var(--surface); animation: enter .4s ease both; }
+.readiness-grid h3 { margin: 18px 0 10px; font-size: 23px; }
+.readiness-grid p { color: var(--ink-2); line-height: 1.7; font-size: 14px; }
+.readiness-grid a { display: inline-block; margin-top: 16px; font-size: 13px; }
+@media (max-width: 640px) { .readiness-grid { grid-template-columns: 1fr; } .readiness-grid article { padding: 20px; } }

@@ -159,3 +159,8 @@ Next: measure the remaining native onboarding/lifecycle costs and evaluate the c
 ## Live-data-only update (22 October 2026)
 
 Supersedes earlier simulation walkthroughs: runtime simulation, role switching, generated visitor wallets, opening balances, example business calculator and seed-listing script have been removed. Network console now reads finalized blocks directly. Financial routes require a verified deployment; missing token balances and service history are unavailable. Current steps: [WALKTHROUGH.md](WALKTHROUGH.md). Contract deployment and the real asset lifecycle remain unfinished.
+
+
+## Engineering leadership review (22 October 2026)
+
+The [technical review](TECHNICAL-REVIEW.md) records the current blockers, corrections and staged completion criteria. This change hardens finalized receipts, storage acceptance/renewal indexes, native backing checks and finalized/replay-safe history. The network console now exposes separate feature readiness rather than suggesting a connected chain means the product is fully live. No contract bytecode or on-chain balances were changed. Core SDK/indexer integration, affordable deployment, hosted services and live wallet/lifecycle proof are the next gates.

@@ -141,7 +141,7 @@ export function ListingPage() {
             <div className="proof">
               <div className={`proof-row ${docMeta ? '' : 'wait'}`}>
                 <span className="tick">{docMeta ? '✓' : '…'}</span>
-                <div><b>Terms and photo are stored on the chain</b><span>{docMeta ? `Block ${docMeta.block.toLocaleString()}, ${docMeta.size.toLocaleString()} bytes, hash checked. The chain keeps it for about ${docMeta.daysLeft.toFixed(1)} more days and a keeper renews it.` : 'Waiting for the document gateway to index it.'}</span></div>
+                <div><b>Terms document storage record</b><span>{docMeta ? `Block ${docMeta.block.toLocaleString()}, ${docMeta.size.toLocaleString()} bytes, hash checked. Recorded retention remaining: ${docMeta.blocksLeft.toLocaleString()} blocks. Keeper renewal is not guaranteed.` : 'Waiting for the document gateway to index it.'}</span></div>
                 <a href={backend!.docUrl(l.docHash)} target="_blank" rel="noreferrer">raw</a>
               </div>
               <div className={`proof-row ${proof ? (proof.deedLocked ? '' : 'bad') : 'wait'}`}>
@@ -149,14 +149,14 @@ export function ListingPage() {
                 <div><b>The deed NFT is locked in place</b><span>{proof ? (proof.deedLocked ? 'The deed still exists and its transfers are switched off by the fractionalization pallet. It is only released if one account collects 100% of the shares.' : 'The deed is not locked: it is missing or can still be transferred.') : 'Reading the native pallets…'}</span></div>
                 <span>#{l.nftItem}</span>
               </div>
-              <div className={`proof-row ${proof ? (proof.supplyMatches && proof.adminIsPallet ? '' : 'bad') : 'wait'}`}>
-                <span className="tick">{proof ? (proof.supplyMatches && proof.adminIsPallet ? '✓' : '!') : '…'}</span>
-                <div><b>The number of shares cannot change</b><span>{proof ? `${l.totalShares.toLocaleString()} shares exist and only the protocol can administer the asset, so no one can print more.` : 'Reading the share asset…'}</span></div>
+              <div className={`proof-row ${proof ? (proof.supplyMatches && proof.rolesControlled ? '' : 'bad') : 'wait'}`}>
+                <span className="tick">{proof ? (proof.supplyMatches && proof.rolesControlled ? '✓' : '!') : '…'}</span>
+                <div><b>Share supply and asset permissions</b><span>{proof ? proof.supplyMatches && proof.rolesControlled ? `${l.totalShares.toLocaleString()} shares match the listing; asset permissions are held by the fractionalization pallet.` : 'Supply or asset permissions did not pass verification. Review the findings below.' : 'Reading the share asset…'}</span></div>
                 <span>asset {l.assetId}</span>
               </div>
-              <div className="proof-row">
-                <span className="tick">✓</span>
-                <div><b>A bond backs the promise</b><span>{usd(l.vault.bond)} of pUSD is held by the contract and cannot be touched by the operator while the listing is active.</span></div>
+              <div className={`proof-row${l.vault.bond > 0n ? '' : ' bad'}`}>
+                <span className="tick">{l.vault.bond > 0n ? '✓' : '!'}</span>
+                <div><b>{l.vault.bond > 0n ? 'Operator bond held' : 'No operator bond remains'}</b><span>{usd(l.vault.bond)} of pUSD is held by the contract and cannot be touched by the operator while the listing is active.</span></div>
               </div>
             </div>
             {proof?.notes?.length ? <p className="note" style={{ marginTop: 10 }}>{proof.notes.join(' ')}</p> : null}

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { connect, TESTNET, type Deployment } from '@portion/sdk';
-import type { Backend } from '../lib/backend';
+import { api as serviceApi, type Backend } from '../lib/backend';
 import { LiveBackend } from '../lib/live';
 
 const bundled = import.meta.glob('../../../../deployments/portaldot-testnet.json', { eager: true, import: 'default' }) as Record<string, Deployment>;
@@ -47,7 +47,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const api = await withTimeout(connection, 12_000, 'The Portaldot testnet did not answer in time.').catch(e => { expired = true; throw e; });
         cleanup = () => void api.disconnect();
         let deployment: Deployment | undefined = bundledDeployment;
-        try { const r = await fetch('/api/deployment', { signal: AbortSignal.timeout(5000) }); if (r.ok) deployment = (await r.json()) ?? deployment; } catch { /* server optional for reads */ }
+        try { deployment = await serviceApi<Deployment | null>('/api/deployment', { signal: AbortSignal.timeout(5000) }) ?? deployment; } catch { /* server optional for reads */ }
         if (dead) { void api.disconnect(); return; }
         if (api.genesisHash.toHex() !== '0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd') throw new Error('The RPC returned an unexpected network. Financial actions are disabled.');
         if (deployment) {

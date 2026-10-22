@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
+import { contentHash } from '@portion/sdk';
 import { LiveBackend } from '../src/lib/live';
 import { usd } from '../src/lib/format';
 
@@ -24,5 +25,15 @@ describe('live data integrity', () => {
     const backend = new LiveBackend({} as any);
     await expect(backend.activity({})).rejects.toThrow('Service unreachable');
     await expect(backend.revenue(1)).rejects.toThrow('Service unreachable');
+  });
+});
+
+describe('terms integrity at the browser boundary', () => {
+  it('only accepts document JSON whose bytes match the listing hash', async () => {
+    const bytes = new TextEncoder().encode(JSON.stringify({ terms: 'Actual operator terms' }));
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(bytes)));
+    const backend = new LiveBackend({} as any);
+    expect(await backend.docJson(contentHash(bytes))).toEqual({ terms: 'Actual operator terms' });
+    expect(await backend.docJson('0x' + '00'.repeat(32))).toBeNull();
   });
 });

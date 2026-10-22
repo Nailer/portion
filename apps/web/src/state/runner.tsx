@@ -142,7 +142,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
 
             {phase === 'error' && error && (
               <>
-                <h2 id="sheet-title">{error.fix === 'faucet' ? 'You need a few tokens first' : 'That did not go through'}</h2>
+                <h2 id="sheet-title">{error.fix === 'faucet' ? 'You need a few tokens first' : 'Transaction could not be confirmed'}</h2>
                 <p className="sheet-error">{error.message}</p>
                 <div className="sheet-actions">
                   <button className="btn ghost" onClick={close}>Close</button>

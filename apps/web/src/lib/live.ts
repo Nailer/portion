@@ -87,7 +87,10 @@ export class LiveBackend implements Backend {
   async docJson(hash: string) {
     try {
       const r = await fetch(this.docUrl(hash));
-      return r.ok ? await r.json() : null;
+      if (!r.ok) return null;
+      const bytes = new Uint8Array(await r.arrayBuffer());
+      if (bytes.length > MAX_DOC_BYTES || contentHash(bytes).toLowerCase() !== hash.toLowerCase()) return null;
+      return JSON.parse(new TextDecoder().decode(bytes));
     } catch {
       return null;
     }
@@ -147,6 +150,8 @@ export class LiveBackend implements Backend {
     await this.ensureGas(who);
     switch (intent.kind) {
       case 'buy': {
+        const proof = await this.proof(intent.id);
+        if (!proof?.verified) throw new UserError('Buying is unavailable until the listing’s native backing checks pass.');
         const l = await c.listing(intent.id);
         if (!l.saleOpen) throw new UserError('This sale is closed.');
         if (intent.shares < 1 || intent.shares > l.vault.forSale) throw new UserError(`Only ${l.vault.forSale} shares are available.`);
