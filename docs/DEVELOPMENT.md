@@ -130,3 +130,13 @@ Next: investigate a substantially smaller deployment architecture or the organis
 - Completed the full simulation in the public Vercel site: operator created Solar neighbourhood hub with a 50 pUSD bond; a separate funder bought 10 shares for 100; operator balance rose from 1,950 to 2,049; operator deposited 20, allocating 19.90 after fees; funder claimed it and finished at 1,919.90 with zero pending. Saved screenshot evidence outside the repository. No blockchain transactions were submitted.
 
 Remaining: automatic Git deployment connection, funded Portaldot contract deployment and live lifecycle proof, business pilot validation and final submission materials. Publishing the frontend does not resolve these requirements.
+
+## Stage 7 — measure a smaller money-accounting contract
+
+- Added a separate `PortionCore` budget candidate, retaining the funding/payment/claim/bond lifecycle while moving display metadata to hashed documents and fixing deployment-wide payment/fee terms. Existing SDK artifacts and the published simulation are unchanged. See CORE-CANDIDATE.md for the exact differences and required integration work.
+- Creation bytecode fell from 11,738 to 6,143 bytes, and live read-only storage-deposit estimates from 925.788 to 481.1685 tPOT (about 48%). Both constructors passed runtime simulations. Native runtime constants explain the high code-storage cost and 30% code-hash lockup.
+- The candidate still exceeds a conservative operating budget: 643.0975 tPOT including the current deposit margin, working buffer and estimated deployment fee. Its provisional shortfall is 143.0975 against 500; this is not yet evidence that the complete lifecycle fits. No signing keys were loaded by the comparison and no transactions were submitted. Verified balance: 500 tPOT, nonce 0.
+- Added a reproducible, read-only comparison command, `npm run deploy:check:candidate`, with separate evidence in deployments/core-candidate.json. It does not replace the current deployment preflight or introduce a deploy command for the unintegrated candidate.
+- Added 18 candidate tests, including malicious-token callback protection, closure/default restrictions, late-joiner isolation, payout solvency fuzzing and failed-transfer rollback. All 99 local tests passed (64 contract, 12 SDK, 16 web, 7 server); four opt-in SDK live tests skipped. Project typecheck passed.
+
+Next: measure the remaining native onboarding/lifecycle costs and evaluate the candidate's integration. Keep public Vercel simulation working and preserve financial protections. Testnet deployment and a full live lifecycle remain outstanding.

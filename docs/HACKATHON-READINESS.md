@@ -49,6 +49,7 @@ The key technical demonstration is a native NFT → fractional native shares →
 - `deployments/portaldot-testnet.json` records completed deployment checkpoints only; partial records are not exposed as a ready deployment by the server/app.
 - `npm run e2e` is intended to produce actual lifecycle hashes after a funded deployment. No report should claim success until it has run successfully.
 - The fixed 500 tPOT allocation remains unspent. The latest optimised core budget is 1,198.235 tPOT, so live deployment is still unfunded. API spending jobs default off and never inherit the deployment key for faucet/keeper use. Additional funding is not assumed.
+- A separate, unintegrated `PortionCore` candidate reduces estimated storage deposit to 481.1685 tPOT. Its provisional budget with margin, working buffer and estimated deployment fee is 643.0975 tPOT. See `deployments/core-candidate.json` and `docs/CORE-CANDIDATE.md`; this does not change the app's deployment status or establish that 500 covers the full lifecycle.
 - Simulation is always labelled. Generated seed listings are demonstration assets, not verified businesses.
 - Shares, an NFT record and hashed documents do not independently establish legal ownership of physical equipment, prove business revenue or guarantee principal repayment.
 - Community Choice can stack with other awards. Grand Prize replaces a track first-place award for the same winner. Multiple track-award stacking is not explicitly confirmed by the public details.

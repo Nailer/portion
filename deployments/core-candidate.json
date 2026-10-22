@@ -1,0 +1,48 @@
+{
+  "kind": "read-only-core-candidate-comparison",
+  "checkedAt": "2026-10-22T11:04:30.121Z",
+  "genesisHash": "0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd",
+  "runtime": "portaldot-v3",
+  "specVersion": "3002",
+  "finalizedBlock": 145122,
+  "finalizedHash": "0x616894019202b36167287261e14e68eb32cf41b65c10a6cd95d302871c68d0fe",
+  "account": "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+  "freeTPOT": "500",
+  "spendableTPOT": "500",
+  "accountNonce": "0",
+  "operatingBufferTPOT": "40",
+  "contracts": [
+    {
+      "name": "Portion",
+      "creationBytes": 11738,
+      "bytecodeSha256": "3a66f7fe52acb43da900435a900b61a7b20ecbee1bee3483f2a58f3ee6d8c1ef",
+      "constructorDryRunPassed": true,
+      "storageDepositTPOT": "925.788",
+      "budgetedStorageDepositTPOT": "1158.235",
+      "estimatedDeploymentFeeTPOT": "1.19331839344629",
+      "budgetWithOperatingBufferAndDeploymentFeeTPOT": "1199.42831839344629",
+      "shortfallTPOT": "699.42831839344629",
+      "funded": false
+    },
+    {
+      "name": "PortionCore",
+      "creationBytes": 6143,
+      "bytecodeSha256": "83ccfa39b4241951ad3a0dc3becb88c26cedfa8390fccd30f61c6914b0c6852c",
+      "constructorDryRunPassed": true,
+      "storageDepositTPOT": "481.1685",
+      "budgetedStorageDepositTPOT": "602.460625",
+      "estimatedDeploymentFeeTPOT": "0.63691621002438",
+      "budgetWithOperatingBufferAndDeploymentFeeTPOT": "643.09754121002438",
+      "shortfallTPOT": "143.09754121002438",
+      "funded": false
+    }
+  ],
+  "codeDepositConstants": {
+    "perByte": "6000000000000",
+    "perItem": "15000000000000",
+    "codeHashLockupPercentPartsPerBillion": "300000000"
+  },
+  "candidateUsedByPublishedApp": false,
+  "submittedTransactions": false,
+  "note": "The candidate changes the ABI and uses hashed documents for metadata. SDK/indexer integration and live lifecycle proof are outstanding. The buffer is provisional, not a measured full seed/e2e budget. This file is not a deployment."
+}
