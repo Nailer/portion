@@ -9,7 +9,7 @@ export function generateCover(name: string, category: number): string {
   let seed = 0;
   for (const c of name) seed = (Math.imul(seed, 31) + c.charCodeAt(0)) >>> 0;
   const shift = seed % 10;
-  const label = (CATEGORIES[index] ?? 'Other').replace(/&/g, '&amp;');
+  const label = (CATEGORIES[index] ?? 'Other').toUpperCase().replace(/&/g, '&amp;');
   const platform = `<ellipse cx="200" cy="229" rx="123" ry="24" fill="#020915" opacity=".6"/><path d="m75 203 125-63 125 63-125 66z" fill="#102442" stroke="#2d507a"/><path d="m75 203 125 66 125-66v12l-125 65-125-65z" fill="#0b182d"/>`;
   let illustration: string;
   if (index === 0) {
@@ -22,5 +22,5 @@ export function generateCover(name: string, category: number): string {
     const bars = Array.from({length: 11},(_,i) => { const height = 30 + ((i * 23 + seed) % 90); return `<rect x="${105+i*17}" y="${155-height/2}" width="7" height="${height}" rx="3.5" fill="${accent}" opacity="${.35+(i%4)*.17}"/>`; }).join('');
     illustration = `<ellipse cx="200" cy="150" rx="112" ry="65" fill="#122b50" stroke="#345980"/>${bars}`;
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><radialGradient id="a"><stop stop-color="${accent}" stop-opacity=".2"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient></defs><rect width="400" height="300" fill="#0e1c31"/><ellipse cx="${200+shift}" cy="130" rx="185" ry="145" fill="url(#a)"/><g transform="translate(0 ${shift-5})">${platform}${illustration}</g><text x="22" y="280" font-family="sans-serif" font-size="10" letter-spacing="2" fill="#7899c2">${label.toUpperCase()}</text><path d="M347 271h30m-8-6 8 6-8 6" stroke="${accent}" stroke-width="1.5" fill="none"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><defs><radialGradient id="a"><stop stop-color="${accent}" stop-opacity=".2"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient></defs><rect width="400" height="300" fill="#0e1c31"/><ellipse cx="${200+shift}" cy="130" rx="185" ry="145" fill="url(#a)"/><g transform="translate(0 ${shift-5})">${platform}${illustration}</g><text x="22" y="280" font-family="sans-serif" font-size="10" letter-spacing="2" fill="#7899c2">${label}</text><path d="M347 271h30m-8-6 8 6-8 6" stroke="${accent}" stroke-width="1.5" fill="none"/></svg>`;
 }
