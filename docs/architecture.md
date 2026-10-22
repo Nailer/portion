@@ -24,8 +24,7 @@
   `TransactionStorage.store` is *not* batched: the pallet indexes the tail of the extrinsic as the stored bytes, so it must be a top-level extrinsic.
 - **Why a contract at all?** Accountability needs state machines that pallets do not provide off the shelf: a cadence clock, a bond, a permissionless slash, per-share revenue accounting.
   Solidity is the right tool and `pallet-revive` runs it with standard `solc` output (`evm_version = paris`).
-- **Passport.** A Substrate key the app signs with. A guest key lives in the browser; a MetaMask user signs one fixed message and the key is derived from the signature, so the same wallet always
-  opens the same account. The Passport's contract address is `keccak256(accountId)[12..]`, verified against `reviveApi.address` on the live chain.
+- **Wallet-owned signing.** The web app connects to an injected Substrate-compatible browser wallet. The wallet shares public accounts and supplies a signer; native transactions are approved in that wallet. The app does not request recovery phrases, derive spending keys from MetaMask signatures, or restore/save browser secrets. Demo identities are memory-only and are never used for live transactions. The contract address mapping remains `keccak256(accountId)[12..]`, verified against `reviveApi.address`. Historical SDK key helpers remain for local development/legacy compatibility, not web sign-in.
 
 ## Chain facts this build depends on (all verified on the V3 testnet)
 
@@ -43,9 +42,9 @@
 ## Data flow of the headline transaction
 
 1. Browser compresses the photo to under 28 KB and builds the terms JSON.
-2. Passport submits two top-level `TransactionStorage.store` extrinsics (terms, photo).
+2. The connected wallet approves two top-level `TransactionStorage.store` extrinsics (terms, photo).
 3. SDK picks a free asset id and NFT item, then builds the batch.
-4. Passport submits `batchAll[ mint, setAttribute, fractionalize, approve shares, approve bond, Portion.createListing ]`.
+4. The connected wallet approves `batchAll[ mint, setAttribute, fractionalize, approve shares, approve bond, Portion.createListing ]`.
 5. `createListing` checks `totalSupply()` of the share token equals the declared supply, pulls shares and bond with the approvals, and emits `Listed`.
 6. The indexer stores the documents it sees in the block bodies and the event; the app shows the listing.
 

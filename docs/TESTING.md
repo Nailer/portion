@@ -11,22 +11,22 @@ npm run dev          # starts the API on :8787 and the web app on :5173
 
 Open <http://localhost:5173/?demo> for the **simulated** mode, which follows the same rules as the Solidity contract and needs no network. Then:
 
-1. Click **Open Passport → Continue as a guest**.
-2. Open **Yaba solar charging kiosk**. Drag the wheel, press **Buy**. Read the "Under the hood" sheet: those are the real calls (a native approval, then a Solidity call). Confirm.
+1. Click **Get started → Explore as a funder**, or select **Operator/Funder** in the simulation banner. No wallet or recovery phrase is needed.
+2. Open **Solar charging network**. Drag the wheel, press **Buy**. Read the "Under the hood" sheet: those are the real calls (a native approval, then a Solidity call). Confirm.
 3. Open the **Podcast network catalogue**: its operator clock is in the "Late" band. Press **Skip a week ahead** in the banner and it becomes slashable; then press **Slash the bond** and watch the bond flow to holders.
 4. **Tokenize**: fill the form, watch the preview card and the nine-step "Under the hood" list, publish.
 5. **Portfolio**: claim, stake, see activity.
 
-Remove `?demo` to use the **live testnet** instead.
+Use **Use the live testnet** or open `?live` to inspect the live network. The public build defaults to simulation; removing `?demo` alone does not change a saved mode choice. Live native signing uses a compatible browser extension, not a phrase imported into the site.
 
 ## 2. Automated tests (no network)
 
 ```bash
-npm run contracts:test      # 46 Foundry tests, including a 512-run solvency fuzz
-npm test -w @portion/web    # 14 web regression tests
-npm test -w @portion/sdk    # 12 unit tests (address mapping, ERC-20 addressing, passports, hashing)
+npm run contracts:test      # Original and compact-core contract suites, including solvency fuzzing
+npm test -w @portion/web    # UI, wallet-connection and simulation regression tests
+npm test -w @portion/sdk    # Address mapping, signer routing, units, development keys and hashing
 npm run teleport:local      # two local EVM chains + the relayer: both directions, replay and forgery rejected
-npm test -w @portion/server # 4 faucet recipient-safety tests
+npm test -w @portion/server # Faucet recipient safety and spending opt-in tests
 npm run typecheck           # scripts, sdk, server and web
 ```
 

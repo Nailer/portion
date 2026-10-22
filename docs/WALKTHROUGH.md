@@ -2,7 +2,7 @@
 
 Portion connects two sides of a productive business: an operator who wants funding for equipment, and funders who want to receive a share of the income that operator pays in. Examples include solar installations, charging equipment, bike fleets and cold rooms. The intended market is global.
 
-Today this is an interactive prototype. The public website starts in **Simulated mode**. There are no real investments, earnings or withdrawals. The demonstration works in your browser, uses separate operator and funder accounts, and resets when you reload. Keep the same tab open while following the steps. No wallet extension is needed: the Operator and Funder buttons provide demo accounts with 2,000 simulated pUSD each.
+Today this is an interactive prototype. The public website starts in **Simulated mode**. There are no real investments, earnings or withdrawals. The demonstration works in your browser, uses separate operator and funder accounts, and resets when you reload. Keep the same tab open while following the steps. No wallet extension is needed: **Get started** lets you choose a demo role, and the Operator/Funder banner switches between accounts with 2,000 simulated pUSD each. The web app never asks for a recovery phrase. Live testnet tools can connect to a compatible browser wallet, which keeps the keys and approves signing.
 
 ## If you want to fund an asset
 

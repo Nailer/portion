@@ -36,6 +36,8 @@ and [docs/TESTING.md](docs/TESTING.md) for how to check every claim.
 
 New here? Open the [public preview](https://portion-one.vercel.app) and follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). Source: [Nailer/portion](https://github.com/Nailer/portion). The public preview is a labelled browser simulation; live Portion contracts are not deployed. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
 
+Account connection never asks for a recovery phrase. Choose a demo role with **Get started**, or approve a compatible browser-wallet connection for native testnet tools. Keys remain in the extension; the demo uses memory-only identities. See [account connection and legacy-data handling](docs/ACCOUNT-CONNECTION.md).
+
 ## Run it
 
 Requirements: Node 22.13+ on the 22.x LTS line, Node 24, or Node 26+, and [Foundry](https://getfoundry.sh) only if you want to rebuild or test the contracts.
