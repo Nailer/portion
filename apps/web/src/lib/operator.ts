@@ -1,12 +1,4 @@
 import { parseUnits, type ListingView } from '@portion/sdk';
-import type { TokenizeForm } from './backend';
-
-export const DEMO_SOLAR: TokenizeForm = {
-  name: 'Solar neighbourhood hub', summary: 'A simulated solar installation supplying daytime power to local businesses.', category: 0,
-  totalShares: 100, sharesForSale: 100, pricePusd: '10', cadenceSeconds: 604800, minPerPeriodPusd: '20', bondPusd: '50',
-  terms: 'Simulation only. The operator deposits at least 20 pUSD weekly. Revenue comes from customer electricity payments. The bond provides limited compensation for missed deposits; purchase principal is not guaranteed or automatically redeemed.', image: null,
-};
-
 export function paymentPreview(amount: string, minimum: bigint, feeBps: number) {
   try {
     const gross = parseUnits(amount, 6);

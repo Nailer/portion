@@ -17,29 +17,28 @@ import { Faucet } from './pages/Faucet';
 import { Teleport } from './pages/Teleport';
 import { Guide } from './pages/Guide';
 import { Operator } from './pages/Operator';
-import { DemoRoles } from './components/DemoRoles';
 import { Business } from './pages/Business';
 
 const Logo = BrandMark;
+function Unavailable() { return <div className="market-empty"><h1>Asset funding is not live yet.</h1><p>Portion’s contracts have not been deployed. Listings, purchases, operator payments and claims are unavailable. No wallet funds will be requested here.</p><Link className="btn primary" to="/network">View the real network</Link><Link className="btn ghost" to="/guide">See the development stages</Link></div>; }
 
 function AccountChip() {
-  const { passport, balances, signOut, loading, demoRole } = usePassport();
+  const { passport, balances, signOut, loading } = usePassport();
   const { openPassport } = useRunner();
-  const { backend } = useApp();
   const [open, setOpen] = useState(false);
   if (loading) return null;
-  if (!passport) return <button className="btn dark sm" onClick={openPassport}>{backend?.mode === 'demo' ? 'Get started' : 'Connect wallet'} <Icon name="arrow" size={16}/></button>;
+  if (!passport) return <button className="btn dark sm" onClick={openPassport}>Connect wallet <Icon name="arrow" size={16}/></button>;
   return (
     <>
       <button className="chip" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
         <span className="avatar" />
-        <span>{balances ? usd(balances.pusd, 0) : '…'}</span>
+        <span>{balances ? pot(balances.pot, 2) : 'Balance unavailable'}</span>
         <small>{short(passport.address, 4, 4)}</small>
       </button>
       {open && (
         <div className="account-menu" role="dialog" aria-label="Your account">
-          <div className="account-heading"><span className="choice-symbol"><Icon name="wallet"/></span><div><strong>{backend?.mode === 'demo' ? `Demo ${demoRole ?? 'account'}` : 'Connected wallet'}</strong><small>{backend?.mode === 'demo' ? 'Simulation only' : 'Keys remain in your wallet'}</small></div><button className="dialog-close" aria-label="Close account menu" onClick={() => setOpen(false)}><Icon name="close" size={16}/></button></div>
-          <div className="account-balance"><small>Available balance</small><b>{balances ? usd(balances.pusd) : '…'}</b><span>{balances ? pot(balances.pot, 2) : ''}</span></div>
+          <div className="account-heading"><span className="choice-symbol"><Icon name="wallet"/></span><div><strong>Connected wallet</strong><small>Keys remain in your wallet</small></div><button className="dialog-close" aria-label="Close account menu" onClick={() => setOpen(false)}><Icon name="close" size={16}/></button></div>
+          <div className="account-balance"><small>Payment token balance</small><b>{balances ? usd(balances.pusd) : 'Unavailable'}</b><span>{balances ? `${pot(balances.pot, 2)} free native balance` : 'Native balance unavailable'}</span><small>Read from Portaldot · refreshed every 15 seconds</small></div>
           <details className="account-details"><summary>Account details</summary><dl>
             <dt>Network account</dt><dd className="mono">{passport.address} <CopyButton text={passport.address} /></dd>
             <dt>Contract address</dt><dd className="mono">{passport.h160} <CopyButton text={passport.h160} /></dd>
@@ -47,7 +46,6 @@ function AccountChip() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Link className="btn ghost sm" to="/faucet" onClick={() => setOpen(false)}>Get tokens</Link>
             <button className="btn ghost sm" onClick={() => { signOut(); setOpen(false); }}>Sign out</button>
-            {backend?.mode === 'demo' && <span className="pill">simulated</span>}
           </div>
         </div>
       )}
@@ -56,8 +54,7 @@ function AccountChip() {
 }
 
 export function App() {
-  const { status, error, backend, forceDemo } = useApp();
-  const { busy } = useRunner();
+  const { status, error, backend, reconnect } = useApp();
   const [navOpen, setNavOpen] = useState(false);
   const loc = useLocation();
   const close = () => setNavOpen(false);
@@ -74,7 +71,7 @@ export function App() {
             <NavLink to="/operator" onClick={close}>Workspace</NavLink>
             <NavLink to="/guide" onClick={close}>How it works</NavLink>
             <details className="tools-nav"><summary>Tools <span>⌄</span></summary><div className="tools-menu">
-              <NavLink to="/business" onClick={close}>Business lab</NavLink>
+              <NavLink to="/business" onClick={close}>Revenue model</NavLink>
               <NavLink to="/network" onClick={close}>Network console</NavLink>
               <NavLink to="/pools" onClick={close}>Staking pools</NavLink>
               <NavLink to="/teleport" onClick={close}>Teleport bridge</NavLink>
@@ -82,21 +79,12 @@ export function App() {
             </div></details>
           </nav>
           <div className="spacer" />
-          <span className="network-chip"><i className="live-indicator" />{backend?.mode === 'demo' ? 'Simulation' : 'Testnet'}</span>
+          <span className="network-chip"><i className="live-indicator" />{status === 'ready' ? 'Testnet connected' : status === 'connecting' ? 'Connecting' : 'Offline'}</span>
           <AccountChip />
           <button className="btn ghost sm menu-btn" onClick={() => setNavOpen((o) => !o)} aria-label="Menu" aria-expanded={navOpen}>Menu</button>
         </div>
       </header>
 
-      {backend?.mode === 'demo' && (
-        <div className="banner" role="status">
-          <div className="wrap">
-            <b>Simulated mode.</b> <span>Test assets and funds. Resets on reload.</span><DemoRoles />
-            <button className="btn ghost sm" disabled={busy} onClick={() => (backend as any).advance(7 * 86_400)} title="Move the simulated clock forward so operators fall behind">Skip a week ahead</button>
-            <button className="btn ghost sm" disabled={busy} onClick={() => forceDemo(false)}>Use the live testnet</button>
-          </div>
-        </div>
-      )}
       {backend?.mode === 'live' && !backend.deployed && (
         <div className="banner" role="status"><div className="wrap"><b>Contracts are not deployed yet.</b> <span>You are connected to Portaldot, but Portion's contracts have not been deployed to it.</span></div></div>
       )}
@@ -106,17 +94,17 @@ export function App() {
         {!['/', '/business', '/guide'].includes(loc.pathname) && status === 'offline' && (
           <div className="empty">
             <h3>The Portaldot testnet is not answering</h3>
-            <p>{error}. The testnet is being upgraded during the hackathon, so this happens. You can keep exploring in simulated mode, which follows the same rules as the contract.</p>
-            <button className="btn primary" onClick={() => forceDemo(true)}>Explore in simulated mode</button>
+            <p>{error}. Live data is unavailable. No balances or activity will be invented.</p>
+            <button className="btn primary" onClick={reconnect}>Retry connection</button>
           </div>
         )}
         {(['/', '/business', '/guide'].includes(loc.pathname) || (status === 'ready' && backend)) && (
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/listing/:id" element={<ListingPage />} />
-            <Route path="/create" element={<Create />} />
-            <Route path="/portfolio" element={<Portfolio />} />
-            <Route path="/operator" element={<Operator />} />
+            <Route path="/listing/:id" element={backend?.deployed ? <ListingPage /> : <Unavailable />} />
+            <Route path="/create" element={backend?.deployed ? <Create /> : <Unavailable />} />
+            <Route path="/portfolio" element={backend?.deployed ? <Portfolio /> : <Unavailable />} />
+            <Route path="/operator" element={backend?.deployed ? <Operator /> : <Unavailable />} />
             <Route path="/network" element={<Network />} />
             <Route path="/pools" element={<Pools />} />
             <Route path="/faucet" element={<Faucet />} />
@@ -131,7 +119,7 @@ export function App() {
       <footer className="foot">
         <div className="wrap">
           <div className="footer-brand"><Link className="brand" to="/"><Logo />Portion</Link><p>Working assets. Shared ambition.</p><small>Built on Portaldot V3 · Test tokens only. No monetary value.</small></div>
-          <span><Link to="/guide">How it works</Link> · <Link to="/faucet">Faucet</Link> · <Link to="/business">Business lab</Link></span>
+          <span><Link to="/guide">How it works</Link> · <Link to="/faucet">Faucet</Link> · <Link to="/business">Revenue model</Link></span>
         </div>
       </footer>
     </>

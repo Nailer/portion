@@ -19,7 +19,7 @@ export function useAsync<T>(fn: () => Promise<T>, deps: unknown[]): { data?: T; 
   const [state, set] = useState<{ data?: T; error?: Error; loading: boolean }>({ loading: true });
   useEffect(() => {
     let dead = false;
-    set((s) => ({ ...s, loading: true }));
+    set({ loading: true });
     fn().then(
       (data) => { if (!dead) set({ data, loading: false }); },
       (error) => { if (!dead) set({ error, loading: false }); },

@@ -63,9 +63,9 @@ export function ListingPage() {
     return Number.isSafeInteger(requested) && requested > 0 ? requested : 10;
   });
   const [tab, setTab] = useState<'buy' | 'trade' | 'mine'>('buy');
-  const [dexIn, setDexIn] = useState('20');
+  const [dexIn, setDexIn] = useState('');
   const [sellN, setSellN] = useState('1');
-  const [seedShares, setSeedShares] = useState('50');
+  const [seedShares, setSeedShares] = useState('');
   const [seedPusd, setSeedPusd] = useState('');
   const [depositAmt, setDepositAmt] = useState('');
   const [topUpAmt, setTopUpAmt] = useState('');
@@ -82,7 +82,7 @@ export function ListingPage() {
   const dexInUnits = safeAmount(dexIn);
   const { data: buyQuote } = useAsync(async () => (l && pool && dexInUnits > 0n ? backend!.quote(l, 'buy', dexInUnits) : null), [l?.id, pool?.shares, pool?.pusd, dexIn]);
   const { data: sellQuote } = useAsync(async () => (l && pool && Number(sellN) > 0 ? backend!.quote(l, 'sell', BigInt(Math.floor(Number(sellN)))) : null), [l?.id, pool?.shares, pool?.pusd, sellN]);
-  const { data: positions } = useAsync(async () => (passport ? backend!.positions(passport.address) : []), [passport?.address, tick]);
+  const { data: positions, error: positionsError, loading: positionsLoading } = useAsync(async () => (passport ? backend!.positions(passport.address) : []), [passport?.address, tick]);
 
 
   const me = positions?.find((p) => p.id === id);
@@ -94,9 +94,11 @@ export function ListingPage() {
   if (loading && !l) return <div className="empty"><Spinner /></div>;
   if (error || !l || !e) return <Empty title="We could not find that listing" action={<Link className="btn primary" to="/">Back to the market</Link>}>{error?.message}</Empty>;
 
+  if (!rules) return <Empty title="Verified contract fees unavailable">Try again once contract rules can be read.</Empty>;
+  if (passport && (positionsLoading || positionsError || !positions)) return <Empty title="Your positions are unavailable">Wait for a verified account reading before buying or claiming.</Empty>;
   const staked = me?.staked ?? 0;
   const cost = BigInt(shares) * l.vault.salePrice;
-  const fee = (cost * BigInt(rules?.saleFeeBps ?? 100)) / 10_000n;
+  const fee = (cost * BigInt(rules.saleFeeBps)) / 10_000n;
   const canBuy = l.saleOpen && l.vault.forSale > 0;
   const nowSec = backend!.now();
   const toSlash = l.lastDepositAt + 2 * l.cadence - nowSec;
@@ -116,7 +118,7 @@ export function ListingPage() {
             <div className="fact"><small>Price per share</small><b>{usd(l.vault.salePrice)}</b></div>
             <div className="fact"><small>Total share price reference</small><b>{usd(BigInt(Math.round(e.raise * 1e6)), 0)}</b></div>
             <div className="fact"><small>Promised minimum</small><b>{usd(l.minPerPeriod, 0)} {cadenceLabel(l.cadence)}</b></div>
-            <div className="fact"><small>Fee on deposited revenue</small><b>{(rules?.revenueFeeBps ?? 50) / 100}%</b></div>
+            <div className="fact"><small>Fee on deposited revenue</small><b>{(rules.revenueFeeBps) / 100}%</b></div>
             <div className="fact"><small>Paid so far</small><b>{usd(l.vault.totalRevenue)}</b></div>
             <div className="fact"><small>Operator bond</small><b>{usd(l.vault.bond)}</b></div>
           </div>
@@ -170,11 +172,12 @@ export function ListingPage() {
 
           <section className="block">
             <h2>Revenue paid in</h2>
-            <RevenueChart rows={revenue ?? []} />
+            {revenue ? <RevenueChart rows={revenue} /> : <p className="notice">Revenue history unavailable. No payment totals are inferred.</p>}
           </section>
 
           <section className="block">
             <h2>Activity</h2>
+            {!activity && <p className="notice">Activity history unavailable.</p>}
             <ul className="activity">
               {(activity ?? []).map((a) => <li key={a.id}><span>{describe(a)}</span><time>{ago(a.ts, nowSec)}</time></li>)}
               {activity && !activity.length && <li><span>No activity indexed yet.</span></li>}
@@ -233,15 +236,15 @@ export function ListingPage() {
                 <input type="number" aria-label="Number of shares" min={1} max={l.vault.forSale} value={shares} onChange={(ev) => setShares(Math.max(1, Math.min(l.vault.forSale, Math.floor(Number(ev.target.value)) || 1)))} />
                 <button aria-label="More shares" onClick={() => setShares((s) => Math.min(l.vault.forSale, s + 1))}>+</button>
               </div>
-              <div className="sum-line"><span>If all shares are staked</span><b>{usd(l.minPerPeriod * BigInt(10000 - (rules?.revenueFeeBps ?? 50)) / 10000n * BigInt(shares) / BigInt(l.totalShares))} {cadenceLabel(l.cadence)}</b></div>
-              <div className="sum-line"><span>Included Portion fee ({(rules?.saleFeeBps ?? 100) / 100}%)</span><b>{usd(fee)}</b></div>
+              <div className="sum-line"><span>If all shares are staked</span><b>{usd(l.minPerPeriod * BigInt(10000 - (rules.revenueFeeBps)) / 10000n * BigInt(shares) / BigInt(l.totalShares))} {cadenceLabel(l.cadence)}</b></div>
+              <div className="sum-line"><span>Included Portion fee ({(rules.saleFeeBps) / 100}%)</span><b>{usd(fee)}</b></div>
               <div className="total"><span>You pay</span><b>{usd(cost)}</b></div><p className="hint" style={{fontSize:11,color:'var(--ink-3)',lineHeight:1.8}}>The payment illustration assumes the stated deposit and every share staked. Actual allocations use the shares staked when money arrives. Income and principal repayment are not guaranteed.</p>
               {passport ? (
                 <>
                   <button className="btn primary" onClick={() => act({ kind: 'buy', id, shares })}>Buy {shares} share{shares === 1 ? '' : 's'}</button>
                   {balances && <p className="hint" style={{ color: 'var(--ink-3)', fontSize: 13 }}>You have {usd(balances.pusd)} and {pot(balances.pot, 1)}.</p>}
                 </>
-              ) : <button className="btn primary" onClick={openPassport}>{backend?.mode === 'demo' ? 'Choose a demo role to buy' : 'Connect wallet to buy'}</button>}
+              ) : <button className="btn primary" onClick={openPassport}>Connect wallet to buy</button>}
             </>
           ) : <p className="notice">{l.health === 'WoundDown' ? 'This listing has been wound down.' : 'The primary sale is closed. Shares may still trade on the native DEX.'}</p>)}
 

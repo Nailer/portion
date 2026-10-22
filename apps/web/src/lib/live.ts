@@ -1,7 +1,7 @@
 import type { ApiPromise } from '@polkadot/api';
 import {
   createPoolAndSeed, quoteExactIn, reserves, swapExactIn, withId, FALLBACK_LIMITS,
-  PortionClient, assetBalance, contentHash, generateCover, nativeFree, parseUnits, storeTx, submit, MAX_DOC_BYTES,
+  PortionClient, assetBalance, contentHash, nativeFree, parseUnits, storeTx, submit, MAX_DOC_BYTES,
   TESTNET, type Deployment, type ListingView, type Passport, type Plan, type PlanStep, type TxStage,
 } from '@portion/sdk';
 import {
@@ -43,17 +43,17 @@ export class LiveBackend implements Backend {
   }
 
   listings() {
-    return this.client ? this.client.listings() : Promise.resolve([]);
+    return this.need().listings();
   }
   listing(id: number) {
     return this.need().listing(id);
   }
   positions(a: string) {
-    return this.client ? this.client.positions(a) : Promise.resolve([]);
+    return this.need().positions(a);
   }
   async balances(address: string): Promise<Balances> {
     const pot = await nativeFree(this.chain, address);
-    const pusd = this.deployment ? await assetBalance(this.chain, this.deployment.pusdAssetId, address) : 0n;
+    const pusd = this.deployment ? await assetBalance(this.chain, this.deployment.pusdAssetId, address) : null;
     return { pot, pusd };
   }
   shareBalance(assetId: number, address: string) {
@@ -104,19 +104,11 @@ export class LiveBackend implements Backend {
     if (q.listing !== undefined) p.set('listing', String(q.listing));
     if (q.actor) p.set('actor', q.actor);
     if (q.limit) p.set('limit', String(q.limit));
-    try {
-      return await http<ActivityRow[]>(`/api/activity?${p}`);
-    } catch {
-      return [];
-    }
+    return http<ActivityRow[]>(`/api/activity?${p}`);
   }
   async revenue(id: number) {
-    try {
-      const rows = await http<{ ts: number; amount: string; kind: 'revenue' | 'slash' }[]>(`/api/listings/${id}/revenue`);
-      return rows.map((r) => ({ ...r, amount: BigInt(r.amount) }));
-    } catch {
-      return [];
-    }
+    const rows = await http<{ ts: number; amount: string; kind: 'revenue' | 'slash' }[]>(`/api/listings/${id}/revenue`);
+    return rows.map(r => ({ ...r, amount: BigInt(r.amount) }));
   }
   drip(address: string) {
     return http<DripResult>('/api/drip', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ address }) });
@@ -160,7 +152,7 @@ export class LiveBackend implements Backend {
         if (intent.shares < 1 || intent.shares > l.vault.forSale) throw new UserError(`Only ${l.vault.forSale} shares are available.`);
         const cost = BigInt(intent.shares) * l.vault.salePrice;
         await this.ensurePusd(who, cost);
-        return this.wrap(`Buy ${intent.shares} share${intent.shares === 1 ? '' : 's'} of ${l.name}`, c.planBuy(l, intent.shares), who, 'Your pUSD goes to the operator (minus a 1% fee). Nothing is locked.');
+        return this.wrap(`Buy ${intent.shares} share${intent.shares === 1 ? '' : 's'} of ${l.name}`, c.planBuy(l, intent.shares), who, 'Your pUSD goes to the operator after the contract’s sale fee.');
       }
       case 'claim': {
         if (!intent.ids.length) throw new UserError('Nothing to claim yet.');
@@ -182,7 +174,7 @@ export class LiveBackend implements Backend {
         return this.wrap('Unstake shares', c.planUnstake(l, intent.amount), who);
       }
       case 'slash':
-        return this.wrap('Slash the operator bond', c.planSlash(intent.id), who, 'You keep a 1% tip. The rest goes to share-holders.');
+        return this.wrap('Slash the operator bond', c.planSlash(intent.id), who, 'The contract determines the caller tip and allocation to share-holders.');
       case 'topUp': {
         const l = await c.listing(intent.id);
         await this.ensurePusd(who, intent.amount);
@@ -198,7 +190,7 @@ export class LiveBackend implements Backend {
         await this.ensureGas(who, 3n * 10n ** 14n);
         const tx = createPoolAndSeed(this.chain, withId(l.assetId), withId(this.need().deployment.pusdAssetId), BigInt(intent.shares), intent.pusd, who.address);
         return this.wrap(`Open a market for ${l.name}`, { tx, steps: [
-          { key: 'pool', lane: 'native', pallet: 'AssetConversion', method: 'createPool', title: 'Create the share / pUSD pool', detail: 'A native Uniswap-style pool. Setup costs 1 tPOT.' },
+          { key: 'pool', lane: 'native', pallet: 'AssetConversion', method: 'createPool', title: 'Create the share / pUSD pool', detail: 'A native Uniswap-style pool. Review the chain’s setup deposit before signing.' },
           { key: 'liq', lane: 'native', pallet: 'AssetConversion', method: 'addLiquidity', title: `Add ${intent.shares} shares and ${usdLabel(intent.pusd)} of liquidity`, detail: 'Sets the opening price and lets anyone trade shares with no order book.' },
         ] }, who, 'You can withdraw the liquidity later. LP tokens go to your Passport.');
       }
@@ -218,7 +210,7 @@ export class LiveBackend implements Backend {
           { key: 'swap', lane: 'native', pallet: 'AssetConversion', method: 'swapExactTokensForTokens', title: `Swap ${usdLabel(intent.pusdIn)} for about ${q} shares`, detail: 'Trades against the pool at the current price. The swap fails if the price moves more than 3%.' },
           { key: 'ap', lane: 'native', pallet: 'Assets', method: 'approveTransfer', title: 'Approve the vault', detail: 'So the shares you just bought can start earning.' },
           { key: 'stake', lane: 'evm', pallet: 'Revive', method: 'call', title: 'Stake them to earn revenue', detail: 'Portion.stake(): shares in the vault receive their portion of every payment.' },
-        ] }, who, 'Includes the pool’s 0.3% fee. No Portion fee applies to market trades.');
+        ] }, who, 'The live pool quote includes its trading fee.');
       }
       case 'dexSell': {
         const l = await c.listing(intent.id);
@@ -247,7 +239,8 @@ export class LiveBackend implements Backend {
     await this.ensurePusd(who, bond);
 
     const enc = new TextEncoder();
-    const cover = f.image ? f.image.bytes : enc.encode(generateCover(f.name, f.category));
+    if (!f.image) throw new UserError('Upload an actual image of the asset.');
+    const cover = f.image.bytes;
     const terms = enc.encode(JSON.stringify({ v: 1, name: f.name, summary: f.summary, category: f.category, terms: f.terms, createdAt: new Date().toISOString() }));
     if (cover.length > MAX_DOC_BYTES) throw new UserError(`The photo is ${(cover.length / 1024).toFixed(0)} KB after compression; the on-chain limit is 32 KB.`);
     if (terms.length > MAX_DOC_BYTES) throw new UserError('The terms are longer than 32 KB.');
@@ -265,7 +258,7 @@ export class LiveBackend implements Backend {
     return {
       title: `Tokenize ${f.name}`,
       steps: [...storage, ...plan.steps],
-      cost: `You lock a ${f.bondPusd} pUSD bond and about 3 tPOT of refundable deposits. Fees are a fraction of a cent.`,
+      cost: `You lock a ${f.bondPusd} pUSD bond. Network fees and storage deposits are additional; review them in your wallet.`,
       run: async (onStage) => {
         const txs: NonNullable<ActionResult['txs']> = [];
         try {

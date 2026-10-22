@@ -1,13 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { CADENCES, CATEGORIES, generateCover, parseUnits } from '@portion/sdk';
+import { CADENCES, CATEGORIES, parseUnits } from '@portion/sdk';
 import { useApp } from '../state/app';
 import { usePassport } from '../state/passport';
 import { useRunner } from '../state/runner';
 import { StepList } from '../components/StepList';
 import { compressImage } from '../lib/image';
 import { tokenizeSteps } from '../lib/steps';
-import { DEMO_SOLAR } from '../lib/operator';
 import { cadenceLabel, usd } from '../lib/format';
 
 interface Photo { bytes: Uint8Array; mime: string; url: string }
@@ -22,11 +21,11 @@ export function Create() {
   const [summary, setSummary] = useState('');
   const [category, setCategory] = useState(0);
   const [terms, setTerms] = useState('');
-  const [totalShares, setTotalShares] = useState(1000);
-  const [percentForSale, setPercentForSale] = useState(60);
-  const [price, setPrice] = useState('10');
+  const [totalShares, setTotalShares] = useState(0);
+  const [percentForSale, setPercentForSale] = useState(0);
+  const [price, setPrice] = useState('');
   const [cadence, setCadence] = useState<number>(CADENCES[2].seconds);
-  const [minPer, setMinPer] = useState('50');
+  const [minPer, setMinPer] = useState('');
   const [bond, setBond] = useState('');
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [photoErr, setPhotoErr] = useState<string>();
@@ -35,12 +34,11 @@ export function Create() {
 
   const forSale = Math.round((totalShares * percentForSale) / 100);
   const raise = forSale * Number(price || 0);
-  const minBond = (raise * (rules?.minBondBps ?? 500)) / 10_000;
+  const minBond = (raise * (rules?.minBondBps ?? 0)) / 10_000;
   useEffect(() => { setBond((b) => (b === '' || Number(b) < minBond ? (Math.ceil(minBond * 100) / 100).toString() : b)); }, [minBond]);
 
-  const emblem = useMemo(() => 'data:image/svg+xml;utf8,' + encodeURIComponent(generateCover(name || 'New listing', category)), [name, category]);
   const safeUnits = (v: string) => { try { return parseUnits(v, 6); } catch { return 0n; } };
-  const netRaise = safeUnits(price) * BigInt(forSale) * BigInt(10000 - (rules?.saleFeeBps ?? 100)) / 10000n;
+  const netRaise = safeUnits(price) * BigInt(forSale) * BigInt(10000 - (rules?.saleFeeBps ?? 0)) / 10000n;
   useEffect(() => () => { if (photo?.url) URL.revokeObjectURL(photo.url); }, [photo?.url]);
 
   const errors: Record<string, string> = {};
@@ -51,12 +49,12 @@ export function Create() {
   if (safeUnits(price) <= 0n) errors.price = 'Set a positive price with at most six decimal places.';
   if (safeUnits(minPer) <= 0n) errors.minPer = 'Set a positive minimum with at most six decimal places.';
   if (cadence < (rules?.minCadence ?? 60)) errors.cadence = 'That period is too short.';
-  if (safeUnits(bond) <= 0n || Number(bond) < minBond) errors.bond = `The bond must be at least ${usd(BigInt(Math.ceil(minBond * 1e6)))} (${(rules?.minBondBps ?? 500) / 100}% of the raise).`;
+  if (safeUnits(bond) <= 0n || Number(bond) < minBond) errors.bond = `The bond must be at least ${usd(BigInt(Math.ceil(minBond * 1e6)))} (${(rules?.minBondBps ?? 0) / 100}% of the raise).`;
   if (!Number.isSafeInteger(totalShares) || totalShares < 10 || totalShares > 1000000) errors.shares = 'Use a whole number between 10 and 1,000,000.';
-  const valid = Object.keys(errors).length === 0;
+  if (!photo) errors.photo = 'Upload a real asset photo.';
+  const valid = !!rules && Object.keys(errors).length === 0;
   const groups = [['name','summary','terms'],['shares','price'],['cadence','minPer','bond']];
   const next = () => { setTouched(true); if (!(groups[step] ?? []).some(k => errors[k])) {setStep(Math.min(3,step+1));setTouched(false);} };
-  const useExample = () => { setName(DEMO_SOLAR.name);setSummary(DEMO_SOLAR.summary);setTerms(DEMO_SOLAR.terms);setCategory(0);setTotalShares(100);setPercentForSale(100);setPrice('10');setCadence(604800);setMinPer('20');setBond('50');setTouched(false); };
 
   const onPhoto = async (f?: File | null) => {
     setPhotoErr(undefined);
@@ -79,13 +77,13 @@ export function Create() {
   };
   const show = (k: string) => (touched ? errors[k] : undefined);
 
+  if (!rules) return <div className="market-empty"><h2>Listing setup unavailable</h2><p>Verified contract rules are required before entering funding terms.</p></div>;
   return (
     <div className="create">
       <Link className="crumb" to="/operator">← Your operator workspace</Link>
       <div className="eyebrow" style={{marginTop:28}}>CREATE AN ASSET LISTING</div>
       <h1>Put your next asset<br/><span>in motion.</span></h1>
       <p className="page-lede">Describe the business, choose your funding terms, and set a payment schedule. Review everything before publishing.</p>
-      {backend?.mode === 'demo' && <button className="link-btn create-example" type="button" onClick={useExample}>Fill with the demo solar example ↗</button>}
       <nav className="create-progress" aria-label="Listing creation steps">{['Your asset','Funding','Payments','Review'].map((label,i)=><button key={label} type="button" disabled={i>step} aria-current={step===i?'step':undefined} onClick={()=>{setStep(i);setTouched(false);}}><span>{i<step?'✓':String(i+1).padStart(2,'0')}</span>{label}</button>)}</nav>
 
       <div className="create-grid" style={{ marginTop: 32 }}>
@@ -109,9 +107,9 @@ export function Create() {
             <div className="field">
               <label>Photo</label>
               <div className="drop">
-                <img src={photo?.url ?? emblem} alt="Cover preview" />
+                {photo && <img src={photo.url} alt="Your uploaded asset" />}
                 <input type="file" accept="image/*" aria-label="Upload a photo" onChange={(e) => onPhoto(e.target.files?.[0])} />
-                <p className="hint">{photo ? `Compressed to ${(photo.bytes.length / 1024).toFixed(1)} KB so it fits in one on-chain document.` : 'No photo? Portion draws an emblem for you. A real photo builds more trust.'}</p>
+                <p className="hint">{photo ? `Compressed to ${(photo.bytes.length / 1024).toFixed(1)} KB so it fits in one on-chain document.` : 'Upload a real photo of the asset. A photo is required.'}</p>
                 {photoErr && <p className="err">{photoErr}</p>}
               </div>
             </div>
@@ -174,7 +172,7 @@ export function Create() {
 
         <div className="sticky">
           <div className="preview-card">
-            <img className="cover" src={photo?.url ?? emblem} alt="" />
+            {photo ? <img className="cover" src={photo.url} alt="Your uploaded asset" /> : <div className="notice">Upload a real asset photo to preview it here.</div>}
             <div className="body">
               <h3>{name || 'Your listing'}</h3>
               <p style={{ color: 'var(--ink-2)', fontSize: 14 }}>{summary || 'Your one-line summary appears here.'}</p>

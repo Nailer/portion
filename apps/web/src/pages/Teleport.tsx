@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { BrowserProvider, Contract, parseUnits, isAddress } from 'ethers';
 import { FALLBACK_LIMITS, ReviveContract, TeleportArtifact, ERC20_ABI, h160ToFallbackSs58, submit, type PlanStep } from '@portion/sdk';
@@ -15,18 +16,18 @@ interface Transfer { id: number; src_chain: number; nonce: string; dst_chain: nu
 const BNB_PARAMS = { chainId: '0x61', chainName: 'BNB Smart Chain Testnet', nativeCurrency: { name: 'tBNB', symbol: 'tBNB', decimals: 18 }, rpcUrls: ['https://data-seed-prebsc-1-s1.bnbchain.org:8545'], blockExplorerUrls: ['https://testnet.bscscan.com'] };
 
 export function Teleport() {
-  const { backend, tick, refresh, forceDemo } = useApp();
+  const { backend, tick, refresh } = useApp();
   const { passport, balances } = usePassport();
   const { actPrepared, openPassport } = useRunner();
   const live = backend instanceof LiveBackend ? backend : null;
   const [dir, setDir] = useState<'out' | 'in'>('out');
-  const [amount, setAmount] = useState('25');
+  const [amount, setAmount] = useState('');
   const [recipient, setRecipient] = useState('');
   const [mm, setMm] = useState<string>();
   const [note, setNote] = useState<string>();
 
-  const { data: cfg } = useAsync(() => api<Cfg>('/api/teleport/config').catch(() => ({ enabled: false }) as Cfg), [backend]);
-  const { data: transfers } = useAsync(async () => (passport ? api<Transfer[]>(`/api/teleport/transfers?address=${passport.h160}`).catch(() => []) : []), [passport?.h160, tick]);
+  const { data: cfg, error: configError, loading: configLoading } = useAsync(() => api<Cfg>('/api/teleport/config'), [backend]);
+  const { data: transfers } = useAsync(async () => (passport ? api<Transfer[]>(`/api/teleport/transfers?address=${passport.h160}`) : []), [passport?.h160, tick]);
   const { data: mapped } = useAsync(async () => {
     if (!live || !passport) return true;
     const acc = (await (live.chain.call as any).reviveApi.accountId(passport.h160)).toString();
@@ -35,8 +36,9 @@ export function Teleport() {
 
   useEffect(() => { const t = setInterval(refresh, 9000); return () => clearInterval(t); }, [refresh]);
 
-  if (!live) return <Empty title="Teleport needs the live networks" action={<button className="btn primary" onClick={() => forceDemo(false)}>Switch to the live testnet</button>}>It moves real testnet tokens between Portaldot and BNB Chain, so there is nothing to simulate.</Empty>;
-  if (!cfg) return <div className="empty"><Spinner /></div>;
+  if (!live) return <Empty title="Teleport needs the live networks" action={<Link className="btn primary" to="/network">Network status</Link>}>It moves real testnet tokens between Portaldot and BNB Chain, so there is nothing to simulate.</Empty>;
+  if (configLoading) return <div className="empty"><Spinner /></div>;
+  if (configError || !cfg) return <Empty title="Bridge status unavailable">The bridge service could not be reached. No transfer status is inferred.</Empty>;
   if (!cfg.enabled || !cfg.home || !cfg.bnb) return <Empty title="Teleport is not deployed yet">The bridge contracts have not been deployed on both chains. Run <code>npm run deploy</code> and <code>npm run deploy:bnb</code>.</Empty>;
 
   const home = cfg.home; const bnb = cfg.bnb;
@@ -61,7 +63,8 @@ export function Teleport() {
     if (amt <= 0n) { setNote('Enter an amount.'); return; }
     setNote(undefined);
     actPrepared(async (): Promise<Prepared> => {
-      if ((balances?.pusd ?? 0n) < amt) throw new UserError('You do not have enough pUSD on Portaldot. Get some from the faucet.', 'faucet');
+      if (!balances || balances.pusd === null) throw new UserError('Your payment-token balance is unavailable.');
+      if (balances.pusd < amt) throw new UserError('You do not have enough pUSD on Portaldot. Get some from the faucet.', 'faucet');
       if ((balances?.pot ?? 0n) < 10n ** 14n) throw new UserError('You need a little tPOT for fees.', 'faucet');
       const c = new ReviveContract(live.chain, home.teleport, TeleportArtifact.abi);
       const data = c.encode('bridgeOut', [bnb.chainId, recipient, amt]);

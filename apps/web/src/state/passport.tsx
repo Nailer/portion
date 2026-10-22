@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { guestPassport, type Passport } from '@portion/sdk';
+import { type Passport } from '@portion/sdk';
 import type { Balances } from '../lib/backend';
 import { installedWallets, requestWallet, walletAddress, walletPassport, type InjectedWallet, type WalletAccount } from '../lib/wallet';
 import { useApp } from './app';
@@ -8,11 +8,9 @@ interface PassportState {
   passport: Passport | null;
   loading: boolean;
   balances: Balances | null;
-  demoRole: 'operator' | 'funder' | null;
   walletAccounts: WalletAccount[];
   requestConnection(provider: string): Promise<void>;
   selectAccount(address: string): void;
-  switchDemoRole(role: 'operator' | 'funder'): Promise<void>;
   signOut(): void;
   reloadBalances(): Promise<void>;
 }
@@ -22,13 +20,11 @@ export const usePassport = () => useContext(Ctx);
 export function PassportProvider({ children }: { children: ReactNode }) {
   const { backend, tick } = useApp();
   const [passport, setPassport] = useState<Passport | null>(null);
-  const [demoRole, setDemoRole] = useState<'operator' | 'funder' | null>(null);
   const [walletAccounts, setAccounts] = useState<WalletAccount[]>([]);
   const wallet = useRef<InjectedWallet | null>(null);
   const walletUnsubscribe = useRef<(() => void) | undefined>();
   const selectedWalletAddress = useRef<string | null>(null);
-  const demoAccounts = useRef<Partial<Record<'operator' | 'funder', Passport>>>({});
-  const activePassport = backend?.mode === 'demo' && demoRole ? demoAccounts.current[demoRole] ?? null : passport;
+  const activePassport = passport;
   const balanceRequest = useRef(0);
   const [balances, setBalances] = useState<Balances | null>(null);
 
@@ -38,14 +34,13 @@ export function PassportProvider({ children }: { children: ReactNode }) {
   const reloadBalances = useCallback(async () => {
     const request = ++balanceRequest.current;
     if (!backend || !activePassport) { setBalances(null); return; }
-    try { const next = await backend.balances(activePassport.address); if (request === balanceRequest.current) setBalances(next); } catch { /* transient */ }
+    try { const next = await backend.balances(activePassport.address); if (request === balanceRequest.current) setBalances(next); } catch { if (request === balanceRequest.current) setBalances(null); }
   }, [backend, activePassport]);
   useEffect(() => { void reloadBalances(); }, [reloadBalances, tick]);
   useEffect(() => { const timer = setInterval(() => void reloadBalances(), 15_000); return () => clearInterval(timer); }, [reloadBalances]);
 
   const value = useMemo<PassportState>(() => ({
     passport: activePassport, loading: false, balances, reloadBalances, walletAccounts,
-    demoRole: backend?.mode === 'demo' ? demoRole : null,
     requestConnection: async provider => {
       const result = await requestWallet(installedWallets()[provider]);
       walletUnsubscribe.current?.();
@@ -67,24 +62,14 @@ export function PassportProvider({ children }: { children: ReactNode }) {
       const connected = walletPassport(account, wallet.current);
       selectedWalletAddress.current = connected.address;
       balanceRequest.current++;
-      setBalances(null); setDemoRole(null); setPassport(connected);
-    },
-    switchDemoRole: async role => {
-      if (backend?.mode !== 'demo') throw new Error('Demo roles are only available in simulation.');
-      if (demoRole === role) return;
-      balanceRequest.current++;
-      if (!demoAccounts.current[role]) {
-        const { mnemonic: _unused, ...account } = await guestPassport();
-        demoAccounts.current[role] = account;
-      }
-      setBalances(null); setDemoRole(role);
+      setBalances(null); setPassport(connected);
     },
     signOut: () => {
       walletUnsubscribe.current?.(); walletUnsubscribe.current = undefined;
       wallet.current = null; selectedWalletAddress.current = null;
       balanceRequest.current++;
-      setAccounts([]); setDemoRole(null); demoAccounts.current = {}; setPassport(null); setBalances(null);
+      setAccounts([]); setPassport(null); setBalances(null);
     },
-  }), [activePassport, backend, demoRole, balances, reloadBalances, walletAccounts]);
+  }), [activePassport, backend, balances, reloadBalances, walletAccounts]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

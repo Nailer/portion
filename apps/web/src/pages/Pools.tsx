@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { parseUnits, submit, type PlanStep } from '@portion/sdk';
 import { useApp } from '../state/app';
@@ -11,12 +12,12 @@ import type { Prepared } from '../lib/backend';
 const native = (key: string, method: string, title: string, detail: string): PlanStep => ({ key, lane: 'native', pallet: 'NominationPools', method, title, detail });
 
 export function Pools() {
-  const { backend, tick, forceDemo } = useApp();
+  const { backend, tick } = useApp();
   const { passport, balances, reloadBalances } = usePassport();
   const { actPrepared, openPassport } = useRunner();
   const live = backend instanceof LiveBackend ? backend : null;
-  const [amount, setAmount] = useState('10');
-  const [joinAmt, setJoinAmt] = useState('1');
+  const [amount, setAmount] = useState('');
+  const [joinAmt, setJoinAmt] = useState('');
   const [name, setName] = useState('');
   const [picked, setPicked] = useState<Record<string, boolean>>({});
 
@@ -34,7 +35,7 @@ export function Pools() {
       const id = k.args[0].toNumber();
       const info: any = v.toJSON();
       const meta = (await api.query.nominationPools.metadata(id)).toU8a();
-      return { id, state: Object.keys(info.state ? { [String(info.state)]: 1 } : { Open: 1 })[0], members: Number(info.memberCounter ?? 0), points: BigInt(info.points ?? 0), root: info.roles?.root as string, name: new TextDecoder().decode(meta) };
+      return { id, state: String(info.state), members: Number(info.memberCounter), points: BigInt(info.points), root: info.roles?.root as string, name: new TextDecoder().decode(meta) };
     }));
     let mine: any = null;
     let pending = 0n;
@@ -50,7 +51,7 @@ export function Pools() {
     return { rows, minJoin: BigInt(minJoin.toString()), minCreate: BigInt(minCreate.toString()), validators: (validators as any).map((v: any) => v.toString()) as string[], nextId: Number(last.toString()) + 1, mine, pending, perm };
   }, [live, passport?.address, tick]);
 
-  if (!live) return <Empty title="Pool Studio needs the live testnet" action={<button className="btn primary" onClick={() => forceDemo(false)}>Switch to the live testnet</button>}>Pools are native staking, so there is nothing to simulate.</Empty>;
+  if (!live) return <Empty title="Pool Studio needs the live testnet" action={<Link className="btn primary" to="/network">Network status</Link>}>Pools are native staking, so there is nothing to simulate.</Empty>;
   if (loading && !data) return <div className="empty"><Spinner /></div>;
   if (!data) return <Empty title="Could not read staking pools" />;
 
@@ -87,14 +88,14 @@ export function Pools() {
 
   const join = (id: number) => actPrepared(prep(
     `Join pool #${id}`,
-    [native('j', 'join', `Bond ${joinAmt} tPOT into pool #${id}`, 'Your stake backs the pool’s validators and earns a share of rewards.'), native('p', 'setClaimPermission', 'Allow auto-compounding', 'Lets a keeper reinvest your rewards for you. It can never move your funds anywhere else.')],
+    [native('j', 'join', `Bond ${joinAmt} tPOT into pool #${id}`, 'Your stake backs the pool’s validators and earns a share of rewards.'), native('p', 'setClaimPermission', 'Allow auto-compounding', 'Grants a keeper permission to reinvest rewards; no keeper service is confirmed running.')],
     () => api.tx.utility.batchAll([api.tx.nominationPools.join(parseUnits(joinAmt, 14), id), api.tx.nominationPools.setClaimPermission('PermissionlessCompound')]),
   ));
 
   return (
     <div>
       <h1 className="page-title">Pool Studio</h1>
-      <p className="page-lede">Portaldot has two validators and no nominators. Staking pools let anyone with a little tPOT back validators together. Create a pool, point it at the validators you trust, and a keeper will reinvest everyone's rewards.</p>
+      <p className="page-lede">Staking pools let participants back validators together. Pool records and minimum bonds below come from the connected chain. Automatic reinvestment requires a separately running keeper; granting permission alone does not start one.</p>
 
       {data.mine && (
         <>
@@ -102,7 +103,7 @@ export function Pools() {
           <div className="stat-strip">
             <div className="stat"><small>Pool</small><b>#{data.mine.poolId}</b></div>
             <div className="stat"><small>Rewards waiting</small><b>{pot(data.pending, 3)}</b></div>
-            <div className="stat"><small>Auto-compound</small><b>{compounding ? 'On' : 'Off'}</b></div>
+            <div className="stat"><small>Keeper permission</small><b>{compounding ? 'Granted' : 'Not granted'}</b></div>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
             <button className="btn primary sm" onClick={() => actPrepared(prep('Reinvest rewards', [native('b', 'bondExtra', 'Reinvest your rewards', 'Adds your pending rewards to your stake.')], () => api.tx.utility.batchAll([api.tx.nominationPools.bondExtra({ Rewards: null })])))}>Reinvest now</button>

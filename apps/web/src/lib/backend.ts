@@ -10,7 +10,7 @@ export interface Rules {
 
 export interface Balances {
   pot: bigint;
-  pusd: bigint;
+  pusd: bigint | null;
 }
 
 export type StageName = 'preparing' | 'signing' | 'broadcast' | 'inBlock' | 'done' | 'failed';
@@ -112,7 +112,7 @@ export interface DripResult {
 }
 
 export interface Backend {
-  mode: 'live' | 'demo';
+  mode: 'live';
   chainLabel: string;
   deployed: boolean;
   deployment?: Deployment;
@@ -133,7 +133,7 @@ export interface Backend {
   revenue(id: number): Promise<{ ts: number; amount: bigint; kind: 'revenue' | 'slash' }[]>;
   drip(address: string): Promise<DripResult>;
   head(): Promise<number>;
-  /** chain time in seconds (a simulated clock in demo mode) */
+  /** Local wall-clock time in seconds; not a finalized chain timestamp. */
   now(): number;
 }
 

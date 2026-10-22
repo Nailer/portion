@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "installCommand": "npm ci",
-  "buildCommand": "VITE_DEFAULT_MODE=demo npm run build -w @portion/web",
+  "buildCommand": "npm run build -w @portion/web",
   "outputDirectory": "apps/web/dist",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [{ "source": "/(.*)", "headers": [

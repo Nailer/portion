@@ -8,7 +8,7 @@ import { ago, cadenceLabel, pot, usd } from '../lib/format';
 
 export function Portfolio() {
   const { backend, tick, refresh } = useApp();
-  const { passport, balances, demoRole } = usePassport();
+  const { passport, balances } = usePassport();
   const { act, openPassport, busy } = useRunner();
   const { data, error, loading } = useAsync(async () => {
     if (!passport) return null;
@@ -25,11 +25,11 @@ export function Portfolio() {
   const claimable = rows.filter(p=>p.pending>0n).map(p=>p.id);
   const running = (current?.listings ?? []).filter(l=>l.operator.toLowerCase()===passport?.h160.toLowerCase());
   const now = backend!.now();
+  if (passport && (!current || loading || error)) return <div className="market-empty"><h2>Portfolio data unavailable</h2><p>{error?.message ?? "Reading your on-chain positions and payment history."}</p></div>;
   return <div className="workspace portfolio-workspace">
-    <div className="workspace-topline"><span className="eyebrow"><i className="live-indicator"/>{backend!.mode === 'demo' ? 'SIMULATED' : 'TESTNET'} FUNDER WORKSPACE</span><button className="link-btn" onClick={refresh}>Refresh data ↻</button></div>
+    <div className="workspace-topline"><span className="eyebrow"><i className="live-indicator"/>TESTNET FUNDER WORKSPACE</span><button className="link-btn" onClick={refresh}>Refresh data ↻</button></div>
     <header className="workspace-heading"><div><h1>Your portions.<br/><span>Your perspective.</span></h1><p>Follow your shares, see deposited income, and claim what’s ready.</p></div><Link className="btn ghost" to="/">Explore more assets <span>↗</span></Link></header>
     {!passport ? <div className="workspace-empty"><div className="empty-orbit" aria-hidden="true">◔</div><h2>A little ownership starts here.</h2><p>Connect your wallet to see your shares and deposited revenue.</p><button className="btn primary" onClick={openPassport}>Connect wallet</button></div> : <>
-      {backend!.mode === 'demo' && demoRole === 'operator' && <div className="workspace-info"><span>You’re using the demo operator. Switch to Funder above to view that account’s shares and claims.</span><Link to="/operator">Manage your operation →</Link></div>}
       <section className="workspace-stats" aria-label="Portfolio overview"><div><span>Reference value of staked shares</span><b>{usd(value)}</b><small>At listing sale prices · not a resale quote</small></div><div><span>Assets in your portfolio</span><b>{String(rows.length).padStart(2,'0')}</b><small>{rows.reduce((n,p)=>n+p.staked,0).toLocaleString()} staked shares in total</small></div><div><span>Available test balance</span><b>{balances ? usd(balances.pusd) : '—'}</b><small>{balances ? pot(balances.pot,2) : 'Reading your wallet'}</small></div><div className="stat-dark"><span>Income ready to claim</span><b>{usd(pending)}</b><button className="stat-claim" disabled={!claimable.length || busy} onClick={()=>act({kind:'claim',ids:claimable})}>{claimable.length ? 'Review and claim all ↗' : 'Waiting for deposits'}</button></div></section>
       {loading && !current && <div className="workspace-empty"><Spinner label="Loading your portfolio"/></div>}
       {error && <div className="workspace-info" role="alert"><p>We couldn’t read your portfolio. {error.message}</p><button className="btn ghost sm" onClick={refresh}>Try again</button></div>}

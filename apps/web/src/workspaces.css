@@ -52,14 +52,6 @@
   .nav.open { display: flex; }.btn.menu-btn { display: inline-flex; }.top .spacer { flex: 1; }
   .tools-menu { position: static; margin: 0 10px; box-shadow: none; }
 }
-
-/* Stage 3 — operator and funder workspaces. */
-.demo-roles { display: inline-flex; align-items: center; gap: 9px; flex-wrap: wrap; }
-.demo-roles > span { font-size: 10px; color: var(--ink-2); }
-.demo-roles > div { display: flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 7px; }
-.banner .demo-roles button { padding: 4px 9px; margin: 0; background: none; border: none; border-radius: 4px; font-size: 10px; cursor: pointer; }
-.banner .demo-roles button[aria-pressed='true'] { background: var(--surface-2); color: var(--ink-2); }
-.banner .wrap > .demo-roles { margin-left: auto; }
 .workspace { animation: enter .5s ease both; }
 .workspace-topline { display: flex; justify-content: space-between; gap: 15px; align-items: center; padding-top: 12px; }
 .workspace-topline > button { font-size: 10px; }
@@ -174,7 +166,6 @@
 @media (max-width: 900px) { .workspace-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }.journey-guide { grid-template-columns: 1fr; gap: 20px; }.operator-asset-numbers { grid-template-columns: 1fr 1fr; row-gap: 18px; }.operator-asset-bottom { gap: 12px; flex-wrap: wrap; }.operator-asset-bottom > div { min-width: 160px; max-width: none; flex-basis: 100%; }.operator-payment { gap: 20px; }.operator-empty { padding: 30px; gap: 25px; } }
 @media (max-width: 720px) {
   .workspace-heading { display: grid; gap: 22px; padding-bottom: 25px; }.workspace-heading .btn { justify-self: start; }.workspace-heading h1 { font-size: 51px; }.workspace-heading p { font-size: 13px; }.workspace-topline .eyebrow { font-size: 8px; }.workspace-topline > button { font-size: 9px; }
-  .banner .wrap > .demo-roles { margin-left: 0; flex-basis: 100%; }.demo-roles > span { font-size: 10px; }.banner .demo-roles button { padding: 7px 12px; font-size: 11px; }
   .workspace-stats { gap: 10px; margin-bottom: 25px; }.workspace-stats > div { padding: 18px 14px; }.workspace-stats > div > span { font-size: 9px; line-height: 1.6; }.workspace-stats b { font-size: 28px; margin-top: 15px; }.workspace-stats small { font-size: 9px; }.stat-claim { font-size: 9px; }
   .workspace-section-head { flex-wrap: wrap; gap: 16px; }.workspace-section-head h2 { font-size: 29px; }.workspace-filters button { font-size: 10px; }.operator-asset { grid-template-columns: 1fr; }.operator-asset-image { min-height: 0; height: 160px; }.operator-asset-main { padding: 21px; }.operator-asset-heading { gap: 12px; }.operator-asset-heading h3 { font-size: 22px; }.operator-asset-numbers { margin-top: 23px; gap: 20px; }.operator-asset-numbers small { font-size: 10px; }.operator-asset-numbers b { font-size: 17px; }.operator-asset-bottom .btn { margin-left: auto; }.operator-asset-bottom > div { flex-basis: 100%; }.operator-asset-bottom > div > span { font-size: 10px; }.operator-payment { grid-template-columns: 1fr; padding: 22px; gap: 22px; }.operator-payment p { font-size: 12px; }.operator-payment h3 { font-size: 28px; }
   .operator-empty { grid-template-columns: 1fr; padding: 27px; }.operator-empty .asset-scene { max-height: 260px; }.workspace-empty { padding: 35px 23px; }.workspace-empty h2 { font-size: 30px; }.workspace-info { flex-wrap: wrap; gap: 12px; padding: 16px; font-size: 11px; }.journey-guide { padding: 21px; }.journey-guide ol { grid-template-columns: 1fr; gap: 10px; }.journey-guide h3 { font-size: 22px; }.journey-guide p { font-size: 11px; }.attention-strip { flex-wrap: wrap; }.attention-strip > div { flex: 1; }.attention-strip button { margin-left: 45px; }
@@ -190,3 +181,11 @@
 .workspace-stats > div:nth-child(4) { animation-delay: .15s; }
 .chart .bar { transform-origin: center bottom; animation: bar-reveal .6s ease both; }
 @keyframes bar-reveal { from { transform: scaleY(.05); opacity: .2; } to { transform: scaleY(1); opacity: 1; } }
+
+.guide-steps { padding-left: 24px; max-width: 850px; }
+.guide-steps > li { padding: 12px 0 24px 12px; border-bottom: 1px solid var(--line); }
+.guide-steps h2 { margin: 10px 0; font-size: 24px; }
+.guide-steps p { color: var(--ink-2); margin-bottom: 14px; line-height: 1.7; }
+.console > h2 { margin-top: 32px; }
+.console > p, .console > ol { line-height: 1.8; }
+.console .kv dd { overflow-wrap: anywhere; min-width: 0; }

@@ -1,7 +1,7 @@
 import { formatUnits, type ListingView } from '@portion/sdk';
 
 const big = (v: bigint | number | string): bigint => (typeof v === 'number' ? BigInt(Math.round(v)) : BigInt(v));
-export const usd = (v: bigint | number | string, frac = 2) => `$${formatUnits(big(v), 6, frac)}`;
+export const usd = (v: bigint | number | string | null, frac = 2) => v === null ? 'Unavailable' : `${formatUnits(big(v), 6, frac)} pUSD`;
 export const pot = (v: bigint | number | string, frac = 2) => `${formatUnits(big(v), 14, frac)} tPOT`;
 export const num = (v: number) => v.toLocaleString('en-US');
 
@@ -34,11 +34,9 @@ export function economics(l: ListingView) {
   const price = Number(l.vault.salePrice) / 1e6;
   const raise = price * l.totalShares;
   const perShareFloor = Number(l.minPerPeriod) / 1e6 / l.totalShares;
-  const periodsPerYear = (365 * 86_400) / l.cadence;
-  const apyAtFloor = raise > 0 ? ((Number(l.minPerPeriod) / 1e6) * 0.995 * periodsPerYear) / raise : 0;
   const paid = Number(l.vault.totalRevenue) / 1e6;
   const soldPct = l.vault.sold + l.vault.forSale > 0 ? l.vault.sold / (l.vault.sold + l.vault.forSale) : 0;
-  return { price, raise, perShareFloor, apyAtFloor, paid, soldPct };
+  return { price, raise, perShareFloor, paid, soldPct };
 }
 
 export function short(a: string, h = 6, t = 4) {

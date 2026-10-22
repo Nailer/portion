@@ -6,7 +6,7 @@ import { UserError, type ActionResult, type Intent, type Prepared, type StageNam
 import { Dialog } from '../components/Dialog';
 import { StepList } from '../components/StepList';
 import { Spinner } from '../components/ui';
-import { explorerBlock, pot, usd } from '../lib/format';
+import { explorerBlock } from '../lib/format';
 
 type Phase = 'preparing' | 'confirm' | 'running' | 'result' | 'error';
 
@@ -42,7 +42,6 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
   const [result, setResult] = useState<ActionResult>();
   const [error, setError] = useState<{ message: string; fix?: 'faucet' }>();
   const [passportOpen, setPassportOpen] = useState(false);
-  const [dripping, setDripping] = useState(false);
   const last = useRef<{ prepare: () => Promise<Prepared>; onDone?: (r: ActionResult) => void }>();
   const submitting = useRef(false);
   const preparation = useRef(0);
@@ -86,14 +85,6 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
     else { refresh(); void reloadBalances(); last.current?.onDone?.(r); }
   };
 
-  const drip = async () => {
-    if (!backend || !passport) return;
-    setDripping(true);
-    try { await backend.drip(passport.address); await reloadBalances(); refresh(); if (last.current) void actPrepared(last.current.prepare, { onDone: last.current.onDone }); }
-    catch (e) { setError({ message: (e as Error).message }); }
-    finally { setDripping(false); }
-  };
-
   // Esc closes unless a transaction is in flight
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape' && phase && phase !== 'running') close(); };
@@ -112,7 +103,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
               <>
                 <h2 id="sheet-title">{prepared.title}</h2>
                 <p className="sheet-sub">
-                  {backend?.mode === 'demo' ? 'Simulation only. No real funds move.' : prepared.steps.some(s => s.lane === 'storage') ? 'Documents are stored first, then the listing is created in an atomic batch. The separate transactions each require a signature.' : 'Review the transaction. Your wallet will ask you to approve it.'}
+                  {prepared.steps.some(s => s.lane === 'storage') ? 'Documents are stored first, then the listing is created in an atomic batch. The separate transactions each require a signature.' : 'Review the transaction. Your wallet will ask you to approve it.'}
                 </p>
                 <details className="transaction-details"><summary>See what happens in this transaction ({prepared.steps.length} {prepared.steps.length === 1 ? 'step' : 'steps'})</summary><StepList steps={prepared.steps} state={phase === 'running' ? 'running' : 'idle'} /></details>
                 {prepared.cost && <p className="sheet-cost">{prepared.cost}</p>}
@@ -138,7 +129,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
                   {(result.txs ?? (result.txHash ? [{ label: 'Transaction', hash: result.txHash, block: result.blockNumber }] : [])).map((t) => (
                     <li key={t.hash}>
                       <span>{t.label}</span>
-                      {backend?.mode === 'live' ? <a href={explorerBlock(t.block)} target="_blank" rel="noreferrer"><code>{t.hash.slice(0, 18)}…</code> view block</a> : <code>simulated</code>}
+                      <a href={explorerBlock(t.block)} target="_blank" rel="noreferrer"><code>{t.hash.slice(0, 18)}…</code> view block</a>
                     </li>
                   ))}
                 </ul>
@@ -153,10 +144,9 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
               <>
                 <h2 id="sheet-title">{error.fix === 'faucet' ? 'You need a few tokens first' : 'That did not go through'}</h2>
                 <p className="sheet-error">{error.message}</p>
-                {passport && backend?.mode && error.fix === 'faucet' && <p className="sheet-sub">The faucet sends {pot(3n * 10n ** 14n, 0)} for fees and {usd(500n * 10n ** 6n, 0)} pUSD to your Passport.</p>}
                 <div className="sheet-actions">
                   <button className="btn ghost" onClick={close}>Close</button>
-                  {error.fix === 'faucet' && <button className="btn primary" disabled={dripping} onClick={drip}>{dripping ? 'Sending…' : 'Get free tokens'}</button>}
+                  {error.fix === 'faucet' && <button className="btn primary" onClick={() => { close(); nav('/faucet'); }}>Check faucet availability</button>}
                 </div>
               </>
             )}

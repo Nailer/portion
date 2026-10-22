@@ -11,7 +11,6 @@ interface FaucetStatus { address: string; balance: string; dripPot: string; drip
 export function Faucet() {
   const { backend, refresh } = useApp();
   const { passport } = usePassport();
-  const demo = backend?.mode === 'demo';
   const [addr, setAddr] = useState('');
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<DripResult>();
@@ -28,13 +27,13 @@ export function Faucet() {
     <div className="two-col" style={{ alignItems: 'start' }}>
       <div>
         <h1 className="page-title">Testnet faucet</h1>
-        <p className="page-lede">{demo ? 'Add simulated funds to an account while exploring the demo. These tokens stay in this browser session and have no monetary value.' : 'The live faucet needs a separately funded service. It is currently disabled in this public preview to preserve the deployment budget.'}</p>
+        <p className="page-lede">The faucet requires a reachable, separately funded service. Only amounts returned by that service are shown. If unavailable, this page cannot send tokens.</p>
         <div className="field" style={{ marginTop: 28 }}>
           <label htmlFor="addr">Address</label>
           <input id="addr" type="text" value={addr} onChange={(e) => setAddr(e.target.value)} placeholder={passport ? `${passport.address} (your account)` : '5… or 0x…'} spellCheck={false} />
           <p className="hint">Only public addresses belong here. Never enter a recovery phrase or private key.</p>
         </div>
-        <button className="btn primary" disabled={busy || !target || (!demo && !status)} onClick={go}>{busy ? 'Sending…' : !demo && !status ? 'Live faucet unavailable' : `Add ${status ? pot(status.dripPot, 0) : '3 tPOT'}${backend?.deployed ? ` and ${usd(status?.dripPusd ?? 500e6, 0)}` : ''}${demo ? ' · simulated' : ''}`}</button>
+        <button className="btn primary" disabled={busy || !target || !status} onClick={go}>{busy ? 'Sending…' : !status ? 'Live faucet unavailable' : `Request ${pot(status.dripPot, 0)}`}</button>
         {err && <p className="sheet-error" style={{ marginTop: 16 }}>{err}</p>}
         {res && (
           <div className="mine" style={{ marginTop: 16 }}>

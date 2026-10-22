@@ -41,7 +41,7 @@ export const CATEGORIES = [
 ] as const;
 
 export const CADENCES = [
-  { label: '2 minutes (demo)', seconds: 120 },
+  { label: '2 minutes (testnet)', seconds: 120 },
   { label: 'Daily', seconds: 86_400 },
   { label: 'Weekly', seconds: 604_800 },
   { label: 'Monthly', seconds: 2_592_000 },

@@ -68,14 +68,14 @@ export async function snapshot(api: ApiPromise): Promise<NetworkSnapshot> {
   const finalized = finHeader.number.toNumber();
 
   // average block time over the last 20 blocks
-  let blockTimeSec = 6;
+  let blockTimeSec: number;
   try {
     const back = Math.min(20, best);
     const oldHash = await api.rpc.chain.getBlockHash(best - back);
     const [nowT, oldT] = await Promise.all([api.query.timestamp.now(), (await api.at(oldHash)).query.timestamp.now()]);
     blockTimeSec = (num(nowT) - num(oldT)) / 1000 / back;
   } catch {
-    /* keep default */
+    throw new Error('Historical timestamps unavailable; block time cannot be verified.');
   }
 
   const era = ((await api.query.staking.currentEra()) as any).unwrapOr(0).toNumber();
