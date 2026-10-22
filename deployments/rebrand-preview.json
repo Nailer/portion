@@ -1,0 +1,39 @@
+{
+  "kind": "public-frontend-rebrand-verification",
+  "verifiedOn": "2026-10-22",
+  "url": "https://portion-one.vercel.app",
+  "sourceCommit": "8ca3ee9",
+  "vercelDeploymentId": "dpl_95pP5FeZ2ceYQw5VZs77mk5bdC7K",
+  "readyState": "READY",
+  "checks": {
+    "contractTestsPassed": 64,
+    "sdkTestsPassed": 17,
+    "webTestsPassed": 21,
+    "serverTestsPassed": 7,
+    "sdkLiveTestsSkipped": 4,
+    "typecheck": true,
+    "productionBuild": true,
+    "vercelCleanInstallAndBuild": true,
+    "desktopViewport": "1280x720",
+    "mobileViewport": "390x844",
+    "mobileCreateContentWidth": 390,
+    "accountDialogSecretEntryFields": 0,
+    "legacyLoginControlsAbsentFromBundle": true,
+    "escapeFocusRestoration": true,
+    "assetCoversLoadedInPublicWalkthrough": 5,
+    "publicSimulationLifecycle": {
+      "assetCreated": "Solar neighbourhood hub",
+      "sharesPurchased": 10,
+      "purchasePUSD": "100",
+      "operatorProceedsPUSD": "99",
+      "depositPUSD": "20",
+      "claimedPUSD": "19.90",
+      "finalFunderBalancePUSD": "1919.90",
+      "pendingPUSD": "0"
+    }
+  },
+  "liveExtensionSigningVerified": false,
+  "portionContractsDeployed": false,
+  "blockchainTransactionsSubmitted": false,
+  "note": "Browser wallet branches were mocked in unit tests; the QA browser has no injected extension. Public lifecycle uses labelled simulation only. Existing legacy browser records are left untouched but are no longer restored or exposed by the app."
+}

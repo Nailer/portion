@@ -1,6 +1,6 @@
 # Public preview hosting
 
-Public URL: https://portion-one.vercel.app. Source repository: https://github.com/Nailer/portion. Vercel project: `pleasants-projects/portion`. Production deployment `dpl_32iQqwKSqKWWJSDCfGKmBsvhBrcD` built from source commit `f7d5bc8` on 21 October 2026.
+Public URL: https://portion-one.vercel.app. Source repository: https://github.com/Nailer/portion. Vercel project: `pleasants-projects/portion`. Latest verified production deployment: `dpl_95pP5FeZ2ceYQw5VZs77mk5bdC7K`, built from source commit `8ca3ee9` on 22 October 2026, with the rebrand and secret-free account connection. The first preview was published on 21 October; its historical evidence remains in `deployments/web-preview.json`.
 
 CLI publishing is working. Vercel's attempt to connect the GitHub repository was rejected for missing repository access, so automatic deployments on Git pushes are not enabled. Grant the Vercel GitHub integration access to `Nailer/portion` and reconnect it to enable that workflow. Until then, publish authorised updates with `vercel deploy --prod --scope pleasants-projects`.
 
