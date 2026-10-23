@@ -7,11 +7,11 @@ const palletId = stringToU8a('frac/pal');
 const pallet = encodeAddress(u8aConcat(stringToU8a('modl'), palletId, new Uint8Array(20)), 42);
 const other = encodeAddress(new Uint8Array(32).fill(1), 42);
 const listing = { nftCollection: 1, nftItem: 2, assetId: 3, totalShares: 100 } as ListingView;
-function fixture({ settings = 1, issuer = pallet, fractions = 100, missingConfig = false } = {}) {
+function fixture({ settings = 1, issuer = pallet, fractions = 100, missingConfig = false, missingMapping = false } = {}) {
   const json = (value: unknown) => async () => ({ toJSON: () => value });
   const state = { query: {
     nfts: { item: json({ owner: other }), itemConfigOf: json(missingConfig ? null : { settings }) },
-    nftFractionalization: { nftToAsset: json({ asset: 3, fractions }) },
+    nftFractionalization: { nftToAsset: json(missingMapping ? null : { asset: 3, fractions }) },
     assets: { asset: json({ supply: 100, owner: pallet, issuer, admin: pallet, freezer: pallet }) },
   } };
   return { consts: { nftFractionalization: { palletId: { toU8a: () => palletId } } },
@@ -21,9 +21,12 @@ describe('native listing proof', () => {
   it('recognizes the disabled-transfer flag and verifies all asset roles at finalized state', async () => {
     expect(await verifyListing(fixture(), listing)).toMatchObject({ deedLocked: true, rolesControlled: true, verified: true, finalizedHash: '0xfinal' });
   });
-  it('does not label an unlocked deed or missing configuration as locked', async () => {
-    expect((await verifyListing(fixture({ settings: 0 }), listing)).deedLocked).toBe(false);
-    expect((await verifyListing(fixture({ missingConfig: true }), listing)).verified).toBe(false);
+  it('recognizes runtime fractionalization locks even when ItemSettings is zero', async () => {
+    expect(await verifyListing(fixture({ settings: 0 }), listing)).toMatchObject({ deedLocked: true, lockSource: 'fractionalization-pallet', verified: true });
+  });
+  it('does not infer a lock from missing settings without a valid native mapping', async () => {
+    expect((await verifyListing(fixture({ settings: 0, missingMapping: true }), listing)).deedLocked).toBe(false);
+    expect((await verifyListing(fixture({ missingConfig: true, missingMapping: true }), listing)).verified).toBe(false);
   });
   it('rejects an externally controlled issuer even when the admin belongs to the pallet', async () => {
     expect(await verifyListing(fixture({ issuer: other }), listing)).toMatchObject({ adminIsPallet: true, rolesControlled: false, verified: false });

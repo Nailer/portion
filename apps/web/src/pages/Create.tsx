@@ -184,7 +184,7 @@ export function Create() {
           </div>
           <div className="hood">
             <details><summary>See the onchain steps</summary><h2>Under the hood</h2>
-            <p>Tokenizing runs these calls. The last six form one atomic batch, so a failure anywhere leaves nothing half-done.</p>
+            <p>Tokenizing runs these calls. The final six calls form one atomic batch, so a failure anywhere leaves nothing half-done.</p>
             <StepList steps={tokenizeSteps(totalShares)} atomicFrom={2} /></details>
           </div>
         </div>

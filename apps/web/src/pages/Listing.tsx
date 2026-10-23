@@ -42,7 +42,7 @@ function describe(a: ActivityRow): string {
     case 'RevenueDeposited': return `${usd(d.net)} of revenue paid in${d.qualifying === false ? ' (did not reset the cadence clock)' : ''}`;
     case 'Claimed': return `${usd(d.amount)} claimed by a holder`;
     case 'Slashed': return `Bond slashed: ${usd(d.toHolders)} went to holders`;
-    case 'BondToppedUp': return `Operator topped up the bond to ${usd(d.newBond)}`;
+    case 'BondToppedUp': return `Operator added ${usd(d.amount ?? d.newBond)} to the bond`;
     case 'SaleClosed': return 'Sale closed';
     case 'WoundDown': return 'Operator wound the listing down';
     case 'Staked': return `${d.amount ?? ''} shares staked`.trim();

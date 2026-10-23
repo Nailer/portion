@@ -5,6 +5,7 @@ import type { ListingView } from '@portion/sdk';
 
 export interface NativeProof {
   deedLocked: boolean;
+  lockSource?: 'item-setting' | 'fractionalization-pallet';
   deedOwner?: string;
   fractionalized: boolean;
   fractions?: string;
@@ -33,14 +34,14 @@ export async function verifyListing(api: ApiPromise, l: ListingView): Promise<Na
 
   const item: any = (await state.query.nfts.item(l.nftCollection, l.nftItem)).toJSON();
   const deedOwner = item?.owner as string | undefined;
-  // The pallet does not move the deed: it switches transfers off for it (the Transferable bit of the item config).
+  // Explicit item locks disable Transferable. Fractionalization may instead enforce a runtime Locker.
   const cfg: any = (await state.query.nfts.itemConfigOf(l.nftCollection, l.nftItem)).toJSON();
   // ItemSettings stores DISABLED capabilities: bit 0 set means transfers are locked.
   const settings = cfg?.settings;
   const transfersDisabled = settings !== undefined && Number.isSafeInteger(Number(settings)) && (BigInt(settings) & 1n) === 1n;
-  const deedLocked = !!item && transfersDisabled;
+
   if (!item) notes.push('The deed NFT no longer exists. It may have been burned.');
-  else if (!transfersDisabled) notes.push('The deed transfer lock could not be established from its item settings.');
+
 
   const map: any = (await state.query.nftFractionalization.nftToAsset([l.nftCollection, l.nftItem])).toJSON();
   const fractionalized = !!map;
@@ -61,8 +62,16 @@ export async function verifyListing(api: ApiPromise, l: ListingView): Promise<Na
   const fractionsMatch = fractions === String(l.totalShares);
   if (fractionalized && !fractionsMatch) notes.push('The original fraction count does not match the listing.');
 
+  // On Portaldot V3, the fractionalization pallet's Locker blocks nfts.transfer while
+  // nftToAsset exists, even when ItemSettings is zero. A signed historical dry-run
+  // for listing 585886 returned nfts.ItemLocked before its optional explicit lock.
+  // Require the complete native mapping/supply/role proof before accepting this path.
+  const fractionalizationLock = cfg != null && assetMatches && fractionsMatch && supplyMatches && rolesControlled;
+  const deedLocked = !!item && (transfersDisabled || fractionalizationLock);
+  if (item && !deedLocked) notes.push('Neither an explicit item lock nor a verified fractionalization lock could be established.');
   return {
     deedLocked,
+    lockSource: !deedLocked ? undefined : transfersDisabled ? 'item-setting' : 'fractionalization-pallet',
     deedOwner,
     fractionalized,
     fractions,

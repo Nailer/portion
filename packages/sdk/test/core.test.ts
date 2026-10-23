@@ -50,3 +50,21 @@ describe('Core account mapping', () => {
     expect(batchAll).toHaveBeenCalledWith([mappingCall, existing]);
   });
 });
+
+describe('Core deed creation safety', () => {
+  it('pins the exact 32-byte hash without requiring collection-freezer permission', async () => {
+    const call = (section: string, method: string) => vi.fn((...args: unknown[]) => ({ section, method, args }));
+    const api: any = { tx: {
+      nfts: { mint: call('nfts','mint'), setAttribute: call('nfts','setAttribute'), lockItemTransfer: call('nfts','lockItemTransfer') },
+      nftFractionalization: { fractionalize: call('nftFractionalization','fractionalize') },
+      assets: { approveTransfer: call('assets','approveTransfer') }, revive: { call: call('revive','call') },
+      utility: { batchAll: vi.fn(calls => ({ calls })) },
+    } };
+    const client = new CoreClient(api, deployment, fixture().source);
+    await client.planTokenize({ address: 'operator' } as any, { assetId: 777, nftItem: 1, name: 'Test', summary: '', category: 7, totalShares: 100, sharesForSale: 100, salePrice: 1_000_000n, cadence: 604800, minPerPeriod: 1_000_000n, bond: 5_000_000n, docHash: hash, coverHash: hash });
+    expect(api.tx.nfts.setAttribute.mock.calls[0][4]).toBe(hash);
+    const calls = api.tx.utility.batchAll.mock.calls[0][0];
+    expect(calls.map((c: any) => c.method)).toEqual(['mint','setAttribute','fractionalize','approveTransfer','approveTransfer','call']);
+    expect(api.tx.nfts.lockItemTransfer).not.toHaveBeenCalled();
+  });
+});

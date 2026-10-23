@@ -85,7 +85,7 @@ export class CoreClient extends PortionClient {
     if (!Number.isSafeInteger(assetId) || !Number.isSafeInteger(nftItem)) throw new Error('Allocate native identifiers before hashing the Core document.');
     const tx = this.api.tx.utility.batchAll([
       this.api.tx.nfts.mint(this.deployment.deedsCollection, nftItem, operator.address, null),
-      this.api.tx.nfts.setAttribute(this.deployment.deedsCollection, nftItem, { ItemOwner: null }, stringToHex('portion'), stringToHex(`core-v1:${input.docHash}`)),
+      this.api.tx.nfts.setAttribute(this.deployment.deedsCollection, nftItem, { ItemOwner: null }, stringToHex('portion'), input.docHash),
       this.api.tx.nftFractionalization.fractionalize(this.deployment.deedsCollection, nftItem, assetId, operator.address, input.totalShares),
       this.approve(assetId, BigInt(input.sharesForSale)), this.approve(this.deployment.pusdAssetId, input.bond),
       this.callStep('create', [{ asset: assetId, totalShares: input.totalShares, forSale: input.sharesForSale, cadence: input.cadence,
