@@ -45,7 +45,7 @@ export function Operator() {
   const ownIds = owned.map(l => l.id).join(',');
   const { data: activity } = useAsync(async () => {
     const rows = await Promise.all(owned.map(l => backend!.activity({ listing: l.id, limit: 8 })));
-    return rows.flat().sort((a,b) => b.ts - a.ts || b.id - a.id).slice(0,10);
+    return rows.flat().sort((a,b) => b.ts - a.ts || String(b.id).localeCompare(String(a.id), undefined, { numeric: true })).slice(0,10);
   }, [backend, ownIds, tick]);
   const summary = operatorSummary(owned, rules?.saleFeeBps ?? 0);
   const shown = owned.filter(l => (filter === 'all' || l.health === 'Late' || l.health === 'Defaulted') && `${l.name} ${CATEGORIES[l.category]}`.toLowerCase().includes(search.toLowerCase()));
