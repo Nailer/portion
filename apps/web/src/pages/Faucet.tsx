@@ -27,13 +27,13 @@ export function Faucet() {
     <div className="two-col" style={{ alignItems: 'start' }}>
       <div>
         <h1 className="page-title">Testnet faucet</h1>
-        <p className="page-lede">The faucet requires a reachable, separately funded service. Only amounts returned by that service are shown. If unavailable, this page cannot send tokens.</p>
+        <p className="page-lede">Request real pUSD test credits for bonds and purchases. This service does not send native tPOT: obtain that from the official Portaldot testnet faucet to pay fees and storage deposits. Test credits have no monetary value.</p>
         <div className="field" style={{ marginTop: 28 }}>
           <label htmlFor="addr">Address</label>
           <input id="addr" type="text" value={addr} onChange={(e) => setAddr(e.target.value)} placeholder={passport ? `${passport.address} (your account)` : '5… or 0x…'} spellCheck={false} />
           <p className="hint">Only public addresses belong here. Never enter a recovery phrase or private key.</p>
         </div>
-        <button className="btn primary" disabled={busy || !target || !status} onClick={go}>{busy ? 'Sending…' : !status ? 'Live faucet unavailable' : `Request ${pot(status.dripPot, 0)}`}</button>
+        <button className="btn primary" disabled={busy || !target || !status} onClick={go}>{busy ? 'Sending…' : !status ? 'Live faucet unavailable' : `Request ${usd(status.dripPusd)} test credits`}</button>
         {err && <p className="sheet-error" style={{ marginTop: 16 }}>{err}</p>}
         {res && (
           <div className="mine" style={{ marginTop: 16 }}>

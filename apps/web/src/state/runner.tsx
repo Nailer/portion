@@ -2,10 +2,10 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useNavigate } from 'react-router-dom';
 import { useApp } from './app';
 import { usePassport } from './passport';
-import { UserError, type ActionResult, type Intent, type Prepared, type StageName } from '../lib/backend';
+import { api, UserError, type ActionResult, type Intent, type Prepared, type StageName } from '../lib/backend';
 import { Dialog } from '../components/Dialog';
 import { StepList } from '../components/StepList';
-import { Spinner } from '../components/ui';
+import { Spinner, CopyButton } from '../components/ui';
 import { explorerBlock } from '../lib/format';
 
 type Phase = 'preparing' | 'confirm' | 'running' | 'result' | 'error';
@@ -45,6 +45,10 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
   const last = useRef<{ prepare: () => Promise<Prepared>; onDone?: (r: ActionResult) => void }>();
   const submitting = useRef(false);
   const preparation = useRef(0);
+  const currentIdentity = useRef({ passport, backend });
+  currentIdentity.current = { passport, backend };
+  const reviewedIdentity = useRef({ passport, backend });
+  const [publishing, setPublishing] = useState(false);
 
   const close = useCallback(() => { preparation.current++; setPhase(null); setPrepared(undefined); setResult(undefined); setError(undefined); }, []);
 
@@ -52,6 +56,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
     if (!backend) return;
     if (!passport) { setPassportOpen(true); return; }
     last.current = { prepare, onDone: opts?.onDone };
+    reviewedIdentity.current = { passport, backend };
     const request = ++preparation.current;
     setPhase('preparing'); setError(undefined); setResult(undefined);
     try {
@@ -73,6 +78,9 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
 
   const run = async () => {
     if (!prepared || submitting.current) return;
+    if (reviewedIdentity.current.passport !== currentIdentity.current.passport || reviewedIdentity.current.backend !== currentIdentity.current.backend) {
+      setError({ message: 'Your account or network changed. Start a new review before approving.' }); setPhase('error'); return;
+    }
     submitting.current = true;
     setPhase('running'); setStage('signing'); setDetail(undefined);
     let r: ActionResult;
@@ -124,12 +132,13 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
               <>
                 <h2 id="sheet-title">Done</h2>
                 <p className="sheet-sub">{prepared.title} went through{result.blockNumber ? ` in block ${result.blockNumber.toLocaleString()}` : ''}.</p>
+                {result.warning && <div className="notice" role="status"><p>{result.warning}</p><button className="btn ghost sm" disabled={publishing || !result.blockNumber} onClick={async () => { setPublishing(true); try { await api('/api/receipts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: result.blockNumber, txHash: result.txHash }) }); setResult({ ...result, warning: undefined }); refresh(); } catch { /* Preserve the receipt and warning for an explicit later retry. */ } finally { setPublishing(false); } }}>{publishing ? 'Publishing…' : 'Retry receipt publication'}</button></div>}
                 <details className="transaction-details"><summary>View completed steps</summary><StepList steps={prepared.steps} state="done" /></details>
                 <ul className="tx-links">
                   {(result.txs ?? (result.txHash ? [{ label: 'Transaction', hash: result.txHash, block: result.blockNumber }] : [])).map((t) => (
                     <li key={t.hash}>
                       <span>{t.label}</span>
-                      <a href={explorerBlock(t.block)} target="_blank" rel="noreferrer"><code>{t.hash.slice(0, 18)}…</code> view block</a>
+                      {t.block ? <a href={explorerBlock(t.block)} target="_blank" rel="noreferrer"><code>{t.hash.slice(0, 18)}…</code> view block</a> : <code>{t.hash}</code>}<CopyButton text={t.hash}/>
                     </li>
                   ))}
                 </ul>
@@ -144,6 +153,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
               <>
                 <h2 id="sheet-title">{error.fix === 'faucet' ? 'You need a few tokens first' : 'Transaction could not be confirmed'}</h2>
                 <p className="sheet-error">{error.message}</p>
+                {!!result?.txs?.length && <div className="notice"><p>Earlier steps were finalized. Keep these receipts before retrying.</p>{result.txs.map(tx => <p key={tx.hash}><b>{tx.label}</b> · <code>{tx.hash.slice(0, 18)}…</code> <CopyButton text={tx.hash}/>{tx.block && <a href={explorerBlock(tx.block)} target="_blank" rel="noreferrer"> View block</a>}</p>)}</div>}
                 <div className="sheet-actions">
                   <button className="btn ghost" onClick={close}>Close</button>
                   {error.fix === 'faucet' && <button className="btn primary" onClick={() => { close(); nav('/faucet'); }}>Check faucet availability</button>}

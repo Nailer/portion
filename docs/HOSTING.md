@@ -1,3 +1,5 @@
+> Current status, 23 October 2026: Core is deployed. The live release and current supported flow are documented in [LIVE-CORE-RELEASE.md](LIVE-CORE-RELEASE.md); this supersedes earlier undeployed-status notes below.
+
 # Hosting scope
 
 Vercel builds `@portion/web` with `npm run build -w @portion/web` and serves `apps/web/dist`. SPA rewrites support direct page links. There is no simulation mode, automatic account creation or balance allocation.

@@ -1,3 +1,5 @@
+> Current status, 23 October 2026: Core is deployed. The live release and current supported flow are documented in [LIVE-CORE-RELEASE.md](LIVE-CORE-RELEASE.md); this supersedes earlier undeployed-status notes below.
+
 # Portaldot Hacker House readiness
 
 Verified against the [official event details](https://dorahacks.io/hackathon/2362/detail) on 21 October 2026. All local times below are Africa/Lagos (UTC+1).

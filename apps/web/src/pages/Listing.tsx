@@ -13,7 +13,7 @@ import type { ActivityRow } from '../lib/backend';
 const safeAmount = (value: string) => { try { const n = parseUnits(value,6); return n > 0n ? n : 0n; } catch { return 0n; } };
 
 function RevenueChart({ rows }: { rows: { ts: number; amount: bigint; kind: 'revenue' | 'slash' }[] }) {
-  if (!rows.length) return <p className="note">No revenue has been paid in yet.</p>;
+  if (!rows.length) return <p className="note">No revenue receipts have been indexed. The contract total is shown above.</p>;
   const last = rows.slice(-14);
   const max = Math.max(...last.map((r) => Number(r.amount)));
   const w = 640, h = 150, pad = 22, bw = Math.min(36, (w - pad * 2) / last.length - 6);
@@ -128,7 +128,7 @@ export function ListingPage() {
             <div style={{ maxWidth: 520 }}><Health l={l} /></div>
             <p className="note" style={{ marginTop: 12 }}>
               The operator must pay in at least {usd(l.minPerPeriod, 0)} {cadenceLabel(l.cadence)}. After {span(2 * l.cadence)} without a qualifying payment, anyone can slash the
-              {' '}{usd(l.vault.bond)} bond and it is split between holders.{l.strikes > 0 && <> This operator has been slashed {l.strikes} time{l.strikes > 1 ? 's' : ''}.</>}
+              {' '}{usd(l.vault.bond)} bond and it is split between holders.{l.strikes !== null && l.strikes > 0 && <> This operator has been slashed {l.strikes} time{l.strikes > 1 ? 's' : ''}.</>}
             </p>
             {l.health === 'Defaulted' && l.vault.bond > 0n && (
               <div style={{ marginTop: 14 }}><button className="btn primary" onClick={() => act({ kind: 'slash', id })}>Slash the bond and pay holders</button></div>

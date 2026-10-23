@@ -1,3 +1,5 @@
+> Current status, 23 October 2026: Core is deployed. The live release and current supported flow are documented in [LIVE-CORE-RELEASE.md](LIVE-CORE-RELEASE.md); this supersedes earlier undeployed-status notes below.
+
 # Current user and judge walkthrough
 
 The app is live-data-only. No accounts are generated, no opening balance is granted, and no example listings or payments are supplied. Existing `?demo` links and saved simulation preferences have no effect.

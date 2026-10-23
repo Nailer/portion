@@ -1,3 +1,5 @@
+> Current status, 23 October 2026: Core is deployed. The live release and current supported flow are documented in [LIVE-CORE-RELEASE.md](LIVE-CORE-RELEASE.md); this supersedes earlier undeployed-status notes below.
+
 # Smaller funding contract — stage 7, 22 October 2026
 
 ## Decision

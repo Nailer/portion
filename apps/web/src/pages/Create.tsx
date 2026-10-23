@@ -12,7 +12,7 @@ import { cadenceLabel, usd } from '../lib/format';
 interface Photo { bytes: Uint8Array; mime: string; url: string }
 
 export function Create() {
-  const { backend } = useApp();
+  const { backend, status, reconnect } = useApp();
   const { passport } = usePassport();
   const { act, openPassport } = useRunner();
 
@@ -30,7 +30,7 @@ export function Create() {
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [photoErr, setPhotoErr] = useState<string>();
   const [touched, setTouched] = useState(false);
-  const { data: rules } = useAsyncRules(backend);
+  const { data: rules, error: rulesError } = useAsyncRules(backend);
 
   const forSale = Math.round((totalShares * percentForSale) / 100);
   const raise = forSale * Number(price || 0);
@@ -50,6 +50,7 @@ export function Create() {
   if (safeUnits(minPer) <= 0n) errors.minPer = 'Set a positive minimum with at most six decimal places.';
   if (cadence < (rules?.minCadence ?? 60)) errors.cadence = 'That period is too short.';
   if (safeUnits(bond) <= 0n || Number(bond) < minBond) errors.bond = `The bond must be at least ${usd(BigInt(Math.ceil(minBond * 1e6)))} (${(rules?.minBondBps ?? 0) / 100}% of the raise).`;
+  if (forSale < 1 || forSale > totalShares) errors.shares = 'Choose at least one share to offer for funding.';
   if (!Number.isSafeInteger(totalShares) || totalShares < 10 || totalShares > 1000000) errors.shares = 'Use a whole number between 10 and 1,000,000.';
   if (!photo) errors.photo = 'Upload a real asset photo.';
   const valid = !!rules && Object.keys(errors).length === 0;
@@ -77,7 +78,7 @@ export function Create() {
   };
   const show = (k: string) => (touched ? errors[k] : undefined);
 
-  if (!rules) return <div className="market-empty"><h2>Listing setup unavailable</h2><p>Verified contract rules are required before entering funding terms.</p></div>;
+  if (!rules) return <div className="market-empty"><h2>{rulesError || status === 'offline' ? 'Listing setup unavailable' : 'Checking listing rules…'}</h2><p>{rulesError || (status === 'offline' ? 'Reconnect to the testnet before entering funding terms.' : 'Reading the deployed contract before you enter funding terms.')}</p>{(rulesError || status === 'offline') && <button className="btn" onClick={reconnect}>Try again</button>}</div>;
   return (
     <div className="create">
       <Link className="crumb" to="/operator">← Your operator workspace</Link>
@@ -194,6 +195,7 @@ export function Create() {
 
 function useAsyncRules(backend: ReturnType<typeof useApp>['backend']) {
   const [data, setData] = useState<Awaited<ReturnType<NonNullable<typeof backend>['rules']>>>();
-  useEffect(() => { backend?.rules().then(setData).catch(() => undefined); }, [backend]);
-  return { data };
+  const [error, setError] = useState<string>();
+  useEffect(() => { let active = true; setData(undefined); setError(undefined); backend?.rules().then(value => { if (active) setData(value); }).catch(() => { if (active) setError('Verified contract rules could not be loaded.'); }); return () => { active = false; }; }, [backend]);
+  return { data, error };
 }

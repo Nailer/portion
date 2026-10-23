@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { connect, TESTNET, type Deployment } from '@portion/sdk';
+import { connect, TESTNET, PortionCoreArtifact, type Deployment } from '@portion/sdk';
 import { api as serviceApi, type Backend } from '../lib/backend';
+import { keccak256 } from 'ethers';
 import { LiveBackend } from '../lib/live';
 
 const bundled = import.meta.glob('../../../../deployments/portaldot-testnet.json', { eager: true, import: 'default' }) as Record<string, Deployment>;
@@ -53,6 +54,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (deployment) {
           const account = await api.query.revive.accountInfoOf(deployment.portion);
           if ((account as any).isNone) throw new Error('The configured Portion contract could not be verified on this chain.');
+          if (deployment.contractVersion === 'core-v1') {
+            const response = await fetch(TESTNET.evmRpc, { method: 'POST', headers: { 'content-type': 'application/json' }, signal: AbortSignal.timeout(6000), body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getCode', params: [deployment.portion, 'latest'] }) });
+            const code = await response.json();
+            if (!code.result || keccak256(code.result) !== keccak256(PortionCoreArtifact.runtimeBytecode)) throw new Error('Core runtime bytecode could not be verified.');
+          }
           const candidate = new LiveBackend(api, deployment);
           await candidate.rules();
           const asset = await api.query.assets.asset(deployment.pusdAssetId);

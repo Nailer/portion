@@ -20,6 +20,7 @@ export interface ActionResult {
   txHash?: string;
   blockNumber?: number;
   error?: string;
+  warning?: string;
   /** extra transactions that were part of the action (for example document storage) */
   txs?: { label: string; hash: string; block?: number }[];
   listingId?: number;
@@ -94,7 +95,7 @@ export interface DocMeta {
 }
 
 export interface ActivityRow {
-  id: number;
+  id: number | string;
   block: number;
   ts: number;
   kind: string;

@@ -1,6 +1,6 @@
 # Portion
 
-**Own a portion of things that earn.** Portion is being built for operators to offer shares in productive equipment and distribute revenue they deposit. The contracts are not deployed yet; asset funding is unavailable.
+**Own a portion of things that earn.** Portion is being built for operators to offer shares in productive equipment and distribute revenue they deposit. The Core contract is live on the Portaldot V3 testnet. Publishing and funding use real testnet transactions and test tokens.
 If the operator stops paying, their bond is slashed to the people who hold shares.
 
 Built for the **Portaldot Hacker House 2026**. It targets all four tracks with one product and one SDK:
@@ -12,9 +12,11 @@ Built for the **Portaldot Hacker House 2026**. It targets all four tracks with o
 | **Node Operations & Tooling** | Direct-RPC finalized-block console; server-side decentralization analysis, Pool Studio, permissionless auto-compound keeper, Prometheus metrics |
 | **Multi-Chain & Cross-Chain** | Teleport: pUSD between Portaldot and BNB Chain testnet with a 2-of-3 relayer committee |
 
+Current deployment and validation: [live Core release](docs/LIVE-CORE-RELEASE.md). Hosted features use verified receipts and durable document copies; legacy keepers and the cross-chain bridge are not deployed.
+
 ## Business direction
 
-Portion aims to become global infrastructure for companies managing funding and payouts for productive assets. Contract source implements configurable sale and revenue fees; there are no verified deployed fee rates yet. Company management plans are a pricing hypothesis, not a feature currently charging customers. The [business plan](docs/BUSINESS.md) records costs, pilot criteria and limits; the app’s Revenue model page explains what still needs commercial validation.
+Portion aims to become global infrastructure for companies managing funding and payouts for productive assets. The deployed Core contract charges a 1% sale fee and 0.5% revenue fee in test pUSD. Company management plans are a pricing hypothesis, not a feature currently charging customers. The [business plan](docs/BUSINESS.md) records costs, pilot criteria and limits; the app’s Revenue model page explains what still needs commercial validation.
 
 ## The idea in one picture
 
@@ -34,7 +36,7 @@ to deploy or audit. Terms and photo are stored by the chain's own `TransactionSt
 See [docs/research.md](docs/research.md) for the ecosystem research and why this idea, [docs/architecture.md](docs/architecture.md) for the design,
 and [docs/TESTING.md](docs/TESTING.md) for how to check every claim.
 
-New here? Open the [public preview](https://portion-one.vercel.app) and follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). Source: [Nailer/portion](https://github.com/Nailer/portion). The public preview reads the real testnet; live Portion contracts are not deployed. No simulation or fabricated opening balances are available. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
+New here? Open the [public preview](https://portion-one.vercel.app) and follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). Source: [Nailer/portion](https://github.com/Nailer/portion). The public preview reads the real testnet; the Core contract is deployed and its runtime bytecode is verified before actions are enabled. No simulation or fabricated opening balances are available. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
 
 Account connection never asks for a recovery phrase. Approve a compatible browser-wallet connection for native testnet tools. Keys remain in the extension. No wallet is created by the app. See [account connection and legacy-data handling](docs/ACCOUNT-CONNECTION.md).
 
@@ -56,8 +58,8 @@ To deploy your own instance:
 ```bash
 npm run keygen         # writes .env (git-ignored) and prints the deployer address
 # fund that address on the testnet
-npm run deploy:check:core  # read-only budget report
-npm run deploy:core # only after a successful, affordable preflight
+npx tsx scripts/deploy-live-core.ts # read-only bounded budget report
+npx tsx scripts/deploy-live-core.ts --execute # only for a new deployment after preflight
 # Then verify actual transactions; do not populate example business listings.
 ```
 

@@ -14,5 +14,5 @@ export function Icon({ name, size = 20, style }: { name: keyof typeof paths; siz
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={style}><path d={paths[name]}/></svg>;
 }
 export function BrandMark() {
-  return <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#3366ff"/><path d="M12 30V11h9a8 8 0 1 1 0 16h-4v-6h4a2 2 0 1 0 0-4h-3v13h-6Z" fill="#fff"/><path d="M26 10h4v4h-4z" fill="#80e9ff"/></svg>;
+  return <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M20 2 34 10 28 14 20 9 12 14 6 10 20 2Z" fill="#4f7cff"/><path d="M36 13v16l-14 8v-8l7-4v-8l7-4Z" fill="#80e9ff"/><path d="M18 37 4 29V13l7 4v8l7 4v8Z" fill="#e4edff"/><path d="m20 15 5 3v5l-5 3-5-3v-5l5-3Z" fill="#4f7cff"/></svg>;
 }

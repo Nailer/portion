@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BrandMark, Icon } from './components/Icon';
 import { NavLink, Route, Routes, Link, useLocation } from 'react-router-dom';
 import { useApp } from './state/app';
@@ -57,7 +57,15 @@ export function App() {
   const { status, error, backend, reconnect } = useApp();
   const [navOpen, setNavOpen] = useState(false);
   const loc = useLocation();
-  const close = () => setNavOpen(false);
+  const tools = useRef<HTMLDetailsElement>(null);
+  const close = () => { setNavOpen(false); if (tools.current) tools.current.open = false; };
+  useEffect(() => { close(); }, [loc.pathname]);
+  useEffect(() => {
+    const dismiss = (event: PointerEvent) => { if (tools.current && !tools.current.contains(event.target as Node)) tools.current.open = false; };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && tools.current?.open) { tools.current.open = false; tools.current.querySelector('summary')?.focus(); } };
+    document.addEventListener('pointerdown', dismiss); document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('pointerdown', dismiss); document.removeEventListener('keydown', escape); };
+  }, []);
 
   return (
     <>
@@ -70,7 +78,7 @@ export function App() {
             <NavLink to="/portfolio" onClick={close}>Portfolio</NavLink>
             <NavLink to="/operator" onClick={close}>Workspace</NavLink>
             <NavLink to="/guide" onClick={close}>How it works</NavLink>
-            <details className="tools-nav"><summary>Tools <span>⌄</span></summary><div className="tools-menu">
+            <details ref={tools} className="tools-nav"><summary>Tools <span>⌄</span></summary><div className="tools-menu">
               <NavLink to="/business" onClick={close}>Revenue model</NavLink>
               <NavLink to="/network" onClick={close}>Network console</NavLink>
               <NavLink to="/pools" onClick={close}>Staking pools</NavLink>

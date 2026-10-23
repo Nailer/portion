@@ -1,7 +1,7 @@
 import type { ApiPromise } from '@polkadot/api';
 import {
   createPoolAndSeed, quoteExactIn, reserves, swapExactIn, withId, FALLBACK_LIMITS,
-  PortionClient, assetBalance, contentHash, nativeFree, parseUnits, storeTx, submit, MAX_DOC_BYTES,
+  PortionClient, CoreClient, mappedCorePlan, assetBalance, contentHash, nativeFree, parseUnits, storeTx, submit, MAX_DOC_BYTES,
   TESTNET, type Deployment, type ListingView, type Passport, type Plan, type PlanStep, type TxStage,
 } from '@portion/sdk';
 import {
@@ -23,7 +23,7 @@ export class LiveBackend implements Backend {
     readonly chain: ApiPromise,
     readonly deployment?: Deployment,
   ) {
-    if (deployment?.portion && Number.isSafeInteger(deployment.pusdAssetId) && deployment.deedsCollection !== undefined) this.client = new PortionClient(chain, deployment);
+    if (deployment?.portion && Number.isSafeInteger(deployment.pusdAssetId) && deployment.deedsCollection !== undefined) this.client = deployment.contractVersion === 'core-v1' ? new CoreClient(chain, deployment, { catalog: () => http('/api/catalog'), document: hash => this.docJson(hash) }) : new PortionClient(chain, deployment);
   }
 
   get deployed() {
@@ -129,7 +129,8 @@ export class LiveBackend implements Backend {
     if (have < need) throw new UserError('You do not have enough pUSD for this. Get some from the faucet.', 'faucet');
   }
 
-  private wrap(title: string, plan: Plan, who: Passport, cost?: string): Prepared {
+  private async wrap(title: string, plan: Plan, who: Passport, cost?: string): Promise<Prepared> {
+    if (this.client instanceof CoreClient) plan = await mappedCorePlan(this.chain, plan, who);
     return {
       title,
       steps: plan.steps,
@@ -137,7 +138,12 @@ export class LiveBackend implements Backend {
       run: async (onStage) => {
         try {
           const out = await submit(this.chain, plan.tx, who.pair, (s, d) => onStage(stageMap[s], d));
-          return { ok: out.ok, txHash: out.txHash, blockNumber: out.blockNumber, error: out.error };
+          let warning: string | undefined;
+          if (out.ok && this.deployment?.contractVersion === 'core-v1') {
+            try { await http('/api/receipts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: out.blockNumber, txHash: out.txHash }) }); }
+            catch { warning = 'Transaction finalized, but its history receipt could not be published. Keep the transaction hash.'; }
+          }
+          return { ok: out.ok, txHash: out.txHash, blockNumber: out.blockNumber, error: out.error, warning };
         } catch (e) {
           return { ok: false, error: (e as Error).message };
         }
@@ -243,19 +249,23 @@ export class LiveBackend implements Backend {
     await this.ensureGas(who, 6n * 10n ** 14n);
     await this.ensurePusd(who, bond);
 
+    const core = c instanceof CoreClient;
+    const identifiers = core ? { assetId: await c.freeAssetId(), nftItem: await c.freeNftItem() } : undefined;
     const enc = new TextEncoder();
     if (!f.image) throw new UserError('Upload an actual image of the asset.');
     const cover = f.image.bytes;
-    const terms = enc.encode(JSON.stringify({ v: 1, name: f.name, summary: f.summary, category: f.category, terms: f.terms, createdAt: new Date().toISOString() }));
+    const terms = enc.encode(JSON.stringify({ v: 1, ...identifiers, nftCollection: this.deployment!.deedsCollection, coverHash: contentHash(cover), sharesForSale: f.sharesForSale, name: f.name, summary: f.summary, category: f.category, terms: f.terms }));
     if (cover.length > MAX_DOC_BYTES) throw new UserError(`The photo is ${(cover.length / 1024).toFixed(0)} KB after compression; the on-chain limit is 32 KB.`);
     if (terms.length > MAX_DOC_BYTES) throw new UserError('The terms are longer than 32 KB.');
     const coverHash = contentHash(cover);
     const docHash = contentHash(terms);
 
-    const plan = await c.planTokenize(who, {
-      name: f.name, summary: f.summary, category: f.category, totalShares: f.totalShares, sharesForSale: f.sharesForSale,
+    const originalPlan = await c.planTokenize(who, {
+      ...identifiers, name: f.name, summary: f.summary, category: f.category, totalShares: f.totalShares, sharesForSale: f.sharesForSale,
       salePrice: price, cadence: f.cadenceSeconds, minPerPeriod: minPer, bond, docHash, coverHash,
     });
+    const mappedPlan = core ? await mappedCorePlan(this.chain, originalPlan, who) : originalPlan;
+    const plan = { ...originalPlan, tx: mappedPlan.tx, steps: mappedPlan.steps };
     const storage: PlanStep[] = [
       { key: 'doc', lane: 'storage', pallet: 'TransactionStorage', method: 'store', title: 'Store the terms on-chain', detail: `${terms.length.toLocaleString()} bytes, content hash ${docHash.slice(0, 12)}…` },
       { key: 'cover', lane: 'storage', pallet: 'TransactionStorage', method: 'store', title: 'Store the photo on-chain', detail: `${(cover.length / 1024).toFixed(1)} KB, content hash ${coverHash.slice(0, 12)}…` },
@@ -272,10 +282,20 @@ export class LiveBackend implements Backend {
             const r = await submit(this.chain, storeTx(this.chain, bytes), who.pair);
             if (!r.ok) return { ok: false, error: `${label} could not be stored: ${r.error}`, txs };
             txs.push({ label: `${label} stored`, hash: r.txHash, block: r.blockNumber });
+            if (core) {
+              try { await http(`/api/doc/${contentHash(bytes)}/pin`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: r.blockNumber }) }); }
+              catch { return { ok: false, error: `${label} is finalized on-chain, but its public copy could not be published. Keep the receipt and retry publication before creating the listing.`, txs }; }
+            }
           }
           const out = await submit(this.chain, plan.tx, who.pair, (s, d) => onStage(stageMap[s], d, 2));
           if (!out.ok) return { ok: false, error: out.error, txs, txHash: out.txHash };
           txs.push({ label: 'Atomic tokenize batch', hash: out.txHash, block: out.blockNumber });
+          if (core) {
+            let warning: string | undefined;
+            try { await http('/api/receipts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: out.blockNumber, txHash: out.txHash }) }); }
+            catch { warning = 'Asset creation finalized, but publication is pending. Keep the receipt; do not create the asset again.'; }
+            return { ok: true, txHash: out.txHash, blockNumber: out.blockNumber, txs, listingId: plan.assetId, warning };
+          }
           const [found, id] = await c.contract.read('idOfAsset', [plan.assetId]);
           return { ok: true, txHash: out.txHash, blockNumber: out.blockNumber, txs, listingId: found ? Number(id) : undefined };
         } catch (e) {

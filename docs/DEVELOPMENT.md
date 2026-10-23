@@ -1,3 +1,5 @@
+> Current status, 23 October 2026: Core is deployed. The live release and current supported flow are documented in [LIVE-CORE-RELEASE.md](LIVE-CORE-RELEASE.md); this supersedes earlier undeployed-status notes below.
+
 > Earlier stages below are historical. The live-data-only update at the end supersedes all simulation instructions. For the current runnable workflow see [WALKTHROUGH.md](WALKTHROUGH.md).
 
 # Portion development stages

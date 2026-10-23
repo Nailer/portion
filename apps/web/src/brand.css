@@ -25,12 +25,14 @@ button:disabled { cursor: not-allowed; }
 .nav a:hover { color: white; background: #151e31; }
 .nav a.active { background: #182641; box-shadow: none; color: #d4e2ff; font-weight: 550; }
 .top .spacer { flex: .5; }
-.tools-nav { position: relative; font-size: 12px; }
-.tools-nav summary { list-style: none; cursor: pointer; padding: 9px 11px; color: var(--ink-2); }
+.tools-nav { position: relative; font-size: 12px; align-self: center; }
+.tools-nav summary { list-style: none; cursor: pointer; padding: 9px 11px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; border-radius: 7px; }
 .tools-nav summary::-webkit-details-marker { display: none; }
-.tools-nav summary span { margin-left: 5px; }
-.tools-menu { position: absolute; right: 0; top: 40px; min-width: 210px; border: 1px solid var(--line); border-radius: 12px; background: #121d30; box-shadow: 0 16px 50px #0008; display: grid; padding: 8px; }
-.tools-menu a { border-radius: 7px; }
+.tools-nav summary span { margin-left: 0; transition: transform .18s ease; }
+.tools-nav[open] summary { background: #182641; color: #d4e2ff; }
+.tools-nav[open] summary span { transform: rotate(180deg); }
+.tools-menu { position: absolute; left: 0; right: auto; top: calc(100% + 10px); width: 224px; z-index: 80; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: #121d30; box-shadow: 0 16px 50px #0008; display: grid; padding: 8px; }
+.tools-menu a { display: flex; align-items: center; width: 100%; min-height: 40px; padding: 10px 12px; border-radius: 7px; margin: 0; line-height: 1.4; }
 .network-chip { display: inline-flex; align-items: center; gap: 8px; font: 10px var(--mono); color: #a3b6d2; white-space: nowrap; }
 .live-indicator { width: 6px; height: 6px; display: inline-block; flex-shrink: 0; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 0 4px #8ce7f30b; }
 .btn { border-radius: 9px; padding: 13px 20px; font-size: 13px; font-weight: 550; gap: 14px; transition: background .2s, transform .2s, box-shadow .2s; }
@@ -161,3 +163,5 @@ footer.foot { background: #070b13; border-top: 1px solid #202a40; padding: 35px 
 .create-grid > * { min-width: 0; max-width: 100%; }
 .create-grid fieldset { width: 100%; margin-inline: 0; }
 @media (max-width: 1020px) { .create-grid { grid-template-columns: minmax(0,1fr); } }
+
+@media (max-width: 950px) { .tools-nav { align-self: stretch; } .tools-menu { width: auto; margin: 6px 0 0; } }
