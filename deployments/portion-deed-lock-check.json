@@ -1,0 +1,18 @@
+{
+  "historicalBlock": 165573,
+  "itemConfig": {
+    "settings": 0
+  },
+  "transferDryRun": {
+    "Ok": {
+      "Err": {
+        "Module": {
+          "index": "47",
+          "error": "0x0c000000"
+        }
+      }
+    }
+  },
+  "error": "nfts.ItemLocked",
+  "submitted": false
+}

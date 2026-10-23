@@ -1,0 +1,317 @@
+{
+  "assetId": 585886,
+  "nftItem": 438052709,
+  "name": "Portion Development — TEST ONLY",
+  "testOnly": true,
+  "operator": "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+  "beforeFree": "9238925814254357",
+  "docHash": "0x7a81ab7ecb26dca5a56a8c2ced5647d0d5f57a31603a86a5d9a000a052594c7a",
+  "coverHash": "0x8627e3e12187b83c2b933ea9a900193d181c8f9ec4fda2aad3e3e842b7972be2",
+  "maximumBudgetTPOT": "52",
+  "minimumReserveTPOT": "40",
+  "createdAt": "2026-10-23T21:17:13.144Z",
+  "terms": {
+    "hash": "0x53f078687cf6601698b7e07f7ba8beed6248342feb32bbaad38c42173e56f943",
+    "block": 165542
+  },
+  "cover": {
+    "hash": "0x4d23ac900909bc77045f9aa1e9e5f0d8da2043203e89153a10f289608b747327",
+    "block": 165547
+  },
+  "creation": {
+    "hash": "0xb8ed7f04904bd53080fddf341fde1d8bc01a4dfdb88574af6cfd423bb7f82085",
+    "block": 165551
+  },
+  "afterFree": "4874209477753814",
+  "published": true,
+  "journey": {
+    "hash": "0x353098afddba251740dcc6f7d39b6a757fc8449d647cbb5ed40666c51e9bf912",
+    "block": 165573,
+    "ok": true,
+    "actions": [
+      "buy",
+      "deposit",
+      "claim",
+      "unstake"
+    ],
+    "singleDevelopmentAccount": true
+  },
+  "afterJourneyFree": "4484091370237420",
+  "journeyEvents": [
+    {
+      "section": "balances",
+      "method": "Withdraw",
+      "data": [
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        6041536276779
+      ]
+    },
+    {
+      "section": "balances",
+      "method": "Reserved",
+      "data": [
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        10000000000000
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x0000107900000000000000000000000000010000",
+        "0x0000000000000000000000000000000000000000000000000000000005e69ec0",
+        [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167"
+        ]
+      ]
+    },
+    {
+      "section": "balances",
+      "method": "Unreserved",
+      "data": [
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        10000000000000
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x0000107900000000000000000000000000010000",
+        "0x00000000000000000000000000000000000000000000000000000000000f4240",
+        [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167"
+        ]
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x17501f4510ba4298b618209e105cd47036509706",
+        "0x00000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000005f5e100",
+        [
+          "0xa085e2b2d321e10189df81646d2402c6e813a00e7bf4cfa87fd153183ba33534",
+          "0x000000000000000000000000000000000000000000000000000000000008f09e",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167"
+        ]
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x17501f4510ba4298b618209e105cd47036509706",
+        "0x0000000000000000000000000000000000000000000000000000000000000064",
+        [
+          "0x51521033185dc4d55692b875b8b3c45a0776c831aac46f2f815994de0bb870d4",
+          "0x000000000000000000000000000000000000000000000000000000000008f09e",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167"
+        ]
+      ]
+    },
+    {
+      "section": "balances",
+      "method": "TransferAndHold",
+      "data": [
+        {
+          "revive": "StorageDepositReserve"
+        },
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        "5CbGm25ZCEhiC8VwvXntyjfF5Br4f2jo1KPqTkLNKcrtva7v",
+        384150000000000
+      ]
+    },
+    {
+      "section": "balances",
+      "method": "Reserved",
+      "data": [
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        10000000000000
+      ]
+    },
+    {
+      "section": "balances",
+      "method": "Unreserved",
+      "data": [
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        10000000000000
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x0000107900000000000000000000000000010000",
+        "0x00000000000000000000000000000000000000000000000000000000000f4240",
+        [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167",
+          "0x00000000000000000000000017501f4510ba4298b618209e105cd47036509706"
+        ]
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x0000107900000000000000000000000000010000",
+        "0x0000000000000000000000000000000000000000000000000000000000001388",
+        [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x00000000000000000000000017501f4510ba4298b618209e105cd47036509706",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167"
+        ]
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x17501f4510ba4298b618209e105cd47036509706",
+        "0x00000000000000000000000000000000000000000000000000000000000f2eb800000000000000000000000000000000000000000000000000000000000013880000000000000000000000000000000000000000000000000000000000000001",
+        [
+          "0xa3b4c6216578fb2fe039ab33cbc111fcbd9c17e69c9270e50ab0ae66e1b72a8c",
+          "0x000000000000000000000000000000000000000000000000000000000008f09e",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167"
+        ]
+      ]
+    },
+    {
+      "section": "balances",
+      "method": "TransferAndHold",
+      "data": [
+        {
+          "revive": "StorageDepositReserve"
+        },
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        "5CbGm25ZCEhiC8VwvXntyjfF5Br4f2jo1KPqTkLNKcrtva7v",
+        768300000000000
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x0000107900000000000000000000000000010000",
+        "0x00000000000000000000000000000000000000000000000000000000000f2eb8",
+        [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x00000000000000000000000017501f4510ba4298b618209e105cd47036509706",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167"
+        ]
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x17501f4510ba4298b618209e105cd47036509706",
+        "0x00000000000000000000000000000000000000000000000000000000000f2eb8",
+        [
+          "0xdc8b8058bd26d719cc330a54461930fd9c312dd28447313fd5dc4641513e0074",
+          "0x000000000000000000000000000000000000000000000000000000000008f09e",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167"
+        ]
+      ]
+    },
+    {
+      "section": "balances",
+      "method": "TransferAndHold",
+      "data": [
+        {
+          "revive": "StorageDepositReserve"
+        },
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        "5CbGm25ZCEhiC8VwvXntyjfF5Br4f2jo1KPqTkLNKcrtva7v",
+        384150000000000
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x0008f09e00000000000000000000000000010000",
+        "0x0000000000000000000000000000000000000000000000000000000000000064",
+        [
+          "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+          "0x00000000000000000000000017501f4510ba4298b618209e105cd47036509706",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167"
+        ]
+      ]
+    },
+    {
+      "section": "revive",
+      "method": "ContractEmitted",
+      "data": [
+        "0x17501f4510ba4298b618209e105cd47036509706",
+        "0x0000000000000000000000000000000000000000000000000000000000000064",
+        [
+          "0x31fb83ebfee56cfa39f2617faf08b50f8fd4a2143ced5414a14fca745907c120",
+          "0x000000000000000000000000000000000000000000000000000000000008f09e",
+          "0x000000000000000000000000dd62efd46da4acc4b8b2c7e3bf1685b2c9cee167"
+        ]
+      ]
+    },
+    {
+      "section": "balances",
+      "method": "TransferOnHold",
+      "data": [
+        {
+          "revive": "StorageDepositReserve"
+        },
+        "5CbGm25ZCEhiC8VwvXntyjfF5Br4f2jo1KPqTkLNKcrtva7v",
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        1152449999999998
+      ]
+    },
+    {
+      "section": "balances",
+      "method": "Deposit",
+      "data": [
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        73428760387
+      ]
+    },
+    {
+      "section": "balances",
+      "method": "Deposit",
+      "data": [
+        "5EYCAe5ijiYfyeZ2JJCGq56LmPyNRAKzpG4QkoQkkQNB5e6Z",
+        5968107516392
+      ]
+    },
+    {
+      "section": "transactionPayment",
+      "method": "TransactionFeePaid",
+      "data": [
+        "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+        5968107516392,
+        0
+      ]
+    }
+  ],
+  "deedLock": {
+    "hash": "0x3ab13fcb73df6c5cf9746c43ee8d1c3f10332f3addd4977b283075ace2847d8b",
+    "block": 165586,
+    "ok": true
+  },
+  "verifiedAt": "2026-10-23T21:22:57.703Z",
+  "finalVerification": {
+    "sold": 100,
+    "forSale": 0,
+    "saleOpen": false,
+    "revenuePUSD": "995000",
+    "pending": "0",
+    "staked": "0",
+    "walletShares": "100",
+    "deedLocked": true,
+    "remainingTPOT": "44.82920824",
+    "totalTestTPOT": "47.56004989",
+    "withinBudget": true
+  }
+}

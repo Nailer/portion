@@ -29,3 +29,7 @@ The app checks deployed runtime bytecode before enabling contract actions. Full 
 Bridge relayers, automatic keepers and complete historical indexing remain outside this hosted release. The contract records token rights and operator deposits; a listing alone does not establish enforceable ownership of physical equipment. Marketing should describe the working testnet flow, without promising investment returns or production readiness.
 
 Hosted service verification: health and empty catalog returned verified JSON; a real 500 test-pUSD credit request finalized at block 160705, transaction `0x5b7eea41dc87502592b94036b4f44070d1aa0575303ad367d4c02fd718f2c512`. The native faucet remained disabled. Desktop and mobile Tools navigation and the live listing form were checked in the production browser.
+
+## Authorized live test completed
+
+The disclosed Portion Development test listing and the complete native purchase/deposit/claim/unstake flow have now finalized. See [LIVE-TEST-RESULTS.md](LIVE-TEST-RESULTS.md) for receipts, final assertions, remaining balance and the transfer-lock checker correction. This supersedes the earlier statement that no public test listing exists.

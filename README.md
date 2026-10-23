@@ -12,7 +12,7 @@ Built for the **Portaldot Hacker House 2026**. It targets all four tracks with o
 | **Node Operations & Tooling** | Direct-RPC finalized-block console; server-side decentralization analysis, Pool Studio, permissionless auto-compound keeper, Prometheus metrics |
 | **Multi-Chain & Cross-Chain** | Teleport: pUSD between Portaldot and BNB Chain testnet with a 2-of-3 relayer committee |
 
-Current deployment and validation: [live Core release](docs/LIVE-CORE-RELEASE.md). Hosted features use verified receipts and durable document copies; legacy keepers and the cross-chain bridge are not deployed.
+Current deployment and validation: [live Core release](docs/LIVE-CORE-RELEASE.md) and [finalized protocol test](docs/LIVE-TEST-RESULTS.md). Hosted features use verified receipts and durable document copies; legacy keepers and the cross-chain bridge are not deployed.
 
 ## Business direction
 
