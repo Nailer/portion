@@ -8,8 +8,13 @@ import { Indexer } from './indexer.js';
 import { Faucet } from './faucet.js';
 import { Keepers } from './keepers.js';
 import { buildApp } from './app.js';
+import { publicApi } from './public-api.js';
+import { config as loadEnv } from 'dotenv';
+import { resolve } from 'node:path';
 import { Relayer, evmSide } from './relayer.js';
 
+loadEnv({ path: resolve(config.root, '.env.local') });
+loadEnv({ path: resolve(config.root, '.env.credit-service') });
 await cryptoWaitReady();
 const deployment = loadDeployment();
 const db = openDb(config.dbPath);
@@ -34,10 +39,10 @@ if (config.relayer.enabled && deployment?.teleport && deployment.bnb && config.e
   console.log('[portion] Teleport relayer running');
 }
 const indexer = new Indexer(api, db, deployment);
-const app = buildApp({ api, db, deployment, faucet, startedAt: Date.now(), relayerRunning: !!relayer, indexerStatus: () => indexer.status() });
+const app = deployment?.contractVersion === 'core-v1' ? publicApi(deployment) : buildApp({ api, db, deployment, faucet, startedAt: Date.now(), relayerRunning: !!relayer, indexerStatus: () => indexer.status() });
 
-indexer.start().catch((e) => console.error('[indexer] failed to start', e));
-if (config.keepers.enabled && config.keeperMnemonic) {
+if (deployment?.contractVersion !== 'core-v1') indexer.start().catch((e) => console.error('[indexer] failed to start', e));
+if (deployment?.contractVersion !== 'core-v1' && config.keepers.enabled && config.keeperMnemonic) {
   new Keepers(api, db, keyring.addFromUri(config.keeperMnemonic), deployment, config.keepers.intervalMs).start();
 }
 

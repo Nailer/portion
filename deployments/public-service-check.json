@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-10-23T13:11:00Z",
+  "url": "https://portion-one.vercel.app",
+  "health": {
+    "ok": true,
+    "deployed": true,
+    "mode": "core-v1-public-receipts",
+    "indexedHistoryComplete": false,
+    "documents": true
+  },
+  "catalogCount": 0,
+  "creditTest": {
+    "recipient": "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+    "amountBaseUnits": "500000000",
+    "nativeTokensGranted": "0",
+    "tx": "0x5b7eea41dc87502592b94036b4f44070d1aa0575303ad367d4c02fd718f2c512",
+    "finalizedBlock": 160705
+  }
+}

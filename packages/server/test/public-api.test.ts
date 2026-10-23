@@ -1,0 +1,44 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { contentHash, storedInBlock } from '@portion/sdk';
+import { publicApi } from '../src/public-api';
+const blobs = vi.hoisted(() => new Map<string, Uint8Array>());
+vi.mock('@vercel/blob', () => ({
+  list: vi.fn(async ({ prefix }: { prefix: string }) => ({ hasMore: false, blobs: [...blobs.keys()].filter(key => key.startsWith(prefix)).map(pathname => ({ pathname, url: 'https://public.test/' + pathname })) })),
+  put: vi.fn(async (path: string, bytes: Uint8Array) => { if (blobs.has(path)) throw new Error('Already exists'); blobs.set(path, new Uint8Array(bytes)); return {}; }),
+}));
+vi.mock('@portion/sdk', async original => ({ ...await original<object>(), storedInBlock: vi.fn() }));
+const deployment: any = { contractVersion: 'core-v1', portion: '0x1111111111111111111111111111111111111111', deedsCollection: 9, pusdAssetId: 4217 };
+beforeEach(() => {
+  blobs.clear(); vi.stubEnv('BLOB_READ_WRITE_TOKEN', 'test-only-token');
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => new Response(blobs.get(url.replace('https://public.test/', '')), { status: blobs.has(url.replace('https://public.test/', '')) ? 200 : 404 })));
+});
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.restoreAllMocks(); });
+function fixture() {
+  const api: any = { genesisHash: { toHex: () => '0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd' },
+    rpc: { chain: { getFinalizedHead: async () => '0xfinal', getHeader: async () => ({ number: { toNumber: () => 10 } }), getBlockHash: async () => ({ toHex: () => '0xblock' }) } }, disconnect: vi.fn(async () => {}) };
+  return { api, app: publicApi(deployment, async () => api) };
+}
+describe('durable public API', () => {
+  it('never presents a missing deployment or store as working data', async () => {
+    expect((await publicApi(undefined).request('/api/catalog')).status).toBe(503);
+    vi.stubEnv('BLOB_READ_WRITE_TOKEN', '');
+    expect((await fixture().app.request('/api/catalog')).status).toBe(503);
+  });
+  it('publishes only accepted, finalized document bytes and serves their exact content', async () => {
+    const { app, api } = fixture(); const data = new TextEncoder().encode('{"terms":"operator terms"}'); const hash = contentHash(data);
+    vi.mocked(storedInBlock).mockResolvedValue([{ data, hash, size: data.length, block: 9, index: 0 }]);
+    const response = await app.request(`/api/doc/${hash}/pin`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: 9 }) });
+    expect(response.status).toBe(200); expect(api.disconnect).toHaveBeenCalled();
+    expect(await (await app.request(`/api/doc/${hash}`)).text()).toBe(new TextDecoder().decode(data));
+  });
+  it('rejects unfinalized blocks before writing any public files', async () => {
+    const { app } = fixture();
+    expect((await app.request(`/api/doc/${'0x' + 'ab'.repeat(32)}/pin`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"block":11}' })).status).toBe(409);
+    expect(blobs.size).toBe(0);
+  });
+  it('keeps an empty published catalog empty and labels receipt coverage honestly', async () => {
+    const { app } = fixture();
+    expect(await (await app.request('/api/catalog')).json()).toEqual([]);
+    expect(await (await app.request('/api/health')).json()).toMatchObject({ indexedHistoryComplete: false, mode: 'core-v1-public-receipts' });
+  });
+});

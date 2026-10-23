@@ -1,7 +1,25 @@
 {
   "compilerOptions": {
-    "target": "ES2022", "module": "ESNext", "moduleResolution": "Bundler", "lib": ["ES2023"], "strict": true,
-    "resolveJsonModule": true, "esModuleInterop": true, "skipLibCheck": true, "noEmit": true, "types": ["node"]
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": [
+      "ES2023"
+    ],
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": [
+      "node"
+    ]
   },
-  "include": ["./*.ts", "../packages/server/src/verify.ts", "../packages/server/src/relayer.ts", "../packages/server/src/db.ts"]
+  "include": [
+    "./*.ts",
+    "../packages/server/src/verify.ts",
+    "../packages/server/src/relayer.ts",
+    "../packages/server/src/db.ts",
+    "../serverless/**/*.ts"
+  ]
 }

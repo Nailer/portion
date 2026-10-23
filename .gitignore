@@ -12,3 +12,8 @@ data/*.sqlite*
 .vite/
 coverage/
 .vercel
+.env*
+
+/api/index.cjs
+
+/serverless/bundle.cjs
