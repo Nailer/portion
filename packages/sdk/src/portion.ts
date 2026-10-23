@@ -2,7 +2,7 @@ import type { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import { stringToHex } from '@polkadot/util';
 import { encodeBytes32String } from 'ethers';
-import { PortionArtifact } from './abi';
+import { PortionArtifact, PortionCoreArtifact } from './abi';
 import { ASSET_PRECOMPILE_PREFIX, PUSD_DECIMALS } from './constants';
 import { assetErc20Address, h160ToFallbackSs58, ss58ToH160 } from './addresses';
 import { assetBalance, assetExists } from './chain';
@@ -10,6 +10,8 @@ import { FALLBACK_LIMITS, ReviveContract } from './revive';
 import type { Passport } from './passport';
 
 export interface Deployment {
+  contractVersion?: 'core-v1';
+  runtimeCodeHash?: string;
   network: string;
   chainId: number;
   portion: string; // H160
@@ -31,7 +33,7 @@ export interface VaultView {
   totalStaked: bigint;
   accPerShare: bigint;
   totalRevenue: bigint;
-  deposits: number;
+  deposits: number | null;
   bond: bigint;
   forSale: number;
   sold: number;
@@ -46,7 +48,7 @@ export interface ListingView {
   nftCollection: number;
   nftItem: number;
   category: number;
-  strikes: number;
+  strikes: number | null;
   totalShares: number;
   cadence: number;
   createdAt: number;
@@ -89,6 +91,8 @@ export interface TokenizeInput {
   summary: string;
   category: number;
   totalShares: number;
+  assetId?: number;
+  nftItem?: number;
   sharesForSale: number;
   salePrice: bigint; // pUSD units per share
   cadence: number; // seconds
@@ -146,7 +150,7 @@ export class PortionClient {
     readonly api: ApiPromise,
     readonly deployment: Deployment,
   ) {
-    this.contract = new ReviveContract(api, deployment.portion, PortionArtifact.abi);
+    this.contract = new ReviveContract(api, deployment.portion, deployment.contractVersion === 'core-v1' ? PortionCoreArtifact.abi : PortionArtifact.abi);
     this.contractAccount = h160ToFallbackSs58(deployment.portion);
     this.pusdToken = assetErc20Address(deployment.pusdAssetId, ASSET_PRECOMPILE_PREFIX);
   }
@@ -201,11 +205,11 @@ export class PortionClient {
 
   // ───────────── builders ─────────────
 
-  private approve(assetId: number, amount: bigint) {
+  protected approve(assetId: number, amount: bigint) {
     return this.api.tx.assets.approveTransfer(assetId, this.contractAccount, amount);
   }
 
-  private callStep(fn: string, args: unknown[]) {
+  protected callStep(fn: string, args: unknown[]) {
     const data = this.contract.encode(fn, args);
     return this.api.tx.revive.call(this.deployment.portion, 0n, FALLBACK_LIMITS.weight, FALLBACK_LIMITS.deposit, data);
   }

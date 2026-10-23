@@ -2,13 +2,13 @@
 pragma solidity ^0.8.24;
 
 import {IERC20} from "./interfaces/IERC20.sol";
-import {SafeTransfer} from "./lib/SafeTransfer.sol";
+import {CoreTransfer} from "./lib/CoreTransfer.sol";
 
-/// @notice Budget candidate, not the contract used by the current SDK/UI.
+/// @notice Versioned funding core; native asset IDs identify listings.
 /// @dev Native asset IDs identify listings. Display metadata and NFT references belong in the
 ///      hashed document, not duplicate contract strings. Fees/rules are fixed for this version.
 contract PortionCore {
-    using SafeTransfer for IERC20;
+    using CoreTransfer for IERC20;
 
     error Invalid();
     error Unauthorized();
@@ -19,10 +19,10 @@ contract PortionCore {
 
     struct Listing {
         address operator;
-        uint64 cadence;
-        uint64 totalShares;
-        uint64 lastDepositAt;
-        uint64 closedAt;
+        uint256 cadence;
+        uint256 totalShares;
+        uint256 lastDepositAt;
+        uint256 closedAt;
         bool saleOpen;
         bytes32 docHash;
         uint256 minimum;
@@ -32,13 +32,14 @@ contract PortionCore {
         uint256 acc;
         uint256 bond;
         uint256 revenue;
+        uint256 sold;
     }
     struct Stake { uint256 amount; uint256 debt; uint256 owed; }
     struct Terms {
         uint32 asset;
-        uint64 totalShares;
-        uint64 forSale;
-        uint64 cadence;
+        uint256 totalShares;
+        uint256 forSale;
+        uint256 cadence;
         uint256 price;
         uint256 minimum;
         uint256 bond;
@@ -74,11 +75,11 @@ contract PortionCore {
         _prefix = prefix;
     }
     modifier guarded() {
-        if (_lock != 1) revert Reentrancy();
-        _lock = 2;
+        _enter();
         _;
         _lock = 1;
     }
+    function _enter() private { if (_lock != 1) revert Reentrancy(); _lock = 2; }
     function shareToken(uint32 asset) public view returns (IERC20) {
         return IERC20(address(uint160(uint256(asset) << 128) | uint160(uint256(_prefix) << 16)));
     }
@@ -86,7 +87,18 @@ contract PortionCore {
         l = _listings[asset];
         if (l.operator == address(0)) revert Invalid();
     }
-    function listing(uint32 asset) external view returns (Listing memory) { return _get(asset); }
+    function listing(uint32 asset) external view returns (Listing memory) {
+        Listing storage l = _get(asset);
+        // Every Listing field occupies one complete storage word. This fixed ABI layout is
+        // covered by a full-field encoding regression; update both if fields ever change.
+        assembly ("memory-safe") {
+            let result := mload(0x40)
+            for { let i := 0 } lt(i, 15) { i := add(i, 1) } {
+                mstore(add(result, mul(i, 32)), sload(add(l.slot, i)))
+            }
+            return(result, 480)
+        }
+    }
     function _operator(Listing storage l) private view {
         if (msg.sender != l.operator) revert Unauthorized();
     }
@@ -125,7 +137,7 @@ contract PortionCore {
         l.operator = msg.sender;
         l.cadence = t.cadence;
         l.totalShares = t.totalShares;
-        l.lastDepositAt = uint64(block.timestamp);
+        l.lastDepositAt = uint256(block.timestamp);
         l.saleOpen = t.forSale > 0;
         l.docHash = t.docHash;
         l.minimum = t.minimum;
@@ -138,8 +150,10 @@ contract PortionCore {
     }
     function buy(uint32 asset, uint256 amount) external guarded {
         Listing storage l = _get(asset);
+        if (health(asset) >= 2) revert Protected();
         if (!l.saleOpen || amount == 0 || amount > l.forSale) revert Invalid();
         l.forSale -= amount;
+        l.sold += amount;
         if (l.forSale == 0) l.saleOpen = false;
         _credit(asset, l, amount);
         uint256 cost = amount * l.price;
@@ -152,6 +166,7 @@ contract PortionCore {
     function stake(uint32 asset, uint256 amount) external guarded {
         Listing storage l = _get(asset);
         if (l.closedAt != 0) revert Closed();
+        if (health(asset) == 2) revert Protected();
         if (amount == 0) revert Invalid();
         _credit(asset, l, amount);
         shareToken(asset).safeTransferFrom(msg.sender, address(this), amount);
@@ -176,7 +191,7 @@ contract PortionCore {
         l.acc += net * SCALE / l.staked;
         l.revenue += net;
         bool qualifies = msg.sender == l.operator && amount >= l.minimum;
-        if (qualifies) l.lastDepositAt = uint64(block.timestamp);
+        if (qualifies) l.lastDepositAt = uint256(block.timestamp);
         paymentToken.safeTransferFrom(msg.sender, address(this), amount);
         if (fee > 0) paymentToken.safeTransfer(treasury, fee);
         emit Deposited(asset, msg.sender, net, fee, qualifies);
@@ -233,7 +248,7 @@ contract PortionCore {
         _operator(l);
         if (l.closedAt != 0) revert Closed();
         if (l.staked != 0 || (health(asset) == 2 && l.bond > 0)) revert Protected();
-        l.closedAt = uint64(block.timestamp);
+        l.closedAt = uint256(block.timestamp);
         _returnSale(asset, l);
         emit WoundDown(asset);
     }

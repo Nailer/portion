@@ -1,0 +1,18 @@
+{
+  "contractVersion": "core-v1",
+  "network": "portaldot-v3-testnet",
+  "chainId": 420420777,
+  "deployer": "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+  "treasury": "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+  "pusdAssetId": 4217,
+  "txs": {
+    "pusd": "0x70dd5a17d65c0cfd89014443226d0444ff34daff9d0c6a1d738eeee2a4573326",
+    "deeds": "0xf7f0bb0ae476264619f94c913a253c4bc94aac59554aa42a47b5ffe960ae7a35",
+    "portion": "0x6bdc10ea83152665dc6d7007d217ee4648af6fe0d6efd7b3f4f6697911034b70"
+  },
+  "deedsCollection": 9,
+  "portion": "0x17501f4510ba4298b618209e105cd47036509706",
+  "deployedBlock": 160455,
+  "deployedAt": "2026-10-23T12:45:07.108Z",
+  "runtimeCodeHash": "0xf4209552bb2eb92c768f6faffab50437e8040d63266d8c6495627da046171535"
+}

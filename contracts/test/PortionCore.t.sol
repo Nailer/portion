@@ -40,6 +40,22 @@ contract PortionCoreTest is Test {
     function buy(address who, uint256 amount) private { vm.prank(who); core.buy(ASSET, amount); }
     function deposit(address who, uint256 amount) private { vm.prank(who); core.deposit(ASSET, amount); }
 
+    function test_listingEncodingPreservesEveryField() public {
+        create(); buy(alice, 10); deposit(operator, 20e6);
+        PortionCore.Listing memory l = core.listing(ASSET);
+        assertEq(l.operator, operator); assertEq(l.cadence, 7 days); assertEq(l.totalShares, 100);
+        assertEq(l.lastDepositAt, block.timestamp); assertEq(l.closedAt, 0); assertTrue(l.saleOpen);
+        assertEq(l.docHash, keccak256("terms")); assertEq(l.minimum, 20e6); assertEq(l.price, 10e6);
+        assertEq(l.forSale, 90); assertEq(l.staked, 10); assertEq(l.acc, 19_900_000 * 1e18 / 10);
+        assertEq(l.bond, 50e6); assertEq(l.revenue, 19_900_000); assertEq(l.sold, 10);
+        vm.prank(operator); core.closeSale(ASSET);
+        assertEq(core.listing(ASSET).sold, 10); assertEq(core.listing(ASSET).forSale, 0);
+    }
+    function test_defaultPreventsNewBuyersAndStakers() public {
+        create(); buy(alice, 10); vm.warp(block.timestamp + 14 days + 1);
+        vm.prank(bob); vm.expectRevert(PortionCore.Protected.selector); core.buy(ASSET, 1);
+        vm.prank(bob); vm.expectRevert(PortionCore.Protected.selector); core.stake(ASSET, 1);
+    }
     function test_completeFundingPaymentAndClaim() public {
         create();
         assertEq(shares.balanceOf(address(core)), 100);
@@ -67,7 +83,7 @@ contract PortionCoreTest is Test {
     }
     function test_onlyQualifyingOperatorPaymentResetsClock() public {
         create(); buy(alice, 10);
-        uint64 start = core.listing(ASSET).lastDepositAt;
+        uint256 start = core.listing(ASSET).lastDepositAt;
         vm.warp(block.timestamp + 8 days);
         deposit(bob, 20e6);
         assertEq(core.listing(ASSET).lastDepositAt, start);
@@ -124,7 +140,7 @@ contract PortionCoreTest is Test {
     function test_topUpRearmsBondButDoesNotResetDeadline() public {
         create(); buy(alice, 10); vm.warp(block.timestamp + 14 days + 1);
         core.slash(ASSET);
-        uint64 before = core.listing(ASSET).lastDepositAt;
+        uint256 before = core.listing(ASSET).lastDepositAt;
         vm.prank(operator); core.topUp(ASSET, 25e6);
         assertEq(core.listing(ASSET).bond, 25e6);
         assertEq(core.listing(ASSET).lastDepositAt, before);

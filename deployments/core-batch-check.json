@@ -1,0 +1,81 @@
+{
+  "checkedAt": "2026-10-23T13:06:41.768Z",
+  "contract": "0x17501f4510ba4298b618209e105cd47036509706",
+  "kind": "read-only-native-batch-check",
+  "passed": true,
+  "actions": [
+    "native deed",
+    "fractional shares",
+    "asset registration",
+    "purchase",
+    "revenue deposit",
+    "claim"
+  ],
+  "beforeFree": "9238925814254357",
+  "afterFree": "9238925814254357",
+  "signature": "valid-read-only-simulation",
+  "submitted": false,
+  "beforeNonce": "5",
+  "afterNonce": "5",
+  "result": {
+    "Ok": {
+      "Ok": []
+    }
+  },
+  "traces": [
+    {
+      "throughCall": 1,
+      "call": "nfts.mint",
+      "result": {
+        "Ok": {
+          "Ok": []
+        }
+      }
+    },
+    {
+      "throughCall": 2,
+      "call": "nfts.setAttribute",
+      "result": {
+        "Ok": {
+          "Ok": []
+        }
+      }
+    },
+    {
+      "throughCall": 3,
+      "call": "nftFractionalization.fractionalize",
+      "result": {
+        "Ok": {
+          "Ok": []
+        }
+      }
+    },
+    {
+      "throughCall": 4,
+      "call": "assets.approveTransfer",
+      "result": {
+        "Ok": {
+          "Ok": []
+        }
+      }
+    },
+    {
+      "throughCall": 5,
+      "call": "assets.approveTransfer",
+      "result": {
+        "Ok": {
+          "Ok": []
+        }
+      }
+    },
+    {
+      "throughCall": 6,
+      "call": "revive.call",
+      "result": {
+        "Ok": {
+          "Ok": []
+        }
+      }
+    }
+  ]
+}

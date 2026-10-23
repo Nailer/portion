@@ -1,7 +1,9 @@
+import PortionCore from './artifacts/PortionCore.json';
 import Portion from './artifacts/Portion.json';
 import Teleport from './artifacts/Teleport.json';
 import WrappedToken from './artifacts/WrappedToken.json';
 
+export const PortionCoreArtifact = PortionCore as { contractName: string; abi: any[]; bytecode: string; runtimeBytecode: string };
 export const PortionArtifact = Portion as { contractName: string; abi: any[]; bytecode: string };
 export const TeleportArtifact = Teleport as { contractName: string; abi: any[]; bytecode: string };
 export const WrappedTokenArtifact = WrappedToken as { contractName: string; abi: any[]; bytecode: string };

@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-23T12:44:14.343Z",
+  "kind": "bounded-core-v1-deployment",
+  "account": "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+  "runtimeBytes": 4832,
+  "runtimeCodeHash": "0xf4209552bb2eb92c768f6faffab50437e8040d63266d8c6495627da046171535",
+  "constructorDryRunPassed": true,
+  "estimatedStorageTPOT": "401.5305",
+  "hardStorageCapTPOT": "425",
+  "minimumRemainingTPOT": "70",
+  "freeTPOT": "500",
+  "spendableTPOT": "500",
+  "nonce": "0",
+  "setupFeesTPOT": "0.03992048",
+  "setupDepositsTPOT": "3.48",
+  "deploymentFeeTPOT": "0.5348155",
+  "maximumBudgetIncludingReserveTPOT": "499.05473598",
+  "funded": true,
+  "note": "Explicit hard storage cap, measured setup deposits/fees and 70 tPOT reserve replace the provisional percentage-based comparison. A cap rejection is not retried with a larger amount. Reserve is for operation and testing; users fund their own transactions. No automatic faucet distribution."
+}

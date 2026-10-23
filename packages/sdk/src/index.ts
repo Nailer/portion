@@ -11,3 +11,5 @@ export * from './dex';
 export * from './portion';
 export * from './abi';
 export * from './cover';
+
+export * from './core';
