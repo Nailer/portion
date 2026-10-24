@@ -4,7 +4,7 @@ Current evidence supersedes historical undeployed/budget notes. Official event d
 
 | Milestone | Time / actual status |
 | --- | --- |
-| Check-in | 24 October, 13:00; founder registration/submission confirmation pending |
+| Check-in | 24 October, 13:00; founder confirms registered; check-in not yet submitted |
 | Office-hour application | 27 October, 13:00; optional, not claimed submitted |
 | Final submission / code freeze | 6 November, 05:00 |
 | Live demo | 8–9 November UTC; assigned slot not confirmed |
@@ -43,3 +43,5 @@ Link [live release](LIVE-CORE-RELEASE.md), [actual test results](LIVE-TEST-RESUL
 Earlier preflight/candidate figures are historical comparisons, not current required funding or live balances. Runtime simulations are not submissions. Document hashes are not independent equipment verification. Purchase money is transferred directly to the operator; the small held bond is not investment insurance and no milestone spending control or automatic collection exists.
 
 The authorised test listing is explicitly labelled. No generated visitor wallets, fabricated opening balances, unlabelled example businesses or claimed complete outside-transaction history are allowed. The founder supplies real team/customer/submission facts and authorizes external contact.
+
+Current check-in preparation: [CHECK-IN-PACKET.md](CHECK-IN-PACKET.md). Registration is confirmed by the founder; actual submission confirmation remains outstanding.

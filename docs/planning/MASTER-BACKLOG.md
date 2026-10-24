@@ -67,7 +67,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-S02 — Confirm registration and complete the check-in requirements
 
 - **GitHub:** [P0 · issue #2](https://github.com/Nailer/portion/issues/2)
-- **Status:** open at creation. **Lead role:** Founder.
+- **Status:** in progress; founder confirms registered, not submitted. Evidence packet ready; submission confirmation outstanding. **Lead role:** Founder.
 - **Dependencies:** [POR-S01](https://github.com/Nailer/portion/issues/1).
 - **Work:** Confirm team registration and actual submission state; assemble progress, remaining work, repo, architecture, deployment receipt and demo link; ask the organiser about recovery if the deadline was missed.
 - **Done when:** Founder retains actual submission confirmation or organiser response. No registration or submission is claimed without evidence.

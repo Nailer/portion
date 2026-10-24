@@ -12,11 +12,11 @@
 
 **Cost:** no chain transactions, no faucet usage and no contract redeployment. Source/documentation publication only. Frontend stale undeployed wording found in App/Business is separately retained in open POR-T06; this task does not falsely claim that UI fix is complete.
 
-## POR-S02 — awaiting founder fact, not completed
+## POR-S02 — in progress, 24 October 2026
 
-The founder has been asked whether registration/check-in is already submitted, registered only, or unconfirmed. The assistant cannot truthfully infer this from a public site or a repository. The updated checklist supplies available contract/demo/receipt evidence, but it is not a submission confirmation. Do not claim an extension if the deadline passes.
+Founder confirms **registered, check-in not submitted**. The available contract, repository, architecture, demo and actual receipt links are assembled in [CHECK-IN-PACKET.md](../CHECK-IN-PACKET.md). At the 11:24 UTC / 12:24 Lagos time check, about 36 minutes remained until the recorded 13:00 Lagos deadline.
 
-Next action once the fact is supplied: reconcile actual submission status, identify the specific missing check-in material and complete permitted preparation. External submission and team claims must use verified founder facts.
+The founder must complete the actual event check-in and retain its submitted-entry link/confirmation. This packet and a registered account are not a submitted check-in. Do not close S02 until actual submission evidence or an organiser response resolves its acceptance requirements. No new faucet, asset or deployment is needed for the prepared evidence.
 
 ## Sequencing
 

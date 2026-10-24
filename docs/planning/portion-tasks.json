@@ -25,9 +25,12 @@
     "title": "Confirm registration and complete the check-in requirements",
     "work": "Confirm team registration and actual submission state; assemble progress, remaining work, repo, architecture, deployment receipt and demo link; ask the organiser about recovery if the deadline was missed.",
     "acceptance": "Founder retains actual submission confirmation or organiser response. No registration or submission is claimed without evidence.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/2",
-    "number": 2
+    "number": 2,
+    "founderConfirmedStatus": "Registered; check-in not submitted, 24 October 2026",
+    "evidence": "docs/CHECK-IN-PACKET.md",
+    "remaining": "Founder completes check-in and supplies actual confirmation."
   },
   {
     "id": "POR-S03",
