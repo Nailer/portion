@@ -2,7 +2,7 @@
 
 Planning baseline: **24 October 2026**. This is the task-creation baseline, not a claim that the work below is complete. GitHub issues are the authoritative live status; this document and JSON are snapshots.
 
-**56 individual tasks: 1 completed, 55 open** cover the product, wallet, transaction reliability, operator tools, security/operations, business, design and hackathon gaps. Each has a priority, proposed lead role, dependencies and completion evidence. Lead roles do not assign people or imply someone has accepted the work.
+**56 individual tasks: 6 completed, 50 open** cover the product, wallet, transaction reliability, operator tools, security/operations, business, design and hackathon gaps. Each has a priority, proposed lead role, dependencies and completion evidence. Lead roles do not assign people or imply someone has accepted the work.
 
 Follow [Task progress](TASK-PROGRESS.md) for completed work and the active next step. Read [Decisions and answers](DECISIONS-AND-ANSWERS.md) for the plain-language reasoning. Evidence baseline: [live Core release](../LIVE-CORE-RELEASE.md), [finalized live test](../LIVE-TEST-RESULTS.md), [engineering review](../TECHNICAL-REVIEW.md), [business direction](../BUSINESS.md), and current source. Historical review items were reconciled rather than blindly reopened as deployment blockers.
 
@@ -12,7 +12,7 @@ Follow [Task progress](TASK-PROGRESS.md) for completed work and the active next 
 - **P1:** professional product delivery, demonstrated browser use and final-submission quality.
 - **P2:** evidence-gated expansion or work needed before a later real-money pilot. Not required merely to make the hackathon checklist longer.
 - Task creation authorizes tracking, not new chain spending, contacting customers, posting marketing, binding agreements or a real-money launch. External communications need the founder's explicit instruction; live writes need an action-specific budget.
-- Last verified deployment-wallet free balance: **44.82920824 tPOT**, measured after the 23 October authorized test. This is not a fresh balance query. Preserve the latest approved **40 tPOT** operational floor unless a later explicit decision changes it. The old 70 tPOT deployment reserve was superseded for that completed test, not a second pool of money.
+- Last verified deployment-wallet free balance: **44.82920824820928 tPOT**, read at finalized block 175362 on 24 October. See [operating budget](../OPERATING-BUDGET.md) for the dated snapshot and refresh command. Preserve the latest approved **40 tPOT** operational floor unless a later explicit decision changes it. The old 70 tPOT deployment reserve was superseded for that completed test, not a second pool of money.
 - No further contract deployment is currently required. Prefer read-only checks, isolated test fixtures and existing receipts. A fresh creation test cannot be assumed affordable from the remaining headroom.
 
 ## What is already delivered
@@ -67,7 +67,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-S02 — Confirm registration and complete the check-in requirements
 
 - **GitHub:** [P0 · issue #2](https://github.com/Nailer/portion/issues/2)
-- **Status:** in progress; founder confirms registered, not submitted. Evidence packet ready; submission confirmation outstanding. **Lead role:** Founder.
+- **Status:** completed 24 October 2026; see [acceptance evidence](TASK-PROGRESS.md). **Lead role:** Founder.
 - **Dependencies:** [POR-S01](https://github.com/Nailer/portion/issues/1).
 - **Work:** Confirm team registration and actual submission state; assemble progress, remaining work, repo, architecture, deployment receipt and demo link; ask the organiser about recovery if the deadline was missed.
 - **Done when:** Founder retains actual submission confirmation or organiser response. No registration or submission is claimed without evidence.
@@ -75,7 +75,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-S03 — Select awards based on demonstrated scope
 
 - **GitHub:** [P0 · issue #3](https://github.com/Nailer/portion/issues/3)
-- **Status:** open at creation. **Lead role:** Founder + engineering.
+- **Status:** completed 24 October 2026; see [acceptance evidence](TASK-PROGRESS.md). **Lead role:** Founder + engineering.
 - **Dependencies:** [POR-S01](https://github.com/Nailer/portion/issues/1).
 - **Work:** Prioritise Ecosystem DApps; map working SDK capabilities to Middleware; confirm multiple-track eligibility and prize stacking with organiser if ambiguous; keep undeployed bridge claims out.
 - **Done when:** A dated track decision links each claim to working evidence and records any unanswered organiser question.
@@ -83,7 +83,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-S04 — Publish a reproducible architecture and setup guide
 
 - **GitHub:** [P1 · issue #4](https://github.com/Nailer/portion/issues/4)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 24 October 2026; see [acceptance evidence](TASK-PROGRESS.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-S01](https://github.com/Nailer/portion/issues/1).
 - **Work:** Diagram browser wallet, native modules, Core, RPC, serverless API, Blob and separate issuer; distinguish trust boundaries; run fresh-install setup and disclose third-party dependencies.
 - **Done when:** A new contributor follows the guide; clean install/build succeeds; diagram matches deployed components and includes no secrets.
@@ -339,7 +339,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-R05 — Triage and patch dependency advisories
 
 - **GitHub:** [P0 · issue #35](https://github.com/Nailer/portion/issues/35)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 24 October 2026; see [acceptance evidence](TASK-PROGRESS.md). **Lead role:** Engineering.
 - **Dependencies:** None.
 - **Work:** Reproduce the reported Zod advisory chain through Blob/OIDC/CLI configuration, inspect runtime reachability, choose a compatible fix, regenerate a clean lockfile and rerun relevant checks.
 - **Done when:** Record affected versions, fix or justified mitigation, clean-install/build results and remaining advisories; do not apply blind force upgrades or assume a passing audit proves safety.
@@ -497,7 +497,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-F01 — Maintain an explicit native-token budget and reserve
 
 - **GitHub:** [P0 · issue #54](https://github.com/Nailer/portion/issues/54)
-- **Status:** open at creation. **Lead role:** Engineering + founder.
+- **Status:** completed 24 October 2026; see [acceptance evidence](TASK-PROGRESS.md). **Lead role:** Engineering + founder.
 - **Dependencies:** None.
 - **Work:** Refresh actual balances before any write; budget fees, storage, refunds and failure costs by action; record service wallets separately; use existing receipts/read-only checks before repeating creation.
 - **Done when:** Every new live test has a reviewed cap and remaining reserve. Last verified 44.82920824 tPOT is labelled a dated balance; no new deployment, faucet request or chain write is implied by this backlog.

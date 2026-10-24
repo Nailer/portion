@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm ci",
+  "installCommand": "npx --yes npm@11.21.1 ci",
   "buildCommand": "node scripts/build-api.mjs && npm run build -w @portion/web",
   "outputDirectory": "apps/web/dist",
   "rewrites": [

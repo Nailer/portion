@@ -550,9 +550,11 @@
     "title": "Triage and patch dependency advisories",
     "work": "Reproduce the reported Zod advisory chain through Blob/OIDC/CLI configuration, inspect runtime reachability, choose a compatible fix, regenerate a clean lockfile and rerun relevant checks.",
     "acceptance": "Record affected versions, fix or justified mitigation, clean-install/build results and remaining advisories; do not apply blind force upgrades or assume a passing audit proves safety.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/35",
-    "number": 35
+    "number": 35,
+    "completedAt": "2026-10-24",
+    "evidence": "docs/DEPENDENCY-REVIEW.md"
   },
   {
     "id": "POR-R06",

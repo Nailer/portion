@@ -28,6 +28,10 @@ A clean source-only checkout passed installation with npm 11.21.1 under Node 24.
 
 Added a key-free public-account budget command and retained a finalized snapshot at block 175362. Deployment account remains 44.82920824820928 tPOT with a 40 tPOT floor; headroom is 4.82920824820928. The separate issuer holds 1.98519376656955 tPOT. [OPERATING-BUDGET.md](../OPERATING-BUDGET.md) defines current read/quote/approval/reserve/reconciliation rules; headroom is never presented as a transaction quote or permission to spend. No chain write was made.
 
+## POR-R05 — completed, 24 October 2026
+
+Patched the single Zod advisory chain using an exact 4.6.6 override, with a regenerated lockfile and pinned npm on Vercel. Clean installation, dependency inspection, all 74 SDK/server/web tests, type checking, API/web build and synthetic CLI-config schema checks passed; four optional live SDK tests remained skipped. The pinned npm audit reported zero known vulnerabilities. [DEPENDENCY-REVIEW.md](../DEPENDENCY-REVIEW.md) records scope, reachability limits and the initial retained-resolution problem. No contract or chain write changed.
+
 ## Sequencing
 
 Work one task at a time; explain its purpose, changes, acceptance evidence and remaining limits. Close an issue only when its completion checks pass. Collect external facts early and continue independent preparation while waiting. Do not treat every open business/production gate as permission to spend test funds or deploy new code.

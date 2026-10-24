@@ -9,7 +9,7 @@ Public app: https://portion-one.vercel.app. Core deployment: `deployments/portal
 - Verified document copies, anchors, catalog and app-submitted finalized receipts in Vercel Blob. This is durable public storage, not an archive of every outside transaction.
 - A separately funded, limited test-pUSD issuer. The hosted API has its issuer key, not the deployment mnemonic. Native tPOT grants remain disabled.
 
-`vercel.json` runs `npm ci`, then the API bundle and web build; API rewrites precede the SPA fallback. Missing services or non-JSON responses must remain unavailable rather than producing substitute records.
+`vercel.json` runs the pinned `npx --yes npm@11.21.1 ci`, then the API bundle and web build; API rewrites precede the SPA fallback. Missing services or non-JSON responses must remain unavailable rather than producing substitute records.
 
 ## Direct chain reads and trust checks
 
