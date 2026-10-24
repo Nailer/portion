@@ -49,9 +49,13 @@ Account connection never asks for a recovery phrase. Approve a compatible browse
 Requirements: Node 22.13+ on the 22.x LTS line, Node 24, or Node 26+, and [Foundry](https://getfoundry.sh) only if you want to rebuild or test the contracts.
 
 ```bash
-npm install
-npm run dev            # API on :8787, web on :5173
+nvm install
+nvm use
+npx --yes npm@11.21.1 ci
+PORTION_API_TARGET=https://portion-one.vercel.app npm run dev -w @portion/web
 ```
+
+The public-service preview needs no local wallet/server secrets. For local API settings, complete checks and exact verified versions, follow [SETUP.md](docs/SETUP.md). `npm run dev` is the separate local API + frontend mode.
 
 - <http://localhost:5173> uses the live Portaldot V3 testnet.
 

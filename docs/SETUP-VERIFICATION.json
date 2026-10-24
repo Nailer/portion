@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-24",
+  "task": "POR-S04",
+  "sourceBaseCommit": "689cf63",
+  "isolation": "git archive source-only copy in a new temporary directory; no node_modules, contract cache, .env secrets or wallet keys copied",
+  "testedChangesAfterBase": [
+    ".nvmrc",
+    ".node-version",
+    "package.json runtime/build metadata",
+    "apps/web/vite.config.ts hosted API proxy"
+  ],
+  "runtime": {
+    "node": "24.10.0",
+    "installNpm": "11.21.1 via npx",
+    "scriptRunnerNpm": "11.6.1",
+    "foundry": "1.5.1-stable",
+    "solc": "0.8.28"
+  },
+  "results": {
+    "cleanInstall": true,
+    "typecheck": true,
+    "contractsPassed": 68,
+    "sdkPassed": 37,
+    "sdkOptionalLiveSkipped": 4,
+    "webPassed": 15,
+    "serverPassed": 22,
+    "totalPassed": 142,
+    "apiBundle": true,
+    "productionWebBuild": true,
+    "browserPreview": "real testnet connected; one actual TEST ONLY sold-out listing loaded",
+    "proxyHealth": {
+      "ok": true,
+      "deployed": true,
+      "mode": "core-v1-public-receipts",
+      "indexedHistoryComplete": false
+    }
+  },
+  "limitations": [
+    "same machine with pinned preinstalled Node/Foundry, not an independent Linux run",
+    "dependency audit had four transitive high-severity reports; addressed separately in POR-R05",
+    "no real browser wallet signing, deployment or on-chain write performed"
+  ]
+}

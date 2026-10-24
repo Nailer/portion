@@ -27,7 +27,8 @@
     "dev": "node scripts/dev.mjs",
     "deploy:core": "tsx scripts/deploy.ts --core",
     "deploy:check:core": "tsx scripts/deploy.ts --check --core",
-    "deploy:check:candidate": "tsx scripts/check-core-candidate.ts"
+    "deploy:check:candidate": "tsx scripts/check-core-candidate.ts",
+    "build": "node scripts/build-api.mjs && npm run build -w @portion/web"
   },
   "devDependencies": {
     "@polkadot/api": "^16.5.0",
@@ -41,5 +42,6 @@
     "ethers": "^6.13.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
-  }
+  },
+  "packageManager": "npm@11.21.1"
 }

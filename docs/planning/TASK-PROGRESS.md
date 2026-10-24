@@ -20,9 +20,9 @@ The founder reports the Submit Build/check-in action is done and requests contin
 
 [TRACK-DECISION.md](../TRACK-DECISION.md) selects Ecosystem DApps as the primary fit and maps working SDK/document features to a supporting middleware contribution. No new bridge deployment, extra live track or multi-award eligibility is claimed. Open organiser questions are listed explicitly; no outside message or additional token spend occurred.
 
-## POR-S04 — in progress
+## POR-S04 — completed, 24 October 2026
 
-Next: verify the documented project in a fresh source-only checkout without local node_modules, ignored environment files or keys. Architecture was reconciled in S01. A clean install/build result and current dependency disclosures are needed before closure.
+A clean source-only checkout passed installation with npm 11.21.1 under Node 24.10.0, all 142 local tests (68 contract, 37 SDK, 15 web, 22 server), type checking, API bundle and production web build. Four optional SDK live tests were skipped. Runtime pin files and [SETUP.md](../SETUP.md) remove the hidden older-Node fallback. A new Vite proxy option lets a local developer read real hosted services without copying server/wallet keys; the clean browser preview loaded the actual test listing and health API. No on-chain write occurred. [SETUP-VERIFICATION.json](../SETUP-VERIFICATION.json) records exact scope, commands and limits. The baseline dependency advisory remains separately tracked in R05.
 
 ## Sequencing
 

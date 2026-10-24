@@ -61,9 +61,11 @@
     "title": "Publish a reproducible architecture and setup guide",
     "work": "Diagram browser wallet, native modules, Core, RPC, serverless API, Blob and separate issuer; distinguish trust boundaries; run fresh-install setup and disclose third-party dependencies.",
     "acceptance": "A new contributor follows the guide; clean install/build succeeds; diagram matches deployed components and includes no secrets.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/4",
-    "number": 4
+    "number": 4,
+    "completedAt": "2026-10-24",
+    "evidence": "docs/SETUP-VERIFICATION.json"
   },
   {
     "id": "POR-S05",
