@@ -14,6 +14,10 @@ Built for the **Portaldot Hacker House 2026**. It targets all four tracks with o
 
 Current deployment and validation: [live Core release](docs/LIVE-CORE-RELEASE.md) and [finalized protocol test](docs/LIVE-TEST-RESULTS.md). Hosted features use verified receipts and durable document copies; legacy keepers and the cross-chain bridge are not deployed.
 
+## Delivery tasks and decisions
+
+The [complete 56-task backlog](docs/planning/MASTER-BACKLOG.md) links to individual GitHub issues, priorities, dependencies and completion checks. The [42 plain-language answers](docs/planning/DECISIONS-AND-ANSWERS.md) explain product, wallet, cost, business and submission decisions and identify what still needs evidence.
+
 ## Business direction
 
 Portion aims to become global infrastructure for companies managing funding and payouts for productive assets. The deployed Core contract charges a 1% sale fee and 0.5% revenue fee in test pUSD. Company management plans are a pricing hypothesis, not a feature currently charging customers. The [business plan](docs/BUSINESS.md) records costs, pilot criteria and limits; the app’s Revenue model page explains what still needs commercial validation.
