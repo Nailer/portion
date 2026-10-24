@@ -28,7 +28,8 @@
     "deploy:core": "tsx scripts/deploy.ts --core",
     "deploy:check:core": "tsx scripts/deploy.ts --check --core",
     "deploy:check:candidate": "tsx scripts/check-core-candidate.ts",
-    "build": "node scripts/build-api.mjs && npm run build -w @portion/web"
+    "build": "node scripts/build-api.mjs && npm run build -w @portion/web",
+    "budget:status": "tsx scripts/budget-status.ts"
   },
   "devDependencies": {
     "@polkadot/api": "^16.5.0",

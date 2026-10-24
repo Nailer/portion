@@ -1,0 +1,34 @@
+{
+  "checkedAt": "2026-10-24T13:45:25.564Z",
+  "kind": "read-only-finalized-budget",
+  "submitted": false,
+  "genesisHash": "0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd",
+  "finalizedBlock": 175362,
+  "finalizedHash": "0x66fbb08ed225782de9d6cbed3d6421844d3a310976c105189a3e432baf5d093d",
+  "deployment": {
+    "address": "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+    "freeBaseUnits": "4482920824820928",
+    "frozenBaseUnits": "0",
+    "freeTPOT": "44.82920824820928",
+    "frozenTPOT": "0",
+    "nonce": "10"
+  },
+  "creditIssuer": {
+    "address": "5GTEm89pg6Wp46DEaTN8UURn3CfFxm6UBDJW8w9ZX5H9NciX",
+    "freeBaseUnits": "198519376656955",
+    "frozenBaseUnits": "0",
+    "freeTPOT": "1.98519376656955",
+    "frozenTPOT": "0",
+    "nonce": "1"
+  },
+  "minimumRemainingTPOT": "40",
+  "maximumCurrentHeadroomTPOT": "4.82920824820928",
+  "proposedMaximumCostTPOT": null,
+  "wouldPreserveReserve": null,
+  "notes": [
+    "This reads public accounts only; no key or signing path is loaded.",
+    "Headroom is not a transaction quote or permission to spend. Budget fees, storage and failure cases before a write.",
+    "A storage cap is an upper allowance; locked deposits are not currently available spending money.",
+    "The credit issuer is separate; no deployer-funded native faucet is enabled."
+  ]
+}

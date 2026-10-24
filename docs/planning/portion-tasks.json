@@ -846,9 +846,11 @@
     "title": "Maintain an explicit native-token budget and reserve",
     "work": "Refresh actual balances before any write; budget fees, storage, refunds and failure costs by action; record service wallets separately; use existing receipts/read-only checks before repeating creation.",
     "acceptance": "Every new live test has a reviewed cap and remaining reserve. Last verified 44.82920824 tPOT is labelled a dated balance; no new deployment, faucet request or chain write is implied by this backlog.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/54",
-    "number": 54
+    "number": 54,
+    "completedAt": "2026-10-24",
+    "evidence": "docs/OPERATING-BUDGET.md"
   },
   {
     "id": "POR-F02",

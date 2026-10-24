@@ -24,6 +24,10 @@ The founder reports the Submit Build/check-in action is done and requests contin
 
 A clean source-only checkout passed installation with npm 11.21.1 under Node 24.10.0, all 142 local tests (68 contract, 37 SDK, 15 web, 22 server), type checking, API bundle and production web build. Four optional SDK live tests were skipped. Runtime pin files and [SETUP.md](../SETUP.md) remove the hidden older-Node fallback. A new Vite proxy option lets a local developer read real hosted services without copying server/wallet keys; the clean browser preview loaded the actual test listing and health API. No on-chain write occurred. [SETUP-VERIFICATION.json](../SETUP-VERIFICATION.json) records exact scope, commands and limits. The baseline dependency advisory remains separately tracked in R05.
 
+## POR-F01 — completed, 24 October 2026
+
+Added a key-free public-account budget command and retained a finalized snapshot at block 175362. Deployment account remains 44.82920824820928 tPOT with a 40 tPOT floor; headroom is 4.82920824820928. The separate issuer holds 1.98519376656955 tPOT. [OPERATING-BUDGET.md](../OPERATING-BUDGET.md) defines current read/quote/approval/reserve/reconciliation rules; headroom is never presented as a transaction quote or permission to spend. No chain write was made.
+
 ## Sequencing
 
 Work one task at a time; explain its purpose, changes, acceptance evidence and remaining limits. Close an issue only when its completion checks pass. Collect external facts early and continue independent preparation while waiting. Do not treat every open business/production gate as permission to spend test funds or deploy new code.
