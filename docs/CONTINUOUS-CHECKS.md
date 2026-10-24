@@ -24,3 +24,11 @@ hosted API/browser checks. The workflow itself does not deploy. GitHub branch
 protection is a separate repository setting: this file does not claim to prevent
 an administrator pushing directly to main or running Vercel manually. An automatic
 production deployment must depend on successful verification if added later.
+
+## First verified run
+
+[Run 40100120771](https://github.com/Nailer/portion/actions/runs/40100120771) passed
+for commit `328277159842c583d927450925651e13b7b5f0ee` on 24 October 2026.
+All 142 local-fixture tests passed; four optional live SDK tests were skipped.
+The clean install, audit, type check, production builds and credential-free API
+load also passed on the GitHub Linux runner.

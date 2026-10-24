@@ -2,7 +2,7 @@
 
 Planning baseline: **24 October 2026**. This is the task-creation baseline, not a claim that the work below is complete. GitHub issues are the authoritative live status; this document and JSON are snapshots.
 
-**56 individual tasks: 6 completed, 50 open** cover the product, wallet, transaction reliability, operator tools, security/operations, business, design and hackathon gaps. Each has a priority, proposed lead role, dependencies and completion evidence. Lead roles do not assign people or imply someone has accepted the work.
+**56 individual tasks: 7 completed, 49 open** cover the product, wallet, transaction reliability, operator tools, security/operations, business, design and hackathon gaps. Each has a priority, proposed lead role, dependencies and completion evidence. Lead roles do not assign people or imply someone has accepted the work.
 
 Follow [Task progress](TASK-PROGRESS.md) for completed work and the active next step. Read [Decisions and answers](DECISIONS-AND-ANSWERS.md) for the plain-language reasoning. Evidence baseline: [live Core release](../LIVE-CORE-RELEASE.md), [finalized live test](../LIVE-TEST-RESULTS.md), [engineering review](../TECHNICAL-REVIEW.md), [business direction](../BUSINESS.md), and current source. Historical review items were reconciled rather than blindly reopened as deployment blockers.
 
@@ -355,7 +355,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-R07 — Add reproducible continuous checks and release evidence
 
 - **GitHub:** [P0 · issue #37](https://github.com/Nailer/portion/issues/37)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 24 October 2026; see [CI evidence](https://github.com/Nailer/portion/actions/runs/40100120771). **Lead role:** Engineering.
 - **Dependencies:** [POR-R05](https://github.com/Nailer/portion/issues/35).
 - **Work:** Run relevant contract, SDK, server, web, type and build checks in CI; protect secrets; verify a clean lockfile install and meaningful regressions; record skipped live tests honestly.
 - **Done when:** A contributor can reproduce the checks and identify the release commit; failures block release without spending faucet tokens automatically.

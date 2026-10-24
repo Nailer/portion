@@ -32,6 +32,10 @@ Added a key-free public-account budget command and retained a finalized snapshot
 
 Patched the single Zod advisory chain using an exact 4.6.6 override, with a regenerated lockfile and pinned npm on Vercel. Clean installation, dependency inspection, all 74 SDK/server/web tests, type checking, API/web build and synthetic CLI-config schema checks passed; four optional live SDK tests remained skipped. The pinned npm audit reported zero known vulnerabilities. [DEPENDENCY-REVIEW.md](../DEPENDENCY-REVIEW.md) records scope, reachability limits and the initial retained-resolution problem. No contract or chain write changed.
 
+## POR-R07 — completed, 24 October 2026
+
+GitHub Actions now runs pinned clean-install/audit, contract/SDK/web/server tests, type checking and API/web builds on main pushes and pull requests. [The first actual Linux run](https://github.com/Nailer/portion/actions/runs/40100120771) passed all 142 tests, with four optional live SDK tests skipped. It supplies no project secrets and makes no chain writes. Release commit evidence and the manual release gate are documented in [CONTINUOUS-CHECKS.md](../CONTINUOUS-CHECKS.md); repository branch protection is not claimed.
+
 ## Sequencing
 
 Work one task at a time; explain its purpose, changes, acceptance evidence and remaining limits. Close an issue only when its completion checks pass. Collect external facts early and continue independent preparation while waiting. Do not treat every open business/production gate as permission to spend test funds or deploy new code.
