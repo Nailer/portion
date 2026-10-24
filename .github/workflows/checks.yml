@@ -1,0 +1,57 @@
+name: Portion checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Clean install, tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      LIVE: '0'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .node-version
+      - name: Set up Foundry
+        uses: foundry-rs/foundry-toolchain@dba66c27052e63476d886f22216e119ba7e615bf # v1
+        with:
+          version: v1.5.1
+      - name: Install locked dependencies
+        run: npx --yes npm@11.21.1 ci --no-fund
+      - name: Check dependency advisories
+        run: npx --yes npm@11.21.1 audit --audit-level=high
+      - name: Type check
+        run: npm run typecheck
+      - name: Test contracts, SDK, web and server
+        run: npm test
+      - name: Build API and web
+        run: npm run build
+      - name: Load bundled API without service credentials
+        run: node -e 'require("./serverless/bundle.cjs")'
+      - name: Record release evidence
+        if: always()
+        run: |
+          {
+            echo '## Portion verification'
+            echo "Commit: $GITHUB_SHA"
+            echo 'Node: 24.10.0; npm install/audit: 11.21.1; Foundry: 1.5.1'
+            echo 'See individual steps for pass/fail and exact test counts.'
+            echo 'Four optional live SDK tests are disabled. No chain writes, wallet keys or deployment credentials are supplied.'
+          } >> "$GITHUB_STEP_SUMMARY"
