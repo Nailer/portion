@@ -1,3 +1,5 @@
+> Historical record: implementation stages and findings below describe their original date, including conditions since resolved. For current deployment, test evidence, spending limits and trust boundaries use [WALKTHROUGH.md](WALKTHROUGH.md), [LIVE-TEST-RESULTS.md](LIVE-TEST-RESULTS.md) and [FUNDING-PROTECTION.md](FUNDING-PROTECTION.md). Open items are tracked in [the current backlog](planning/MASTER-BACKLOG.md).
+
 # Build plan
 
 Window: 14 Oct – 6 Nov 2026 (check-in 24 Oct, code freeze 6 Nov 04:00 UTC).

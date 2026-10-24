@@ -1,3 +1,5 @@
+> Historical record: implementation stages and findings below describe their original date, including conditions since resolved. For current deployment, test evidence, spending limits and trust boundaries use [WALKTHROUGH.md](WALKTHROUGH.md), [LIVE-TEST-RESULTS.md](LIVE-TEST-RESULTS.md) and [FUNDING-PROTECTION.md](FUNDING-PROTECTION.md). Open items are tracked in [the current backlog](planning/MASTER-BACKLOG.md).
+
 > Current status, 23 October 2026: Core is deployed. The live release and current supported flow are documented in [LIVE-CORE-RELEASE.md](LIVE-CORE-RELEASE.md); this supersedes earlier undeployed-status notes below.
 
 # Smaller funding contract — stage 7, 22 October 2026

@@ -2,9 +2,9 @@
 
 Planning baseline: **24 October 2026**. This is the task-creation baseline, not a claim that the work below is complete. GitHub issues are the authoritative live status; this document and JSON are snapshots.
 
-**56 individual open tasks** cover the product, wallet, transaction reliability, operator tools, security/operations, business, design and hackathon gaps. Each has a priority, proposed lead role, dependencies and completion evidence. Lead roles do not assign people or imply someone has accepted the work.
+**56 individual tasks: 1 completed, 55 open** cover the product, wallet, transaction reliability, operator tools, security/operations, business, design and hackathon gaps. Each has a priority, proposed lead role, dependencies and completion evidence. Lead roles do not assign people or imply someone has accepted the work.
 
-Read [Decisions and answers](DECISIONS-AND-ANSWERS.md) for the plain-language reasoning. Evidence baseline: [live Core release](../LIVE-CORE-RELEASE.md), [finalized live test](../LIVE-TEST-RESULTS.md), [engineering review](../TECHNICAL-REVIEW.md), [business direction](../BUSINESS.md), and current source. Historical review items were reconciled rather than blindly reopened as deployment blockers.
+Follow [Task progress](TASK-PROGRESS.md) for completed work and the active next step. Read [Decisions and answers](DECISIONS-AND-ANSWERS.md) for the plain-language reasoning. Evidence baseline: [live Core release](../LIVE-CORE-RELEASE.md), [finalized live test](../LIVE-TEST-RESULTS.md), [engineering review](../TECHNICAL-REVIEW.md), [business direction](../BUSINESS.md), and current source. Historical review items were reconciled rather than blindly reopened as deployment blockers.
 
 ## Priority and scope
 
@@ -59,7 +59,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-S01 — Reconcile current project status and remove contradictory live claims
 
 - **GitHub:** [P0 · issue #1](https://github.com/Nailer/portion/issues/1)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 24 October 2026; see [acceptance evidence](TASK-PROGRESS.md). **Lead role:** Engineering.
 - **Dependencies:** None.
 - **Work:** Reconcile current-entry docs against the release and live receipts; retain historical reports with dated labels; distinguish scripts from browser signing.
 - **Done when:** Current guides consistently describe deployed Core, partial receipt coverage, disabled native faucet, unsupported services and test-only results.
@@ -349,8 +349,8 @@ The founder supplies team facts, confirms registration, submits materials and au
 - **GitHub:** [P1 · issue #36](https://github.com/Nailer/portion/issues/36)
 - **Status:** open at creation. **Lead role:** Engineering + independent reviewer.
 - **Dependencies:** None.
-- **Work:** Review direct callers bypassing web checks, supported token identities, existing default guards, bond solvency, malicious callbacks, native fractionalization lock and who can burn/redeem a deed.
-- **Done when:** An adversarial review maps each protection to contract, runtime, web or business process; deployed protections remain covered; any new bytecode needs a separately approved migration budget.
+- **Work:** Review direct callers bypassing web checks, supported token identities, existing default guards, bond solvency, malicious callbacks, native fractionalization lock and who can burn/redeem a deed. Explicitly assess direct-to-operator purchase transfers and missing spending controls. Design, without deploying, funding escrow/targets/deadlines, vendor or milestone release, independent approval, refunds/disputes and accountable collections; keep custody/eligibility review in B06/B07.
+- **Done when:** An adversarial review maps each protection to contract, runtime, web or business process; deployed protections remain covered; any new bytecode needs a separately approved migration budget. Current limits and proposed controls are visibly separate; no purchase-money escrow or regulatory protection is claimed for Core v1. A proposed release model identifies approvers, evidence, conflicts, costs and failure cases before any new bytecode or real-money use.
 
 #### POR-R07 — Add reproducible continuous checks and release evidence
 

@@ -1,3 +1,5 @@
+# Current status — 24 October 2026
+
 # Account connection after the rebrand
 
 The web app never asks visitors to paste or reveal a recovery phrase or private key. The former phrase-import form, phrase-reveal account menu and signature-derived MetaMask login are removed from the web flow.
@@ -8,7 +10,7 @@ The app detects injected wallets implementing the public Polkadot/Substrate exte
 
 MetaMask's EVM address alone cannot sign Portion's native NFT, asset and storage calls. The former conversion of a message signature into a second spending key is not used by the web app. Existing EVM-specific bridge controls remain separate from native account connection.
 
-No installed compatible wallet is a normal state: the dialog explains it and allows public browsing. The browser preview used for QA has no injected wallet. Account sharing, missing/rejected wallet cases, signer routing and rejection handling are unit-tested with mocks; real extension approval and a live transaction have not been verified in that browser. Contracts remain undeployed.
+No installed compatible wallet is a normal state: the dialog explains it and allows public browsing. The browser preview used for QA has no injected wallet. Account sharing, missing/rejected wallet cases, signer routing and rejection handling are unit-tested with mocks; real extension approval and a live transaction have not been verified in that browser. Core is deployed and the development-script lifecycle finalized; actual separate-user browser signing is still a different, outstanding check. See [live test evidence](LIVE-TEST-RESULTS.md).
 
 ## Existing browser records
 

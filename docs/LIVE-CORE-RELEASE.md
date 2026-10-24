@@ -6,7 +6,7 @@ Portion Core is deployed on Portaldot V3 testnet at `0x17501f4510ba4298b618209e1
 
 1. Connect your existing native wallet (Portaldot first). The app never creates a visitor wallet or requests recovery words.
 2. Obtain native tPOT from the official faucet for your own transaction fees and storage deposits. Under Tools → Faucet, explicitly request 500 test pUSD. These credits have no monetary value. Limits: one request per account per UTC day, with a service daily cap.
-3. An operator selects Raise funds, enters genuine equipment information and funding terms, and attaches an image. Review and approve the document uploads and listing transaction in the wallet. Retain finalized receipts. No sample equipment is seeded into the public market.
+3. An operator selects Raise funds, enters genuine equipment information and funding terms, and attaches an image. Review and approve the document uploads and listing transaction in the wallet. Retain finalized receipts. No invented equipment is seeded. A later explicitly authorized TEST ONLY development listing exists and is sold out; see the live test evidence.
 4. A participant opens an actual listing, checks its terms, backing proof, bond and payment history, then reviews a share purchase. Buying transfers test pUSD and stakes the purchased shares. Fees and storage deposits are separate from the purchase price.
 5. The operator uses Workspace to deposit revenue. Participants claim their allocated deposited revenue from their positions. Income only exists when an operator actually deposits it.
 
@@ -33,3 +33,7 @@ Hosted service verification: health and empty catalog returned verified JSON; a 
 ## Authorized live test completed
 
 The disclosed Portion Development test listing and the complete native purchase/deposit/claim/unstake flow have now finalized. See [LIVE-TEST-RESULTS.md](LIVE-TEST-RESULTS.md) for receipts, final assertions, remaining balance and the transfer-lock checker correction. This supersedes the earlier statement that no public test listing exists.
+
+## Current funding limitation
+
+Purchase proceeds go immediately to the operator less the 1% fee. Share/bond escrow is not purchase-money escrow. No milestone releases, vendor payment controls, independent income collection, guaranteed profit or principal recovery are implemented. See [FUNDING-PROTECTION.md](FUNDING-PROTECTION.md).

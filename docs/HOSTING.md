@@ -1,11 +1,28 @@
-> Current status, 23 October 2026: Core is deployed. The live release and current supported flow are documented in [LIVE-CORE-RELEASE.md](LIVE-CORE-RELEASE.md); this supersedes earlier undeployed-status notes below.
+# Current hosting scope — 24 October 2026
 
-# Hosting scope
+Public app: https://portion-one.vercel.app. Core deployment: `deployments/portaldot-testnet.json`. Live evidence: [release](LIVE-CORE-RELEASE.md), [completed protocol test](LIVE-TEST-RESULTS.md).
 
-Vercel builds `@portion/web` with `npm run build -w @portion/web` and serves `apps/web/dist`. SPA rewrites support direct page links. There is no simulation mode, automatic account creation or balance allocation.
+## What Vercel runs
 
-The frontend connects directly to the configured Portaldot testnet RPC for wallet balances, finalized network readings and native staking data. A configured deployment is checked against the network, contract rules and payment asset before financial pages are enabled. No deployed Portion configuration exists at present.
+- Vite/React frontend from `apps/web/dist`.
+- Node serverless entry `api/index.js`, loading the bundled Hono Core API. `scripts/build-api.mjs` builds `serverless/bundle.cjs` before the frontend build.
+- Verified document copies, anchors, catalog and app-submitted finalized receipts in Vercel Blob. This is durable public storage, not an archive of every outside transaction.
+- A separately funded, limited test-pUSD issuer. The hosted API has its issuer key, not the deployment mnemonic. Native tPOT grants remain disabled.
 
-Vercel does not host the persistent Hono/SQLite API, indexer, document gateway, keeper, faucet or bridge relayer. Missing service data is unavailable, not a zero-valued record. Deploy those services separately and configure the frontend API URL before enabling their workflows. No wallet secrets belong in public frontend variables.
+`vercel.json` runs `npm ci`, then the API bundle and web build; API rewrites precede the SPA fallback. Missing services or non-JSON responses must remain unavailable rather than producing substitute records.
 
-Check with `npm test`, `npm run typecheck`, and `npm run build -w @portion/web`. Publish with `vercel deploy --prod --yes --scope pleasants-projects`. GitHub integration is not connected, so a Git push alone does not publish the site. See [WALKTHROUGH.md](WALKTHROUGH.md) for available actions and remaining deployment work.
+## Direct chain reads and trust checks
+
+The frontend reads Portaldot testnet RPC data and uses the connected extension for native signing. It verifies the network identity, configured Core account/runtime bytecode and payment asset before enabling contract actions. Documents are hash-checked. A connected RPC does not by itself establish complete service readiness, independent asset verification or legal ownership.
+
+## What is not hosted in this release
+
+Legacy persistent SQLite indexing, a complete outside-transaction archive, bridge relayers, automated renewal/slashing/compounding keepers and complete network-analysis services are not deployed as ongoing services here. Their source does not make them live features. Native tools may have their own direct RPC functionality; verify each before demonstrating it.
+
+## Publishing and operating
+
+`vercel deploy --prod --yes --scope pleasants-projects` publishes the local project. GitHub-to-Vercel integration was not connected at the last recorded release: pushing Git alone does not prove deployment. After publication, verify API health, deployment identity, catalog, document access and the relevant UI.
+
+Use `npm run typecheck`, relevant tests and `npm run build -w @portion/web`; build the API with `node scripts/build-api.mjs`. Fresh-install reproducibility and operational backup/restore are separate tracked tasks. Keep provider limits, issuer quotas/reserves, secret rotation and service health under review; a successful release is not an operations guarantee.
+
+Local Core mode uses the same stateless API implementation and requires its own configured Blob/issuer service settings for those features. Legacy `FAUCET`, `KEEPERS` and `RELAYER` flags do not mean those services are running in hosted Core mode. Never place server secrets in `VITE_*` variables.

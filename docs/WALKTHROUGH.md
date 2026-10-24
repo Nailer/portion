@@ -1,38 +1,37 @@
-> Current status, 23 October 2026: Core is deployed. The live release and current supported flow are documented in [LIVE-CORE-RELEASE.md](LIVE-CORE-RELEASE.md); this supersedes earlier undeployed-status notes below.
+# Current user and judge walkthrough — 24 October 2026
 
-# Current user and judge walkthrough
+The website uses real testnet data. It creates no visitor wallet or opening balance. The only public development listing was explicitly authorized and clearly labels its purpose; it is not verified physical equipment or a real investment.
 
-The app is live-data-only. No accounts are generated, no opening balance is granted, and no example listings or payments are supplied. Existing `?demo` links and saved simulation preferences have no effect.
+## Inspect Portion without spending anything
 
-## A new user today
+1. Open https://portion-one.vercel.app. The infrastructure illustration explains the idea; it is not asset evidence.
+2. Open [Portion Development — TEST ONLY](https://portion-one.vercel.app/listing/585886). Read its test-only summary, hashed terms, native-backing checks, bond, paid amounts and actual activity.
+3. The primary offer is sold out because the live test purchased all 100 test shares. This is a completed test, not an open investment or broken purchase button.
+4. Open Tools → Network console for observed finalized block/hash, RPC source and separate readiness states. The observation time matters; failed reads are unavailable.
+5. Read [funding and protection](FUNDING-PROTECTION.md): current purchase money goes directly to the operator less the sale fee. There is no purchase-money escrow, spending approval or guaranteed return.
 
-1. Open [Portion](https://portion-one.vercel.app). Explore describes the intended equipment-funding business. The infrastructure illustration is a concept diagram, not a listed asset.
-2. Open Tools → Network console. Check the finalized block, timestamp, hash and RPC source. These are direct testnet readings, refreshed every 15 seconds. Failed reads show unavailable.
-3. Press Connect wallet. Use an existing compatible Substrate browser extension, approve account sharing there, and choose a shared account. Without an extension, browsing remains available; no account is invented.
-4. Open the account menu. Its tPOT amount comes from the chain. pUSD shows unavailable until a real payment asset is configured. Test tokens have no monetary value.
-5. Open Raise funds, Workspace or Portfolio. Until verified contracts exist, these pages explain that asset actions are unavailable. There is no purchase, revenue deposit or claim to complete today.
-6. Faucet only enables requests after its service returns an actual status and amount. Bridge status is unavailable when its service cannot be reached. Pool Studio reads native staking pools and may expose real native transactions; it is separate from equipment funding.
+## Connect and prepare your own action
 
-## A judge today
+1. Select Connect wallet. Portaldot Wallet is the primary presented choice. Use an actual compatible injected native account and approve sharing in the extension; no recovery phrase is requested.
+2. Review the selected account and actual native tPOT/test-pUSD balances. Missing or unavailable is not zero. Ordinary MetaMask EVM signing alone cannot sign this native flow.
+3. Native funds pay fees and storage; test pUSD is used for purchase/bond/deposit amounts. The hosted test-credit request is explicit and limited; native allocation is through the official organiser process. No tokens are fabricated or automatically assigned.
+4. Review the actual action and signing requests. Real separate-user browser approval has not yet been fully demonstrated in our QA; the existing finalized lifecycle used a development script.
 
-Follow the same steps, then inspect [the repository](https://github.com/Nailer/portion), contract tests, signer-routing tests and deployment budget evidence. Confirm that the published frontend distinguishes working chain reads from missing contract deployment. The frontend alone does not meet the complete hackathon deployment requirement. Real extension approval and a real asset transaction have not been verified in the browser used for QA.
+## Operator and participant journey
 
-## Full journey after deployment — not available yet
+| Step | What to do | What it achieves and does not prove |
+| --- | --- | --- |
+| Prepare an asset | Enter permitted genuine details, photo, terms, shares, price, schedule and bond | Produces an unsigned offer draft; it is not independent asset verification |
+| Publish | Review and approve separate document stores and the atomic deed/share/approval/Core batch | Creates on-chain terms and a test funding offer; preserve partial receipts if later steps fail |
+| Inspect and purchase | Review actual terms, evidence, costs, available inventory and risks; approve in the wallet | Buys/stakes shares and pays the operator immediately less 1%; does not restrict operator spending |
+| Deposit | Operator approves payment into the contract | Allocates only deposited test pUSD after the 0.5% fee; business income is not independently collected |
+| Claim | Holder reviews pending allocation and approves claim | Transfers allocated deposited funds to the wallet; not automatic bank profit or repayment of principal |
+| Unstake or exit | Review stake/ownership and available market options | Unstaking returns shares, not purchase money; resale requires real liquidity/buyer |
 
-| Step | User action | Purpose / result |
-|---|---|---|
-| Operator creates an asset | Supply actual asset details, photo, terms, share price, payment schedule and bond; review and approve transactions | Publish an on-chain funding offer |
-| Participant reviews it | Read terms, operator information, verification and actual payment history | Decide whether participation makes sense |
-| Participant purchases | Enter shares; review actual cost and fees; approve in their wallet | Pay the operator and acquire participating shares |
-| Operator deposits revenue | Enter income available for distribution; review fees; approve | Allocate deposited business revenue to staked shares |
-| Participant claims | Open Portfolio, review claimable income, approve claim | Receive only revenue actually allocated by the contract |
-| Both check evidence | Inspect finalized transaction hashes and refreshed balances | Verify what happened independently |
+The native batch has six main calls: mint, set terms hash, fractionalize, approve shares, approve bond, Core create. Account mapping may add a call when required. Document stores are separate top-level transactions. The complete onboarding journey is not one signature.
 
-Revenue depends on the operator's business and deposits. No purchase principal, resale value or return is guaranteed. A listing alone does not prove legal title to equipment.
+## Judge evidence
 
-## Next stages
+Inspect the public repository, `deployments/portaldot-testnet.json`, `deployments/portion-test-listing.json`, [live test results](LIVE-TEST-RESULTS.md), SDK/native proof tests and source. The actual test bought 100 shares, deposited 1 test pUSD, claimed 0.995 and unstaked; one development account acted as both operator and buyer. Current history covers verified published app receipts, not every external transaction. No customer demand or independent investment is inferred.
 
-1. Integrate the smaller contract candidate with the SDK, verify all required interfaces, and rerun read-only deployment budgeting. The last candidate report estimated approximately 643.10 tPOT including margin and operating buffer versus 500 tPOT available; it is not a current live quote or permission to spend.
-2. Resolve that budget, deploy and verify contracts/payment asset, then host the API/indexer/document gateway. Keep operational service wallets separate from the deployment budget.
-3. Complete the full journey above with real testnet transactions and capture hashes, failures and balances. No seeded commercial assets.
-4. Validate an operator pilot, business costs, customer demand and legal terms before commercial use.
+Next gates: real extension/separate-user proof, clear cost/readiness and interruption recovery, operator/customer validation, stronger controlled-funding design and qualified review before any real-money offering. Follow the [task sequence](planning/MASTER-BACKLOG.md).

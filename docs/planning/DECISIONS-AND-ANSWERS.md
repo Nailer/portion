@@ -110,7 +110,7 @@ From money the operator actually deposits, allocated under the contract to earni
 
 ### 25. What happens when an operator does not pay?
 
-Core tracks time since listing initialization or a qualifying operator payment. It becomes late and then defaulted under the chosen cadence; slashing can distribute the held bond according to the contract. A limited bond is not insurance for the full investment. The deployed Core already rejects new buy/stake participation in default; broader recovery/eligibility and external caller boundaries still need review. Tasks: O06, R06.
+Purchase proceeds currently go directly to the operator after the 1% fee; there is no spending-control escrow. Core tracks time since listing initialization or a qualifying operator payment. It becomes late and then defaulted under the chosen cadence; slashing can distribute the held bond according to the contract. A limited bond is not insurance for the full investment. The deployed Core already rejects new buy/stake participation in default; broader recovery/eligibility and external caller boundaries still need review. Tasks: O06, R06.
 
 ### 26. Can a funder get their original money back by unstaking?
 
@@ -184,11 +184,13 @@ Engineering owns implementation, costed tests, reproducibility, service reliabil
 
 ### 42. Does creating these tasks mean the fixes or customer answers are finished?
 
-No. There are 56 actual GitHub issues, each with its own acceptance evidence. Some expand or verify foundations already delivered. This document answers what can be established now and gives a decision process for what remains unknown. Customer willingness to pay, formal pilot commitment, actual separate-wallet use, eligibility and production readiness require real evidence; inventing positive answers would make the project weaker, not more professional.
+No. There are 56 actual GitHub issues, each with its own acceptance evidence; [the execution log](TASK-PROGRESS.md) records completed work. Some expand or verify foundations already delivered. This document answers what can be established now and gives a decision process for what remains unknown. Customer willingness to pay, formal pilot commitment, actual separate-wallet use, eligibility and production readiness require real evidence; inventing positive answers would make the project weaker, not more professional.
 
 ## Evidence and sources
 
 - [Official Portaldot event details](https://dorahacks.io/hackathon/2362/detail), read 24 October 2026. Recheck organiser updates before action.
 - [Live Core release](../LIVE-CORE-RELEASE.md) and [actual test receipts/results](../LIVE-TEST-RESULTS.md).
-- [Account connection](../ACCOUNT-CONNECTION.md), [business assumptions](../BUSINESS.md), [technical review](../TECHNICAL-REVIEW.md). These contain historical statements; S01 tracks reconciliation of current entry points.
+- [Account connection](../ACCOUNT-CONNECTION.md), [business assumptions](../BUSINESS.md), [technical review](../TECHNICAL-REVIEW.md). Earlier stage/review records remain historical; S01 reconciled current entry points on 24 October 2026.
 - Current source: Core.sol, SDK Core adapter, hosted public-api.ts, wallet/runner state and native-proof code. No new chain transactions, customer contacts or pricing commitments were made for this planning work.
+
+Current-money-flow follow-up: [FUNDING-PROTECTION.md](../FUNDING-PROTECTION.md) details direct operator payment, limited bond coverage and the proposed controlled-release review. Those future controls are not deployed.

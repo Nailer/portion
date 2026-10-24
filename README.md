@@ -1,22 +1,23 @@
 # Portion
 
 **Own a portion of things that earn.** Portion is being built for operators to offer shares in productive equipment and distribute revenue they deposit. The Core contract is live on the Portaldot V3 testnet. Publishing and funding use real testnet transactions and test tokens.
-If the operator stops paying, their bond is slashed to the people who hold shares.
+If the operator defaults, a submitted slashing transaction can allocate the limited bond under the contract rules. This is not automatic principal insurance. Purchase proceeds currently go directly to the operator; [funding and protection boundaries](docs/FUNDING-PROTECTION.md) explain the gap.
 
-Built for the **Portaldot Hacker House 2026**. It targets all four tracks with one product and one SDK:
+Built for the **Portaldot Hacker House 2026**, with **Ecosystem DApps** as the primary fit. Track eligibility and any additional award submission remain separate decisions.
 
-| Track | What is here |
+| Scope | Current state |
 |---|---|
-| **Ecosystem DApps** | The Portion app: market, tokenize wizard, portfolio, native-DEX trading, bond enforcement |
-| **Modular Cloud & Middleware** | `@portion/sdk` (dual-VM client), on-chain document gateway with auto-renewal, indexer, open faucet |
-| **Node Operations & Tooling** | Direct-RPC finalized-block console; server-side decentralization analysis, Pool Studio, permissionless auto-compound keeper, Prometheus metrics |
-| **Multi-Chain & Cross-Chain** | Teleport: pUSD between Portaldot and BNB Chain testnet with a 2-of-3 relayer committee |
+| Core funding/accounting | Deployed testnet Core; finalized create/buy/deposit/claim/unstake evidence from one development account |
+| SDK, documents and receipts | Versioned adapter, verified public copies and app-published finalized receipts; partial outside-transaction coverage |
+| Wallet onboarding | Existing native injected-wallet signing design; full separate-user browser proof remains outstanding |
+| Native tools | Direct network readings and optional native tools; verify each action before a demonstration |
+| Bridge, automatic keepers, full archive | Legacy source/roadmap; not deployed ongoing services in this release |
 
 Current deployment and validation: [live Core release](docs/LIVE-CORE-RELEASE.md) and [finalized protocol test](docs/LIVE-TEST-RESULTS.md). Hosted features use verified receipts and durable document copies; legacy keepers and the cross-chain bridge are not deployed.
 
 ## Delivery tasks and decisions
 
-The [complete 56-task backlog](docs/planning/MASTER-BACKLOG.md) links to individual GitHub issues, priorities, dependencies and completion checks. The [42 plain-language answers](docs/planning/DECISIONS-AND-ANSWERS.md) explain product, wallet, cost, business and submission decisions and identify what still needs evidence.
+The [execution log](docs/planning/TASK-PROGRESS.md) records completed work. The [complete 56-task backlog](docs/planning/MASTER-BACKLOG.md) links to individual GitHub issues, priorities, dependencies and completion checks. The [42 plain-language answers](docs/planning/DECISIONS-AND-ANSWERS.md) explain product, wallet, cost, business and submission decisions and identify what still needs evidence.
 
 ## Business direction
 
@@ -24,18 +25,17 @@ Portion aims to become global infrastructure for companies managing funding and 
 
 ## The idea in one picture
 
-Portaldot V3 is not just "an EVM chain". Its runtime ships about 70 native modules, and almost nothing uses them. Portion composes them:
+Portion composes native modules with Solidity accounting:
 
 ```
 one signature  →  Nfts.mint            the deed
                   Nfts.setAttribute    the hash of its terms
                   NftFractionalization shares, with the deed's transfers switched off
-                  Assets.approve ×2    escrow for the sale, bond
-                  Revive.call          Portion.createListing  (Solidity)
+                  Assets.approve ×2    offered-share and bond allowances
+                  Revive.call          PortionCore.create  (Solidity)
 ```
 
-All or nothing. Shares and the pUSD stablecoin are *native assets* that Solidity sees as ordinary ERC-20 tokens through the runtime's `AssetsPrecompiles`, so there is no token contract
-to deploy or audit. Terms and photo are stored by the chain's own `TransactionStorage`. Secondary trading uses the built-in `AssetConversion` DEX, when a real pool exists.
+All or nothing. Shares and the pUSD test-credit asset are *native assets* that Solidity sees as ordinary ERC-20 tokens through the runtime's `AssetsPrecompiles`, so no separate Solidity share/payment-token contract is required. This does not remove the need to review protocol/accounting and asset permissions. Terms and photo are stored by the chain's own `TransactionStorage`. Secondary trading uses the built-in `AssetConversion` DEX, when a real pool exists.
 
 See [docs/research.md](docs/research.md) for the ecosystem research and why this idea, [docs/architecture.md](docs/architecture.md) for the design,
 and [docs/TESTING.md](docs/TESTING.md) for how to check every claim.
@@ -55,9 +55,9 @@ npm run dev            # API on :8787, web on :5173
 
 - <http://localhost:5173> uses the live Portaldot V3 testnet.
 
-The API starts with on-chain spending jobs disabled. Faucet and keeper services require `FAUCET=on` / `KEEPERS=on` and their own `FAUCET_MNEMONIC` / `KEEPER_MNEMONIC`; neither falls back to the deployment key. Fund those operational wallets separately only when needed. The bridge relayer also requires `RELAYER=on`. See `.env.example`.
+Local Core mode uses the hosted-style verified API and needs appropriate Blob configuration for publication; test-pUSD issuance additionally needs its separate issuer key/budget. Native grants and automatic keepers are not enabled by this Core path. Legacy service flags apply to legacy services only. See [hosting scope](docs/HOSTING.md); never put server secrets in frontend variables.
 
-To deploy your own instance:
+The current instance is already deployed. Only for a separately planned new instance:
 
 ```bash
 npm run keygen         # writes .env (git-ignored) and prints the deployer address
@@ -75,8 +75,8 @@ npx tsx scripts/deploy-live-core.ts --execute # only for a new deployment after 
 | `npm run contracts:build` / `contracts:test` | compile + export artifacts / Foundry tests |
 | `npm test` | contract tests + SDK tests |
 | `npm run teleport:local` | two-chain bridge test on local anvil |
-| `npm run deploy:check:core` / `deploy:core` | read-only core budget / resumable core deployment |
-| `npm run deploy` · `deploy:bnb` · `e2e` | full deployment and evidence |
+| `npx tsx scripts/deploy-live-core.ts` | current bounded Core budget check; `--execute` is a separately budgeted write |
+| Legacy deploy/bridge/e2e scripts | separate source paths; not instructions to recreate this live Core deployment |
 | `npm run typecheck` | all packages |
 
 ## Repository layout
@@ -91,14 +91,14 @@ docs/            research, architecture, testing, submission pack
 deployments/     addresses and evidence written by the scripts
 ```
 
-See [hackathon readiness](docs/HACKATHON-READINESS.md) for verified requirements and remaining submission work, and [deployment preflight](deployments/preflight.md) for the latest read-only funding estimate.
+See [hackathon readiness](docs/HACKATHON-READINESS.md) for verified requirements and remaining submission work, and [live test results](docs/LIVE-TEST-RESULTS.md) for dated costs and remaining balance. Historical preflights are not current funding requirements.
 
 ## Honest limits
 
 - Operator revenue is self-reported. Bond + cadence make non-payment visible and expensive; they do not prove revenue. A production version would add payment-rail attestations.
-- Teleport v0 trusts a relayer committee. Portaldot already produces BEEFY/MMR commitments, which is the planned path to a light-client bridge.
+- Legacy Teleport source assumes a relayer committee; no live bridge or light-client migration is claimed here.
 - `pallet-nfts` lets an item's owner burn it; the proof panel will show "the deed no longer exists".
-- The public RPC node prunes old blocks, so the document gateway indexes live and also accepts verified pins.
+- Public document copies use verified finalized pins. App receipt history is partial; old/pruned outside transactions require their own recovery/archive path.
 - Unaudited testnet software. tPOT and pUSD have no value.
 
 ## Credits and disclosures

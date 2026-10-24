@@ -22,7 +22,7 @@ These are arithmetic assumptions, not forecasts. The example excludes the operat
 
 ## Pricing to validate
 
-- Existing: 1% of primary share sales and 0.5% of revenue deposits, adjustable by the contract owner within bounds.
+- Deployed Core v1: fixed 1% of primary share sales and 0.5% of revenue deposits in test pUSD. Configurable-fee descriptions belong to the legacy Portion contract, not this deployment.
 - Proposed, not implemented: a company management subscription and an onboarding/verification fee priced against the real effort involved. Test with the operator before building billing.
 - Separate any third-party payment, legal, verification and custody costs clearly. Do not assume those costs are absorbed by the tiny payout fee.
 - Do not treat offering deposits, bonds, user funds, token price increases, hackathon prizes or grants as operating revenue.
@@ -52,4 +52,8 @@ If operators will not share credible payment evidence, funders will not accept t
 
 ## Current delivery
 
-The Business page is a planning calculator with editable assumptions and views for the operator, funders and Portion. It does not collect subscriptions, verify equipment, pull bank records, underwrite investments or promise returns.
+The current Business page explains the proposed model and reads verified fee rules. The earlier illustrative calculator was removed. It does not collect subscriptions, verify equipment, pull bank records, underwrite investments or promise returns.
+
+## Purchase-fund protection gap
+
+Current Core immediately pays net purchase proceeds to the operator. It escrows shares and the bond, not participant purchase money, and does not control subsequent spending or automatically collect business revenue. Controlled release, evidence-based vendor/milestone payments, collection oversight and dispute/refund rules are proposed design work, not deployed safeguards. See [FUNDING-PROTECTION.md](FUNDING-PROTECTION.md) and POR-R06/B06/B07 before any real-money use.

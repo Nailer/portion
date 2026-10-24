@@ -1,6 +1,8 @@
+> Current baseline, 24 October 2026: Core is deployed and an explicitly labelled development listing has finalized lifecycle receipts. The checklist below includes failure-state checks; absence-of-deployment checks are isolated scenarios, not the current public status. See [LIVE-TEST-RESULTS.md](LIVE-TEST-RESULTS.md) and [WALKTHROUGH.md](WALKTHROUGH.md).
+
 # Verification
 
-Current public workflow: [WALKTHROUGH.md](WALKTHROUGH.md). Runtime simulation and sample listing creation have been removed.
+Current public workflow: [WALKTHROUGH.md](WALKTHROUGH.md). Runtime simulation and generated commercial examples have been removed. The sole authorized development test is labelled TEST ONLY.
 
 ## Automated checks
 
@@ -16,7 +18,7 @@ These checks do not establish real testnet contract deployment or real browser-e
 
 ## Browser checks
 
-1. Open Explore: no sample assets, financial totals or opening wallet balance should appear.
+1. Open Explore: no invented business assets, financial totals or opening wallet balances should appear. The authorized test listing must stay clearly labelled.
 2. Press Connect wallet: only detected existing wallet providers are offered. No compatible extension means no account connection, not an automatically generated wallet.
 3. Open Network console: verify an actual finalized block, timestamp, hash and RPC source. On failure, show unavailable rather than substitute statistics.
 4. Open asset action routes without a deployment: buying, listing, claims and operator payments must be blocked with a clear explanation.
