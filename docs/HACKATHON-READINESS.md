@@ -4,7 +4,7 @@ Current evidence supersedes historical undeployed/budget notes. Official event d
 
 | Milestone | Time / actual status |
 | --- | --- |
-| Check-in | 24 October, 13:00; founder confirms registered; check-in not yet submitted |
+| Check-in | 24 October, 13:00; founder reports registered and check-in submitted; entry not independently inspected |
 | Office-hour application | 27 October, 13:00; optional, not claimed submitted |
 | Final submission / code freeze | 6 November, 05:00 |
 | Live demo | 8–9 November UTC; assigned slot not confirmed |
@@ -44,4 +44,4 @@ Earlier preflight/candidate figures are historical comparisons, not current requ
 
 The authorised test listing is explicitly labelled. No generated visitor wallets, fabricated opening balances, unlabelled example businesses or claimed complete outside-transaction history are allowed. The founder supplies real team/customer/submission facts and authorizes external contact.
 
-Current check-in preparation: [CHECK-IN-PACKET.md](CHECK-IN-PACKET.md). Registration is confirmed by the founder; actual submission confirmation remains outstanding.
+Current check-in preparation: [CHECK-IN-PACKET.md](CHECK-IN-PACKET.md). Founder reports check-in submitted; actual entry/acknowledgement has not been independently inspected.

@@ -1,6 +1,6 @@
 # Portion — check-in evidence packet
 
-Prepared 24 October 2026. **Founder confirms: registered; check-in not yet submitted.** This packet is supporting evidence, not a submitted entry or application prose. Use the team's own words for descriptions and confirm all team fields personally.
+Prepared 24 October 2026. **Latest founder report: registered; Submit Build/check-in action completed.** The entry/acknowledgement has not been independently inspected. Earlier deadline/preparation notes below are historical. This packet is supporting evidence, not a submitted entry or application prose. Use the team's own words for descriptions and confirm all team fields personally.
 
 ## Deadline
 

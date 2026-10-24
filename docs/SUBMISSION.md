@@ -8,7 +8,7 @@ Official event details were read on 24 October 2026: https://dorahacks.io/hackat
 
 | Obligation | Recorded deadline/status |
 | --- | --- |
-| Check-in | 24 October, 13:00; founder confirms registered; check-in not yet submitted |
+| Check-in | 24 October, 13:00; founder reports registered and check-in submitted; entry not independently inspected |
 | Office-hour application | 27 October, 13:00; optional, not filed by the assistant |
 | Final submission / code freeze | 6 November, 05:00 |
 | Live demo | 8–9 November UTC; confirm assigned slot with organisers |
@@ -46,4 +46,4 @@ Suggested evidence order, not a scripted application answer: customer job → us
 
 Core is already deployed. Do not follow historical requests for thousands of deployment tPOT or run another deployment merely for submission. Last verified remaining free balance after the authorized test was **44.82920824 tPOT**; it is a dated snapshot. Additional writes need fresh costs and a defined reserve. The bridge is outside this current release; BNB gas is not a prerequisite for demonstrating deployed Core.
 
-Current check-in preparation: [CHECK-IN-PACKET.md](CHECK-IN-PACKET.md). Registration is confirmed by the founder; actual submission confirmation remains outstanding.
+Current check-in preparation: [CHECK-IN-PACKET.md](CHECK-IN-PACKET.md). Founder reports check-in submitted; actual entry/acknowledgement has not been independently inspected.

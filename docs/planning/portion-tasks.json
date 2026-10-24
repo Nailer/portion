@@ -25,12 +25,13 @@
     "title": "Confirm registration and complete the check-in requirements",
     "work": "Confirm team registration and actual submission state; assemble progress, remaining work, repo, architecture, deployment receipt and demo link; ask the organiser about recovery if the deadline was missed.",
     "acceptance": "Founder retains actual submission confirmation or organiser response. No registration or submission is claimed without evidence.",
-    "status": "in_progress",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/2",
     "number": 2,
-    "founderConfirmedStatus": "Registered; check-in not submitted, 24 October 2026",
+    "founderConfirmedStatus": "Founder reports Submit Build/check-in action completed; no entry URL independently verified.",
     "evidence": "docs/CHECK-IN-PACKET.md",
-    "remaining": "Founder completes check-in and supplies actual confirmation."
+    "remaining": "Retain acknowledgement in founder account; report any organiser correction.",
+    "completedAt": "2026-10-24"
   },
   {
     "id": "POR-S03",
@@ -43,9 +44,11 @@
     "title": "Select awards based on demonstrated scope",
     "work": "Prioritise Ecosystem DApps; map working SDK capabilities to Middleware; confirm multiple-track eligibility and prize stacking with organiser if ambiguous; keep undeployed bridge claims out.",
     "acceptance": "A dated track decision links each claim to working evidence and records any unanswered organiser question.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/3",
-    "number": 3
+    "number": 3,
+    "completedAt": "2026-10-24",
+    "evidence": "docs/TRACK-DECISION.md"
   },
   {
     "id": "POR-S04",

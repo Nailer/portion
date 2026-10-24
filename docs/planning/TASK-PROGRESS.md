@@ -12,11 +12,17 @@
 
 **Cost:** no chain transactions, no faucet usage and no contract redeployment. Source/documentation publication only. Frontend stale undeployed wording found in App/Business is separately retained in open POR-T06; this task does not falsely claim that UI fix is complete.
 
-## POR-S02 — in progress, 24 October 2026
+## POR-S02 — completed on founder confirmation, 24 October 2026
 
-Founder confirms **registered, check-in not submitted**. The available contract, repository, architecture, demo and actual receipt links are assembled in [CHECK-IN-PACKET.md](../CHECK-IN-PACKET.md). At the 11:24 UTC / 12:24 Lagos time check, about 36 minutes remained until the recorded 13:00 Lagos deadline.
+The founder reports the Submit Build/check-in action is done and requests continued development. The evidence packet and public-link checks are recorded in [CHECK-IN-PACKET.md](../CHECK-IN-PACKET.md). This is direct founder confirmation; the submitted entry/acknowledgement has not been independently inspected. The assistant did not submit the build. Keep the acknowledgement in the founder account and report organiser corrections.
 
-The founder must complete the actual event check-in and retain its submitted-entry link/confirmation. This packet and a registered account are not a submitted check-in. Do not close S02 until actual submission evidence or an organiser response resolves its acceptance requirements. No new faucet, asset or deployment is needed for the prepared evidence.
+## POR-S03 — completed, 24 October 2026
+
+[TRACK-DECISION.md](../TRACK-DECISION.md) selects Ecosystem DApps as the primary fit and maps working SDK/document features to a supporting middleware contribution. No new bridge deployment, extra live track or multi-award eligibility is claimed. Open organiser questions are listed explicitly; no outside message or additional token spend occurred.
+
+## POR-S04 — in progress
+
+Next: verify the documented project in a fresh source-only checkout without local node_modules, ignored environment files or keys. Architecture was reconciled in S01. A clean install/build result and current dependency disclosures are needed before closure.
 
 ## Sequencing
 
