@@ -5,12 +5,13 @@ import { Keyring } from '@polkadot/keyring';
 import { cryptoWaitReady, decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import {
   connect, TESTNET, PortionCoreArtifact, ReviveContract, storedInBlock, contentHash, MAX_DOC_BYTES,
-  coreDocument, CoreClient, nativeFree, submit, ss58ToH160, decodeFailure, type Deployment, type CoreRecord,
+  coreDocument, CoreClient, nativeFree, submit, ss58ToH160, decodeFailure, UnconfirmedTransactionError, type Deployment, type CoreRecord,
 } from '@portion/sdk';
 import type { ApiPromise } from '@polkadot/api';
 import { verifyListing } from './verify.js';
 import { storedJson } from './blob-pages.js';
 import { revenueCoverage } from './receipt-coverage.js';
+import { blobCreditStore, reserveCredits } from './credit-control.js';
 
 interface Receipt { block: number; ts: number; txHash: string; rows: { kind: string; listingId: number; actor: string | null; data: Record<string, unknown> }[] }
 const HASH = /^0x[0-9a-f]{64}$/i;
@@ -189,14 +190,17 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
     return new Keyring({ type: 'sr25519', ss58Format: 42 }).addFromUri(mnemonic);
   };
   const day = () => new Date().toISOString().slice(0, 10);
+  const creditControl = blobCreditStore(prefix + 'credit-control/v2.json');
   app.get('/api/faucet', async c => chain(async api => {
     const issuer = await creditIssuer();
     const funds = await nativeFree(api, issuer.address);
     if (funds < 25n * 10n ** 12n) return c.json({ error: 'Test-credit service gas reserve is low.' }, 503);
     const claims = await list({ prefix: prefix + `credits/${day()}/`, limit: 21 });
+    const control = await creditControl.load();
+    const used = Math.max(claims.blobs.length, control?.state.day === day() ? control.state.attempts : 0);
     return c.json({ address: issuer.address, balance: funds.toString(), dripPot: '0', dripPusd: '500000000',
-      cooldownSeconds: Math.ceil((Date.parse(day() + 'T00:00:00Z') + 86400000 - Date.now()) / 1000), remainingToday: Math.max(0, 20 - claims.blobs.length),
-      reset: 'UTC midnight', nativeFaucetEnabled: false });
+      cooldownSeconds: Math.ceil((Date.parse(day() + 'T00:00:00Z') + 86400000 - Date.now()) / 1000), remainingToday: Math.max(0, 20 - used),
+      reset: 'UTC midnight', nativeFaucetEnabled: false, pending: !!control?.state.pending, attemptLimit: 20 });
   }));
   app.post('/api/drip', async c => {
     const input = await c.req.json();
@@ -208,19 +212,33 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
       const asset: any = (await api.query.assets.asset(deployment!.pusdAssetId)).toJSON();
       if (asset?.issuer !== issuer.address) return c.json({ error: 'Test-credit issuer permission is unavailable.' }, 503);
       if (await nativeFree(api, address) === 0n) return c.json({ error: 'Fund this account with tPOT from the official testnet faucet first. Native tokens are needed for its transactions and storage deposits.' }, 400);
-      const path = `credits/${day()}/${address}`;
+      const requestDay = day();
+      const path = `credits/${requestDay}/${address}`;
       if (await read(path)) return c.json({ error: 'This account already requested credits today. Check its on-chain balance and try again after UTC midnight.' }, 429);
-      const claims = await list({ prefix: prefix + `credits/${day()}/`, limit: 21 });
+      const claims = await list({ prefix: prefix + `credits/${requestDay}/`, limit: 21 });
       if (claims.blobs.length >= 20) return c.json({ error: 'Daily test-credit request limit reached.' }, 429);
       const tx = api.tx.assets.mint(deployment!.pusdAssetId, address, 500_000_000n);
-      const fee = BigInt((await tx.paymentInfo(issuer.address)).partialFee.toString());
-      if (fee > 5n * 10n ** 12n || await nativeFree(api, issuer.address) < fee + 25n * 10n ** 12n) return c.json({ error: 'Test-credit service budget is unavailable.' }, 503);
-      // Claim before signing: concurrent retries cannot mint twice, even if tracking later times out.
-      await write(path, new TextEncoder().encode(JSON.stringify({ status: 'pending', address, requestedAt: new Date().toISOString() })));
-      const out = await submit(api, tx, issuer);
-      if (!out.ok) return c.json({ error: `Credit issuance failed: ${out.error}. Keep the transaction hash ${out.txHash}.` }, 503);
-      await write(path, new TextEncoder().encode(JSON.stringify({ status: 'finalized', address, tx: out.txHash, block: out.blockNumber })), 'application/json', true);
-      return c.json({ ss58: address, h160: ss58ToH160(address), viaEvm: false, tx: out.txHash, block: out.blockNumber, pot: '0', pusd: '500000000' });
+      let lease: Awaited<ReturnType<typeof reserveCredits>>;
+      try { lease = await reserveCredits(creditControl, address, requestDay, claims.blobs.map(blob => blob.pathname.split('/').at(-1)!)); }
+      catch (error) { return c.json({ error: error instanceof Error ? error.message : 'Credit reservation is busy. No mint was submitted by this request.' }, 429); }
+      // Reserve before quoting or signing. A crash/unknown mint keeps the lock, even across UTC midnight.
+      let signingStarted = false;
+      try {
+        const fee = BigInt((await tx.paymentInfo(issuer.address)).partialFee.toString());
+        if (fee > 5n * 10n ** 12n || await nativeFree(api, issuer.address) < fee + 25n * 10n ** 12n) {
+          await lease.finish(); return c.json({ error: 'Test-credit service budget is unavailable. This attempt is reserved for today; no mint was submitted.' }, 503);
+        }
+        await write(path, new TextEncoder().encode(JSON.stringify({ status: 'pending', address, requestedAt: new Date().toISOString() })));
+        signingStarted = true;
+        const out = await submit(api, tx, issuer);
+        await write(path, new TextEncoder().encode(JSON.stringify({ status: out.ok ? 'finalized' : 'failed', address, tx: out.txHash, block: out.blockNumber })), 'application/json', true);
+        await lease.finish();
+        if (!out.ok) return c.json({ error: `Credit issuance failed on-chain: ${out.error}. Keep hash ${out.txHash}. This attempt counts toward today's quota.` }, 503);
+        return c.json({ ss58: address, h160: ss58ToH160(address), viaEvm: false, tx: out.txHash, block: out.blockNumber, pot: '0', pusd: '500000000' });
+      } catch (error) {
+        if (!signingStarted) { try { await lease.finish(); } catch { /* A retained lock is safer than another mint. */ } }
+        return c.json({ error: `Credit request could not be completed. ${signingStarted ? 'Its outcome may be unknown; issuance is paused for reconciliation. Do not retry.' : 'No mint was submitted. The reserved attempt remains counted.'} ${error instanceof UnconfirmedTransactionError && error.txHash ? `Keep hash ${error.txHash}.` : ''}` }, 503);
+      }
     });
   });
   app.get('/api/teleport/config', c => c.json({ enabled: false }));

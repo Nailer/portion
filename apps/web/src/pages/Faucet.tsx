@@ -6,7 +6,7 @@ import { api, type DripResult } from '../lib/backend';
 import { CopyButton, useAsync } from '../components/ui';
 import { explorerBlock } from '../lib/format';
 
-interface FaucetStatus { address: string; balance: string; dripPot: string; dripPusd: string; cooldownSeconds: number; remainingToday: number }
+interface FaucetStatus { address: string; balance: string; dripPot: string; dripPusd: string; cooldownSeconds: number; remainingToday: number; pending?: boolean; reset?: string }
 
 export function Faucet() {
   const { backend, refresh } = useApp();
@@ -15,7 +15,7 @@ export function Faucet() {
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<DripResult>();
   const [err, setErr] = useState<string>();
-  const { data: status } = useAsync(async () => (backend!.mode === 'live' ? api<FaucetStatus>('/api/faucet').catch(() => undefined) : undefined), [backend]);
+  const { data: status, error: statusError } = useAsync(() => api<FaucetStatus>('/api/faucet'), [backend]);
 
   const target = addr.trim() || passport?.address || '';
   const go = async () => {
@@ -30,10 +30,12 @@ export function Faucet() {
         <p className="page-lede">Request real pUSD test credits for bonds and purchases. This service does not send native tPOT: obtain that from the official Portaldot testnet faucet to pay fees and storage deposits. Test credits have no monetary value.</p>
         <div className="field" style={{ marginTop: 28 }}>
           <label htmlFor="addr">Address</label>
-          <input id="addr" type="text" value={addr} onChange={(e) => setAddr(e.target.value)} placeholder={passport ? `${passport.address} (your account)` : '5… or 0x…'} spellCheck={false} />
+          <input id="addr" type="text" value={addr} onChange={(e) => setAddr(e.target.value)} placeholder={passport ? `${passport.address} (your account)` : 'Native public address (5…)'} spellCheck={false} />
           <p className="hint">Only public addresses belong here. Never enter a recovery phrase or private key.</p>
         </div>
-        <button className="btn primary" disabled={busy || !target || !status} onClick={go}>{busy ? 'Sending…' : !status ? 'Live faucet unavailable' : `Request ${usd(status.dripPusd)} test credits`}</button>
+        <button className="btn primary" disabled={busy || !target || !status || status.pending || status.remainingToday === 0} onClick={go}>{busy ? 'Sending…' : !status ? 'Live faucet unavailable' : status.pending ? 'Issuer awaiting reconciliation' : status.remainingToday === 0 ? 'Daily attempt limit reached' : `Request ${usd(status.dripPusd)} test credits`}</button>
+        <p className="hint">One reserved attempt per native account per UTC day; at most 20 attempts globally. Failed or interrupted attempts may consume the reservation. An unconfirmed mint pauses issuance until reconciled.</p>
+        {statusError && <p className="sheet-error" role="alert">Test-credit availability could not be checked: {statusError.message}</p>}
         {err && <p className="sheet-error" style={{ marginTop: 16 }}>{err}</p>}
         {res && (
           <div className="mine" style={{ marginTop: 16 }}>
@@ -46,10 +48,9 @@ export function Faucet() {
         )}
       </div>
       <div>
-        <h2 style={{ fontSize: 22, fontWeight: 800 }}>Why two addresses?</h2>
+        <h2 style={{ fontSize: 22, fontWeight: 800 }}>Which address should I use?</h2>
         <p className="note" style={{ marginTop: 10, color: 'var(--ink-2)' }}>
-          Portaldot V3 accounts are Substrate accounts. Solidity sees each one as a 20-byte address derived from it, and an Ethereum key maps to its own Substrate account.
-          This service resolves the recipient before sending. Always check the funded account in the result.
+          Use the native public address shared by Portaldot Wallet. Solidity also sees a derived 20-byte contract address, but this credit service accepts the native address. Ordinary MetaMask EVM accounts cannot sign the native asset workflow.
         </p>
         <dl className="kv" style={{ marginTop: 20 }}>
           <dt>Network</dt><dd>Portaldot V3 Testnet</dd>
@@ -59,8 +60,8 @@ export function Faucet() {
           {status && <><dt>Cooldown</dt><dd>{Math.round(status.cooldownSeconds / 3600)} h per account</dd><dt>Left today</dt><dd>{status.remainingToday} requests</dd></>}
         </dl>
         <h3 style={{ fontSize: 16, marginTop: 24 }}>From a script</h3>
-        <pre className="notice mono" style={{ overflow: 'auto' }}>{`curl -X POST ${location.origin}/api/drip \\\n  -H 'content-type: application/json' \\\n  -d '{"address":"0xYourAddress"}'`}</pre>
-        <p style={{ marginTop: 8 }}><CopyButton text={`curl -X POST ${location.origin}/api/drip -H 'content-type: application/json' -d '{"address":"0xYourAddress"}'`} label="Copy command" /></p>
+        <pre className="notice mono" style={{ overflow: 'auto' }}>{`curl -X POST ${location.origin}/api/drip \\\n  -H 'content-type: application/json' \\\n  -d '{"address":"YOUR_NATIVE_PUBLIC_ADDRESS"}'`}</pre>
+        <p style={{ marginTop: 8 }}><CopyButton text={`curl -X POST ${location.origin}/api/drip -H 'content-type: application/json' -d '{"address":"YOUR_NATIVE_PUBLIC_ADDRESS"}'`} label="Copy command" /></p>
       </div>
     </div>
   );
