@@ -130,9 +130,10 @@
     "title": "Verify the real Portaldot extension flow",
     "work": "Check provider identity and official install destination; share accounts, select one, reject a request, reconnect and sign a low-cost native action; keep Portaldot first.",
     "acceptance": "Real extension observations and one approved finalized action are recorded. Mocked tests are not presented as real-wallet verification.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/8",
-    "number": 8
+    "number": 8,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-W02",
@@ -145,9 +146,11 @@
     "title": "Verify account mapping and account-switch safety",
     "work": "Test mapped/unmapped accounts, mapping collisions, network changes and switching accounts while review is open; keep native batches flat and bind plans to the actual signer.",
     "acceptance": "Wrong account/network invalidates review; no local key fallback; mapping succeeds with the correct native account or fails explicitly.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/9",
-    "number": 9
+    "number": 9,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-W03",
@@ -160,9 +163,10 @@
     "title": "Publish an honest wallet compatibility matrix",
     "work": "Verify each supported injected wallet separately; explain why ordinary MetaMask EVM signing cannot sign the native flow; keep EVM-only tooling separate.",
     "acceptance": "UI and guide list only tested support, clear prerequisites and verified install links; no recovery-phrase import is introduced.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/10",
-    "number": 10
+    "number": 10,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-W04",
@@ -175,9 +179,10 @@
     "title": "Add an intent-based first-use journey",
     "work": "Let visitors choose operating an asset, reviewing/funding, or inspecting the project; allow public browsing; route each role to one clear next step without creating an account.",
     "acceptance": "A first-time visitor identifies the product purpose, intended role and next action without help; no wallet or fabricated balance is generated.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/11",
-    "number": 11
+    "number": 11,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-W05",
@@ -191,9 +196,11 @@
     "title": "Show wallet and service readiness before actions",
     "work": "Display actual native/payment balances, selected account, chain, contract and API readiness; distinguish zero, loading, unavailable, wrong network and missing extension.",
     "acceptance": "A disconnected or unfunded visitor receives the correct next action. Connection alone never implies all funding services are ready.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/12",
-    "number": 12
+    "number": 12,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-W06",
@@ -207,9 +214,10 @@
     "title": "Show action costs including storage deposits",
     "work": "Separate purchase/bond amount, protocol fees, native execution fee, storage deposit and possible refund; estimate against current state and expire quotes when identity/state changes.",
     "acceptance": "Quotes show source/time and limits; unknown costs remain unknown; reviewed fees plus deposits are not described as gas alone; cap rejection never triggers an automatic higher-cap retry.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/13",
-    "number": 13
+    "number": 13,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-W07",
@@ -223,9 +231,10 @@
     "title": "Make faucet prerequisites and limits understandable",
     "work": "Explain native tPOT versus test pUSD, official allocation path, daily reset, service reserve and failed requests; link to verified organiser instructions.",
     "acceptance": "User can tell which token is missing and how to obtain it; hosted native faucet stays disabled and deployer funds are never automatically distributed.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/14",
-    "number": 14
+    "number": 14,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-W08",
@@ -238,9 +247,11 @@
     "title": "Save an unsigned listing draft without secrets",
     "work": "Preserve form progress, validate photo and input limits, show a summary before signing and warn if uploaded public data should not be shared; exclude wallet secrets.",
     "acceptance": "Refresh restores a draft with an explicit save/clear policy; changing a wallet does not silently change operator identity; nothing is published without approval.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/15",
-    "number": 15
+    "number": 15,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-T01",
@@ -254,9 +265,11 @@
     "title": "Make transaction states and finality unambiguous",
     "work": "Expose preparing, awaiting wallet, submitted, included, finalized, rejected, failed and unconfirmed states; prevent duplicate clicks and keep completed receipts visible.",
     "acceptance": "Rejection, dropped/usurped transaction and delayed finality are distinguishable; only a successful finalized receipt is called successful.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/16",
-    "number": 16
+    "number": 16,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-T02",
@@ -269,9 +282,11 @@
     "title": "Resume partial document uploads safely",
     "work": "Persist accepted content hashes and finalized anchors; retry only missing document publication; revalidate allocated identifiers before later creation; retain completed upload receipts.",
     "acceptance": "Terms success/photo failure and pin failure recover without duplicate stores or listing creation; changed IDs require rebuilding and reviewing immutable terms.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/17",
-    "number": 17
+    "number": 17,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-T03",
@@ -284,9 +299,11 @@
     "title": "Reconcile unknown outcomes before retrying",
     "work": "Retain public action identifiers, signer/network identity and known hashes; inspect finalized history/catalog/nonce as appropriate; expose publication-only retry when chain execution succeeded.",
     "acceptance": "A timeout or refresh cannot blindly resubmit an already successful money-moving action. Recovery is demonstrated without additional duplicate spending.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/18",
-    "number": 18
+    "number": 18,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-T04",
@@ -300,9 +317,11 @@
     "title": "Build a receipt and history centre",
     "work": "Show action, actor, finalized block/hash, status, actual amounts and known fee data; support copy, verified explorer links where available, and export.",
     "acceptance": "History reconciles with contract totals, labels incomplete coverage, and offers useful recovery paths without exposing signing material.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/19",
-    "number": 19
+    "number": 19,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-T05",
@@ -316,9 +335,10 @@
     "title": "Exercise rejection and interruption scenarios",
     "work": "Test rejection at every signing step, account/network change, API failure after finalization, tab refresh and double-click; preserve the current wallet rather than substituting identities.",
     "acceptance": "A recorded scenario matrix proves no false success, key fallback or unintended repeat transaction; regressions protect material failure paths.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/20",
-    "number": 20
+    "number": 20,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-T06",
@@ -332,9 +352,11 @@
     "title": "Fix sold-out, connecting and unavailable action states",
     "work": "Replace stale undeployed messages during loading/outages; clearly explain sold-out offers and unavailable pools; separate user-owned shares from stake and sale inventory.",
     "acceptance": "The existing test offer is honestly shown as sold out, not broken; loading does not assert the deployed contract is absent; unsupported actions are not advertised as ready.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/21",
-    "number": 21
+    "number": 21,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-T07",
@@ -381,9 +403,11 @@
     "title": "Improve image quality and verify photo integrity",
     "work": "Validate size/type, preserve useful resolution when compressing, preview the exact bytes, verify content hash/availability independently of terms, and provide accessible fallbacks.",
     "acceptance": "New uploads are legible on desktop/mobile within limits; a failed photo has its own state. Existing immutable low-resolution test media is not silently replaced with different bytes.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/24",
-    "number": 24
+    "number": 24,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-O03",
@@ -412,9 +436,11 @@
     "title": "Explain actual deposits and payment-clock behaviour",
     "work": "Show gross deposit, actual fee, net allocation and qualifying status; distinguish the initial payment window from an actual payment and projected income from paid income.",
     "acceptance": "The 1 test-pUSD deposit reconciles to 0.005 fee and 0.995 allocation; timestamps never imply payment when only listing initialization occurred.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/26",
-    "number": 26
+    "number": 26,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-O05",
@@ -428,9 +454,11 @@
     "title": "Export useful funding and payment reports",
     "work": "Export verified receipts, amounts, currency/decimals, period and account identifiers; include coverage and testnet labels; retain exact source units and usable timestamps.",
     "acceptance": "CSV/report totals match included receipts, disclose exclusions and do not invent complete accounting or customer revenue.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/27",
-    "number": 27
+    "number": 27,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-O06",
@@ -443,9 +471,11 @@
     "title": "Explain default, bond recovery and exit",
     "work": "Explain cadence, overdue/default states, slashing, top-up, wind-down, unstaking, selling and bond limits; distinguish return of shares from repayment of purchase money.",
     "acceptance": "A user can explain how they might exit, what happens if there is no buyer, and why a bond does not insure their full capital; controls match deployed rules.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/28",
-    "number": 28
+    "number": 28,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-O07",
@@ -476,9 +506,11 @@
     "title": "Clarify portfolio ownership, stake and claims",
     "work": "Separate owned shares, earning stake, pending deposited income and previously claimed income; keep claims visible after zero stake; explain stake/unstake effects.",
     "acceptance": "Balances match native assets and Core state, including zero-stake pending claims; no projected return is displayed as money already earned.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/30",
-    "number": 30
+    "number": 30,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-R01",
@@ -491,9 +523,11 @@
     "title": "Define receipt coverage and reconcile history",
     "work": "Maintain honest partial coverage for app-published receipts; reconcile totals and imports; specify an archive-backed full-index path only if available; paginate Blob listings.",
     "acceptance": "Externally submitted transactions cannot silently become zero income or disappear behind a complete-history claim; pagination and reconciliation are tested.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/31",
-    "number": 31
+    "number": 31,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-R02",
@@ -506,9 +540,11 @@
     "title": "Prove document durability and recovery",
     "work": "Back up immutable verified bytes and anchors; test recovery after native retention expires and storage/API outages; document any renewal service separately with its own budget.",
     "acceptance": "Hash-verified documents remain recoverable after a restart/restore test; renewal is not promised unless running and monitored; missing bytes never receive substitute content.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/32",
-    "number": 32
+    "number": 32,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-R03",
@@ -522,9 +558,10 @@
     "title": "Verify read consistency and stale-quote handling",
     "work": "Use clearly identified finalized snapshots where needed; enforce genesis/code/payment-asset identity; refresh sale inventory, allowance and balances before signing.",
     "acceptance": "A stale listing/quote or mismatched chain/code fails safely and prompts a new review; no configured payment asset is silently substituted.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/33",
-    "number": 33
+    "number": 33,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-R04",
@@ -537,9 +574,11 @@
     "title": "Harden concurrent faucet requests and issuer spending",
     "work": "Review atomic account/day claims, global quota races, issuer nonce serialization, rate limits, ambiguous mint recovery and gas reserve enforcement; load-test with isolated fixtures.",
     "acceptance": "Concurrent requests cannot duplicate grants or accidentally exceed the defined service budget; no deployment key is used; unknown mint outcomes are reconciled before retry.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/34",
-    "number": 34
+    "number": 34,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-R05",
@@ -565,9 +604,10 @@
     "title": "Review contract and native-backing boundaries",
     "work": "Review direct callers bypassing web checks, supported token identities, existing default guards, bond solvency, malicious callbacks, native fractionalization lock and who can burn/redeem a deed. Explicitly assess direct-to-operator purchase transfers and missing spending controls. Design, without deploying, funding escrow/targets/deadlines, vendor or milestone release, independent approval, refunds/disputes and accountable collections; keep custody/eligibility review in B06/B07.",
     "acceptance": "An adversarial review maps each protection to contract, runtime, web or business process; deployed protections remain covered; any new bytecode needs a separately approved migration budget. Current limits and proposed controls are visibly separate; no purchase-money escrow or regulatory protection is claimed for Core v1. A proposed release model identifies approvers, evidence, conflicts, costs and failure cases before any new bytecode or real-money use.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/36",
-    "number": 36
+    "number": 36,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-R07",
@@ -597,9 +637,10 @@
     "title": "Reduce initial load and measure mobile performance",
     "work": "Split optional routes and heavy SDK imports, defer advanced tooling and avoid blocking the homepage on RPC; measure before/after on a representative mobile profile.",
     "acceptance": "A recorded baseline and improved startup measurement exist; key routes still work and visual polish is preserved; no arbitrary score is claimed without measurement.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/38",
-    "number": 38
+    "number": 38,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-R09",
@@ -613,9 +654,10 @@
     "title": "Define hosting, backup, secret and incident operations",
     "work": "Document production configuration and permissions, issuer rotation, separate service budgets, storage/hosting limits, health monitoring, rollback and restoration.",
     "acceptance": "A recovery drill restores verified data; no deployer secret is hosted or committed; an operator knows how to disable a failing service and investigate safely.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/39",
-    "number": 39
+    "number": 39,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-R10",
@@ -629,9 +671,11 @@
     "title": "Handle RPC/API latency and outages professionally",
     "work": "Bound requests, clean up subscriptions, expose retryable read states and partial service readiness, prevent noisy retry loops and distinguish stale data from current observations.",
     "acceptance": "RPC disconnect, missing Blob data, non-JSON response and function timeout show a useful state without fabricated data or automatic transaction resubmission.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/40",
-    "number": 40
+    "number": 40,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-B01",
@@ -773,9 +817,10 @@
     "title": "Polish the existing brand and visual hierarchy",
     "work": "Retain a consistent logo, color, type and spacing system; fix low-quality new media handling, dropdown alignment, form layouts and understandable primary actions.",
     "acceptance": "Homepage explains who Portion serves and what to do; asset evidence stays distinguishable from decorative illustrations; desktop/mobile screenshots show consistent quality.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/49",
-    "number": 49
+    "number": 49,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-D02",
@@ -789,9 +834,10 @@
     "title": "Make motion, mobile and accessibility support the task",
     "work": "Use purposeful transitions for steps, approvals and feedback; honor reduced motion; test keyboard/focus, contrast, errors and narrow layouts on key journeys.",
     "acceptance": "Key flows work without animation or a mouse, dialogs preserve focus, controls have useful labels and no essential content overflows the tested mobile widths.",
-    "status": "open",
+    "status": "in_progress",
     "url": "https://github.com/Nailer/portion/issues/50",
-    "number": 50
+    "number": 50,
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   },
   {
     "id": "POR-D03",
@@ -884,8 +930,10 @@
     "title": "Gate bridge, node-tool and keeper expansion",
     "work": "Keep unproven bridge, pools, automated slashing/renewal/compounding and complete archive indexing out of the primary promise; define a customer or award-evidence gate for each later project.",
     "acceptance": "Advanced pages state actual readiness; no new deployment or spend is scheduled merely to claim more tracks; core usability remains the priority.",
-    "status": "open",
+    "status": "completed",
     "url": "https://github.com/Nailer/portion/issues/56",
-    "number": 56
+    "number": 56,
+    "completedAt": "2026-10-25",
+    "evidence": "docs/planning/EXECUTION-2026-10-25.md"
   }
 ]

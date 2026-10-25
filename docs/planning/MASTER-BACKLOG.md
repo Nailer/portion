@@ -1,8 +1,8 @@
 # Portion — complete delivery backlog
 
-Planning baseline: **24 October 2026**. This is the task-creation baseline, not a claim that the work below is complete. GitHub issues are the authoritative live status; this document and JSON are snapshots.
+Planning baseline: **24 October 2026**; status updated **25 October 2026**. This is the task-creation baseline, not a claim that the work below is complete. GitHub issues are the authoritative live status; this document and JSON are snapshots.
 
-**56 individual tasks: 7 completed, 49 open** cover the product, wallet, transaction reliability, operator tools, security/operations, business, design and hackathon gaps. Each has a priority, proposed lead role, dependencies and completion evidence. Lead roles do not assign people or imply someone has accepted the work.
+**56 individual tasks: 25 completed, 31 remaining (12 in progress, 19 open)** cover the product, wallet, transaction reliability, operator tools, security/operations, business, design and hackathon gaps. Each has a priority, proposed lead role, dependencies and completion evidence. Lead roles do not assign people or imply someone has accepted the work.
 
 Follow [Task progress](TASK-PROGRESS.md) for completed work and the active next step. Read [Decisions and answers](DECISIONS-AND-ANSWERS.md) for the plain-language reasoning. Evidence baseline: [live Core release](../LIVE-CORE-RELEASE.md), [finalized live test](../LIVE-TEST-RESULTS.md), [engineering review](../TECHNICAL-REVIEW.md), [business direction](../BUSINESS.md), and current source. Historical review items were reconciled rather than blindly reopened as deployment blockers.
 
@@ -24,7 +24,7 @@ Follow [Task progress](TASK-PROGRESS.md) for completed work and the active next 
 | Versioned Core SDK and real payment asset | Native asset 4217, ABI/document adapter and chain-backed catalog resolver. Browser readiness remains separate. |
 | Actual create/buy/deposit/claim/unstake test | Listing 585886 and finalized receipts. One development account played both roles; this does not prove independent customer use. |
 | Public verified document/receipt services | Vercel API and Blob; app-submitted receipts are partial history, not a full chain archive. |
-| Separate test-pUSD issuer | Actual grant recorded; native faucet disabled and deployer key absent from hosted API. Concurrency review remains open. |
+| Separate test-pUSD issuer | Actual grant recorded; native faucet disabled and deployer key absent from hosted API. Conditional issuance lock, recipient proof and quota regressions delivered; live operating drill remains open. |
 | Wallet-owned signing design | No web recovery-phrase import, generated visitor wallet or opening balance. Real extension approval is not yet fully evidenced. |
 | Finality, hash and identity protections | Regression coverage and source implement material safeguards; interruption/end-to-end checks remain open. |
 | Lower deed storage and corrected runtime lock proof | Exact 32-byte document hash saves 2.52 tPOT at the observed rate. Native fractionalization already blocks deed transfer; Freezer-only lock is not required for ordinary users. |
@@ -117,7 +117,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-W01 — Verify the real Portaldot extension flow
 
 - **GitHub:** [P0 · issue #8](https://github.com/Nailer/portion/issues/8)
-- **Status:** open at creation. **Lead role:** Engineering + wallet tester.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Engineering + wallet tester.
 - **Dependencies:** [POR-S01](https://github.com/Nailer/portion/issues/1).
 - **Work:** Check provider identity and official install destination; share accounts, select one, reject a request, reconnect and sign a low-cost native action; keep Portaldot first.
 - **Done when:** Real extension observations and one approved finalized action are recorded. Mocked tests are not presented as real-wallet verification.
@@ -125,7 +125,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-W02 — Verify account mapping and account-switch safety
 
 - **GitHub:** [P0 · issue #9](https://github.com/Nailer/portion/issues/9)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-W01](https://github.com/Nailer/portion/issues/8).
 - **Work:** Test mapped/unmapped accounts, mapping collisions, network changes and switching accounts while review is open; keep native batches flat and bind plans to the actual signer.
 - **Done when:** Wrong account/network invalidates review; no local key fallback; mapping succeeds with the correct native account or fails explicitly.
@@ -133,7 +133,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-W03 — Publish an honest wallet compatibility matrix
 
 - **GitHub:** [P1 · issue #10](https://github.com/Nailer/portion/issues/10)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-W01](https://github.com/Nailer/portion/issues/8).
 - **Work:** Verify each supported injected wallet separately; explain why ordinary MetaMask EVM signing cannot sign the native flow; keep EVM-only tooling separate.
 - **Done when:** UI and guide list only tested support, clear prerequisites and verified install links; no recovery-phrase import is introduced.
@@ -141,7 +141,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-W04 — Add an intent-based first-use journey
 
 - **GitHub:** [P0 · issue #11](https://github.com/Nailer/portion/issues/11)
-- **Status:** open at creation. **Lead role:** Product + engineering.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Product + engineering.
 - **Dependencies:** [POR-W01](https://github.com/Nailer/portion/issues/8).
 - **Work:** Let visitors choose operating an asset, reviewing/funding, or inspecting the project; allow public browsing; route each role to one clear next step without creating an account.
 - **Done when:** A first-time visitor identifies the product purpose, intended role and next action without help; no wallet or fabricated balance is generated.
@@ -149,7 +149,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-W05 — Show wallet and service readiness before actions
 
 - **GitHub:** [P0 · issue #12](https://github.com/Nailer/portion/issues/12)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-W01](https://github.com/Nailer/portion/issues/8), [POR-W02](https://github.com/Nailer/portion/issues/9).
 - **Work:** Display actual native/payment balances, selected account, chain, contract and API readiness; distinguish zero, loading, unavailable, wrong network and missing extension.
 - **Done when:** A disconnected or unfunded visitor receives the correct next action. Connection alone never implies all funding services are ready.
@@ -157,7 +157,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-W06 — Show action costs including storage deposits
 
 - **GitHub:** [P0 · issue #13](https://github.com/Nailer/portion/issues/13)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-W05](https://github.com/Nailer/portion/issues/12), [POR-F01](https://github.com/Nailer/portion/issues/54).
 - **Work:** Separate purchase/bond amount, protocol fees, native execution fee, storage deposit and possible refund; estimate against current state and expire quotes when identity/state changes.
 - **Done when:** Quotes show source/time and limits; unknown costs remain unknown; reviewed fees plus deposits are not described as gas alone; cap rejection never triggers an automatic higher-cap retry.
@@ -165,7 +165,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-W07 — Make faucet prerequisites and limits understandable
 
 - **GitHub:** [P1 · issue #14](https://github.com/Nailer/portion/issues/14)
-- **Status:** open at creation. **Lead role:** Engineering + founder.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Engineering + founder.
 - **Dependencies:** [POR-W05](https://github.com/Nailer/portion/issues/12), [POR-R04](https://github.com/Nailer/portion/issues/34).
 - **Work:** Explain native tPOT versus test pUSD, official allocation path, daily reset, service reserve and failed requests; link to verified organiser instructions.
 - **Done when:** User can tell which token is missing and how to obtain it; hosted native faucet stays disabled and deployer funds are never automatically distributed.
@@ -173,7 +173,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-W08 — Save an unsigned listing draft without secrets
 
 - **GitHub:** [P1 · issue #15](https://github.com/Nailer/portion/issues/15)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-W04](https://github.com/Nailer/portion/issues/11).
 - **Work:** Preserve form progress, validate photo and input limits, show a summary before signing and warn if uploaded public data should not be shared; exclude wallet secrets.
 - **Done when:** Refresh restores a draft with an explicit save/clear policy; changing a wallet does not silently change operator identity; nothing is published without approval.
@@ -183,7 +183,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-T01 — Make transaction states and finality unambiguous
 
 - **GitHub:** [P0 · issue #16](https://github.com/Nailer/portion/issues/16)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-W02](https://github.com/Nailer/portion/issues/9), [POR-W06](https://github.com/Nailer/portion/issues/13).
 - **Work:** Expose preparing, awaiting wallet, submitted, included, finalized, rejected, failed and unconfirmed states; prevent duplicate clicks and keep completed receipts visible.
 - **Done when:** Rejection, dropped/usurped transaction and delayed finality are distinguishable; only a successful finalized receipt is called successful.
@@ -191,7 +191,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-T02 — Resume partial document uploads safely
 
 - **GitHub:** [P0 · issue #17](https://github.com/Nailer/portion/issues/17)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-T01](https://github.com/Nailer/portion/issues/16).
 - **Work:** Persist accepted content hashes and finalized anchors; retry only missing document publication; revalidate allocated identifiers before later creation; retain completed upload receipts.
 - **Done when:** Terms success/photo failure and pin failure recover without duplicate stores or listing creation; changed IDs require rebuilding and reviewing immutable terms.
@@ -199,7 +199,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-T03 — Reconcile unknown outcomes before retrying
 
 - **GitHub:** [P0 · issue #18](https://github.com/Nailer/portion/issues/18)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-T01](https://github.com/Nailer/portion/issues/16).
 - **Work:** Retain public action identifiers, signer/network identity and known hashes; inspect finalized history/catalog/nonce as appropriate; expose publication-only retry when chain execution succeeded.
 - **Done when:** A timeout or refresh cannot blindly resubmit an already successful money-moving action. Recovery is demonstrated without additional duplicate spending.
@@ -207,7 +207,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-T04 — Build a receipt and history centre
 
 - **GitHub:** [P1 · issue #19](https://github.com/Nailer/portion/issues/19)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-T01](https://github.com/Nailer/portion/issues/16), [POR-R01](https://github.com/Nailer/portion/issues/31).
 - **Work:** Show action, actor, finalized block/hash, status, actual amounts and known fee data; support copy, verified explorer links where available, and export.
 - **Done when:** History reconciles with contract totals, labels incomplete coverage, and offers useful recovery paths without exposing signing material.
@@ -215,7 +215,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-T05 — Exercise rejection and interruption scenarios
 
 - **GitHub:** [P0 · issue #20](https://github.com/Nailer/portion/issues/20)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-W02](https://github.com/Nailer/portion/issues/9), [POR-T01](https://github.com/Nailer/portion/issues/16).
 - **Work:** Test rejection at every signing step, account/network change, API failure after finalization, tab refresh and double-click; preserve the current wallet rather than substituting identities.
 - **Done when:** A recorded scenario matrix proves no false success, key fallback or unintended repeat transaction; regressions protect material failure paths.
@@ -223,7 +223,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-T06 — Fix sold-out, connecting and unavailable action states
 
 - **GitHub:** [P0 · issue #21](https://github.com/Nailer/portion/issues/21)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-W04](https://github.com/Nailer/portion/issues/11), [POR-T01](https://github.com/Nailer/portion/issues/16).
 - **Work:** Replace stale undeployed messages during loading/outages; clearly explain sold-out offers and unavailable pools; separate user-owned shares from stake and sale inventory.
 - **Done when:** The existing test offer is honestly shown as sold out, not broken; loading does not assert the deployed contract is absent; unsupported actions are not advertised as ready.
@@ -249,7 +249,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-O02 — Improve image quality and verify photo integrity
 
 - **GitHub:** [P1 · issue #24](https://github.com/Nailer/portion/issues/24)
-- **Status:** open at creation. **Lead role:** Design + engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Design + engineering.
 - **Dependencies:** [POR-W08](https://github.com/Nailer/portion/issues/15).
 - **Work:** Validate size/type, preserve useful resolution when compressing, preview the exact bytes, verify content hash/availability independently of terms, and provide accessible fallbacks.
 - **Done when:** New uploads are legible on desktop/mobile within limits; a failed photo has its own state. Existing immutable low-resolution test media is not silently replaced with different bytes.
@@ -265,7 +265,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-O04 — Explain actual deposits and payment-clock behaviour
 
 - **GitHub:** [P1 · issue #26](https://github.com/Nailer/portion/issues/26)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-R01](https://github.com/Nailer/portion/issues/31).
 - **Work:** Show gross deposit, actual fee, net allocation and qualifying status; distinguish the initial payment window from an actual payment and projected income from paid income.
 - **Done when:** The 1 test-pUSD deposit reconciles to 0.005 fee and 0.995 allocation; timestamps never imply payment when only listing initialization occurred.
@@ -273,7 +273,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-O05 — Export useful funding and payment reports
 
 - **GitHub:** [P1 · issue #27](https://github.com/Nailer/portion/issues/27)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-T04](https://github.com/Nailer/portion/issues/19), [POR-O04](https://github.com/Nailer/portion/issues/26).
 - **Work:** Export verified receipts, amounts, currency/decimals, period and account identifiers; include coverage and testnet labels; retain exact source units and usable timestamps.
 - **Done when:** CSV/report totals match included receipts, disclose exclusions and do not invent complete accounting or customer revenue.
@@ -281,7 +281,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-O06 — Explain default, bond recovery and exit
 
 - **GitHub:** [P1 · issue #28](https://github.com/Nailer/portion/issues/28)
-- **Status:** open at creation. **Lead role:** Product + engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Product + engineering.
 - **Dependencies:** [POR-R06](https://github.com/Nailer/portion/issues/36).
 - **Work:** Explain cadence, overdue/default states, slashing, top-up, wind-down, unstaking, selling and bond limits; distinguish return of shares from repayment of purchase money.
 - **Done when:** A user can explain how they might exit, what happens if there is no buyer, and why a bond does not insure their full capital; controls match deployed rules.
@@ -297,7 +297,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-O08 — Clarify portfolio ownership, stake and claims
 
 - **GitHub:** [P1 · issue #30](https://github.com/Nailer/portion/issues/30)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-T04](https://github.com/Nailer/portion/issues/19), [POR-O04](https://github.com/Nailer/portion/issues/26), [POR-O06](https://github.com/Nailer/portion/issues/28).
 - **Work:** Separate owned shares, earning stake, pending deposited income and previously claimed income; keep claims visible after zero stake; explain stake/unstake effects.
 - **Done when:** Balances match native assets and Core state, including zero-stake pending claims; no projected return is displayed as money already earned.
@@ -307,7 +307,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-R01 — Define receipt coverage and reconcile history
 
 - **GitHub:** [P0 · issue #31](https://github.com/Nailer/portion/issues/31)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-S01](https://github.com/Nailer/portion/issues/1).
 - **Work:** Maintain honest partial coverage for app-published receipts; reconcile totals and imports; specify an archive-backed full-index path only if available; paginate Blob listings.
 - **Done when:** Externally submitted transactions cannot silently become zero income or disappear behind a complete-history claim; pagination and reconciliation are tested.
@@ -315,7 +315,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-R02 — Prove document durability and recovery
 
 - **GitHub:** [P1 · issue #32](https://github.com/Nailer/portion/issues/32)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-R01](https://github.com/Nailer/portion/issues/31).
 - **Work:** Back up immutable verified bytes and anchors; test recovery after native retention expires and storage/API outages; document any renewal service separately with its own budget.
 - **Done when:** Hash-verified documents remain recoverable after a restart/restore test; renewal is not promised unless running and monitored; missing bytes never receive substitute content.
@@ -323,7 +323,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-R03 — Verify read consistency and stale-quote handling
 
 - **GitHub:** [P0 · issue #33](https://github.com/Nailer/portion/issues/33)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-W06](https://github.com/Nailer/portion/issues/13), [POR-T01](https://github.com/Nailer/portion/issues/16).
 - **Work:** Use clearly identified finalized snapshots where needed; enforce genesis/code/payment-asset identity; refresh sale inventory, allowance and balances before signing.
 - **Done when:** A stale listing/quote or mismatched chain/code fails safely and prompts a new review; no configured payment asset is silently substituted.
@@ -331,7 +331,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-R04 — Harden concurrent faucet requests and issuer spending
 
 - **GitHub:** [P0 · issue #34](https://github.com/Nailer/portion/issues/34)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-F01](https://github.com/Nailer/portion/issues/54).
 - **Work:** Review atomic account/day claims, global quota races, issuer nonce serialization, rate limits, ambiguous mint recovery and gas reserve enforcement; load-test with isolated fixtures.
 - **Done when:** Concurrent requests cannot duplicate grants or accidentally exceed the defined service budget; no deployment key is used; unknown mint outcomes are reconciled before retry.
@@ -347,7 +347,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-R06 — Review contract and native-backing boundaries
 
 - **GitHub:** [P1 · issue #36](https://github.com/Nailer/portion/issues/36)
-- **Status:** open at creation. **Lead role:** Engineering + independent reviewer.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Engineering + independent reviewer.
 - **Dependencies:** None.
 - **Work:** Review direct callers bypassing web checks, supported token identities, existing default guards, bond solvency, malicious callbacks, native fractionalization lock and who can burn/redeem a deed. Explicitly assess direct-to-operator purchase transfers and missing spending controls. Design, without deploying, funding escrow/targets/deadlines, vendor or milestone release, independent approval, refunds/disputes and accountable collections; keep custody/eligibility review in B06/B07.
 - **Done when:** An adversarial review maps each protection to contract, runtime, web or business process; deployed protections remain covered; any new bytecode needs a separately approved migration budget. Current limits and proposed controls are visibly separate; no purchase-money escrow or regulatory protection is claimed for Core v1. A proposed release model identifies approvers, evidence, conflicts, costs and failure cases before any new bytecode or real-money use.
@@ -363,7 +363,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-R08 — Reduce initial load and measure mobile performance
 
 - **GitHub:** [P1 · issue #38](https://github.com/Nailer/portion/issues/38)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-W04](https://github.com/Nailer/portion/issues/11).
 - **Work:** Split optional routes and heavy SDK imports, defer advanced tooling and avoid blocking the homepage on RPC; measure before/after on a representative mobile profile.
 - **Done when:** A recorded baseline and improved startup measurement exist; key routes still work and visual polish is preserved; no arbitrary score is claimed without measurement.
@@ -371,7 +371,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-R09 — Define hosting, backup, secret and incident operations
 
 - **GitHub:** [P1 · issue #39](https://github.com/Nailer/portion/issues/39)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-R02](https://github.com/Nailer/portion/issues/32), [POR-R04](https://github.com/Nailer/portion/issues/34).
 - **Work:** Document production configuration and permissions, issuer rotation, separate service budgets, storage/hosting limits, health monitoring, rollback and restoration.
 - **Done when:** A recovery drill restores verified data; no deployer secret is hosted or committed; an operator knows how to disable a failing service and investigate safely.
@@ -379,7 +379,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-R10 — Handle RPC/API latency and outages professionally
 
 - **GitHub:** [P1 · issue #40](https://github.com/Nailer/portion/issues/40)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Engineering.
 - **Dependencies:** [POR-R01](https://github.com/Nailer/portion/issues/31), [POR-R02](https://github.com/Nailer/portion/issues/32).
 - **Work:** Bound requests, clean up subscriptions, expose retryable read states and partial service readiness, prevent noisy retry loops and distinguish stale data from current observations.
 - **Done when:** RPC disconnect, missing Blob data, non-JSON response and function timeout show a useful state without fabricated data or automatic transaction resubmission.
@@ -455,7 +455,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-D01 — Polish the existing brand and visual hierarchy
 
 - **GitHub:** [P1 · issue #49](https://github.com/Nailer/portion/issues/49)
-- **Status:** open at creation. **Lead role:** Design + engineering.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Design + engineering.
 - **Dependencies:** [POR-W04](https://github.com/Nailer/portion/issues/11), [POR-O02](https://github.com/Nailer/portion/issues/24).
 - **Work:** Retain a consistent logo, color, type and spacing system; fix low-quality new media handling, dropdown alignment, form layouts and understandable primary actions.
 - **Done when:** Homepage explains who Portion serves and what to do; asset evidence stays distinguishable from decorative illustrations; desktop/mobile screenshots show consistent quality.
@@ -463,7 +463,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-D02 — Make motion, mobile and accessibility support the task
 
 - **GitHub:** [P1 · issue #50](https://github.com/Nailer/portion/issues/50)
-- **Status:** open at creation. **Lead role:** Design + engineering.
+- **Status:** in progress; see [evidence and remaining checks](EXECUTION-2026-10-25.md). **Lead role:** Design + engineering.
 - **Dependencies:** [POR-D01](https://github.com/Nailer/portion/issues/49), [POR-T01](https://github.com/Nailer/portion/issues/16).
 - **Work:** Use purposeful transitions for steps, approvals and feedback; honor reduced motion; test keyboard/focus, contrast, errors and narrow layouts on key journeys.
 - **Done when:** Key flows work without animation or a mouse, dialogs preserve focus, controls have useful labels and no essential content overflows the tested mobile widths.
@@ -513,7 +513,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-F03 — Gate bridge, node-tool and keeper expansion
 
 - **GitHub:** [P2 · issue #56](https://github.com/Nailer/portion/issues/56)
-- **Status:** open at creation. **Lead role:** Product + engineering.
+- **Status:** completed 25 October 2026; see [acceptance evidence](EXECUTION-2026-10-25.md). **Lead role:** Product + engineering.
 - **Dependencies:** [POR-S03](https://github.com/Nailer/portion/issues/3), [POR-B08](https://github.com/Nailer/portion/issues/48).
 - **Work:** Keep unproven bridge, pools, automated slashing/renewal/compounding and complete archive indexing out of the primary promise; define a customer or award-evidence gate for each later project.
 - **Done when:** Advanced pages state actual readiness; no new deployment or spend is scheduled merely to claim more tracks; core usability remains the priority.

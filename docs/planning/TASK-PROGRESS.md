@@ -39,3 +39,7 @@ GitHub Actions now runs pinned clean-install/audit, contract/SDK/web/server test
 ## Sequencing
 
 Work one task at a time; explain its purpose, changes, acceptance evidence and remaining limits. Close an issue only when its completion checks pass. Collect external facts early and continue independent preparation while waiting. Do not treat every open business/production gate as permission to spend test funds or deploy new code.
+
+## Engineering batch — 25 October 2026
+
+Google Cloud work is paused. [Detailed acceptance evidence](EXECUTION-2026-10-25.md) records wallet guards, recovery, receipts, exact accounting, image verification, durable faucet coordination and public-document restoration. Eighteen additional engineering tasks meet their scoped acceptance checks: **25 complete;31 remaining**. Twelve remaining tasks have partial implementation/evidence and retain their full acceptance gates. Customer evidence, independent reviews, real browser signing and final hackathon materials are not fabricated or marked complete. No chain writes or faucet expenditure occurred.
