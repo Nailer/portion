@@ -43,6 +43,8 @@ jobs:
         run: npm test
       - name: Build API and web
         run: npm run build
+      - name: Check built crypto initialization
+        run: node scripts/check-built-crypto.mjs
       - name: Load bundled API without service credentials
         run: node -e 'require("./serverless/bundle.cjs")'
       - name: Record release evidence

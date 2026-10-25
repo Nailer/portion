@@ -41,3 +41,7 @@ W01/W03/T07 require real extension observations and a separately budgeted, funde
 B01–B08 depend on real operator facts, willingness to pay, qualified rights/custody review and an evidence-based decision. No customer, consent, revenue or legal permission is invented. Final video, pitch and freeze tasks S05–S07 remain open. No outside customer message, application submission or marketing publication occurred.
 
 See [boundary review](../CORE-BOUNDARY-REVIEW.md), [proposed funding controls](../CONTROLLED-FUNDING-DESIGN.md), [document recovery](../DOCUMENT-RECOVERY.md), [expansion gates](EXPANSION-GATES.md) and [delivery constraints](DELIVERY-CONSTRAINTS.md).
+
+## Production bundle correction
+
+The first Vercel browser smoke test exposed a crypto/storage circular-chunk initialization error (`e is not a function`) despite passing dev-mode and build checks. Rolldown strict execution order now preserves module initialization while retaining route splitting. Each built crypto/storage entry is imported in a fresh process in CI; the corrected compiled preview rendered the receipt centre. Source: [Rolldown execution-order documentation](https://rolldown.rs/reference/OutputOptions.codeSplitting). This incident demonstrates why a successful build is not sufficient browser evidence. Initial entry size numbers above refer to the earlier split build; no controlled mobile-speed improvement is claimed.
