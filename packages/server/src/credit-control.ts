@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 export interface CreditState {
   v: 2; day: string; accounts: string[]; attempts: number;
-  pending?: { id: string; address: string; startedAt: string };
+  pending?: { id: string; address: string; startedAt: string; phase?: 'reserved' | 'signing'; nonce?: string; callHash?: string };
 }
 export interface CreditStore {
   load(): Promise<{ state: CreditState; etag: string } | null>;
@@ -39,11 +39,20 @@ export async function reserveCredits(store: CreditStore, address: string, day: s
   if (accounts.includes(address)) throw new Error('This account already reserved credits today. Check its balance; requests reset at UTC midnight.');
   if (attempts >= 20) throw new Error('Daily test-credit attempt limit reached. Requests reset at UTC midnight.');
   const state: CreditState = { v: 2, day, accounts: [...accounts, address], attempts: attempts + 1,
-    pending: { id: randomUUID(), address, startedAt: new Date().toISOString() } };
+    pending: { id: randomUUID(), address, startedAt: new Date().toISOString(), phase:'reserved' } };
   // A stale read or simultaneous initial create fails at the conditional write.
-  const etag = await store.save(state, previous?.etag);
+  let etag = await store.save(state, previous?.etag);
   return {
     state,
+    markSubmission: async (nonce: string, callHash: string) => {
+      if (!/^\d+$/.test(nonce) || !/^0x[0-9a-f]{64}$/i.test(callHash)) throw new Error('Submission identity is invalid.');
+      state.pending = {...state.pending!,phase:'signing',nonce,callHash};
+      etag = await store.save(state,etag);
+    },
     finish: async () => { const { pending: _, ...settled } = state; await store.save(settled, etag); },
   };
+}
+
+export function creditOutcomeMatches(state: CreditState, evidence: { signer: string; nonce: string; callHash: string }, issuer: string) {
+  return !!state.pending && state.pending.phase==='signing' && state.pending.nonce===evidence.nonce && state.pending.callHash?.toLowerCase()===evidence.callHash.toLowerCase() && evidence.signer===issuer;
 }

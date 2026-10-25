@@ -32,7 +32,11 @@ export function walletPassport(account: WalletAccount, wallet: InjectedWallet, a
   const address = walletAddress(account.address);
   // Check every request, including later signatures in a multi-transaction upload.
   // A signature already approved by the extension cannot be revoked here.
-  const signer: Signer = { signPayload: async payload => {
+  const signer: Signer = { ...(wallet.signer.signRaw ? {signRaw: async (raw: Parameters<NonNullable<Signer['signRaw']>>[0]) => {
+    assertActive();
+    if(walletAddress(raw.address)!==address) throw new Error('The message belongs to another account.');
+    const signed=await wallet.signer.signRaw!(raw); assertActive(); return signed;
+  }} : {}), signPayload: async payload => {
     assertActive();
     if (walletAddress(payload.address) !== address) throw new Error('The signing request belongs to a different account. Start a new review.');
     if (payload.genesisHash.toLowerCase() !== '0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd') throw new Error('The signing request is for a different network.');

@@ -2,7 +2,7 @@ import type { ApiPromise } from '@polkadot/api';
 import {
   createPoolAndSeed, quoteExactIn, reserves, swapExactIn, withId, FALLBACK_LIMITS,
   PortionClient, CoreClient, mappedCorePlan, assetBalance, contentHash, nativeFree, parseUnits, storeTx, submit, MAX_DOC_BYTES,
-  TESTNET, UnconfirmedTransactionError, type Deployment, type ListingView, type Passport, type Plan, type PlanStep, type TxStage,
+  TESTNET, UnconfirmedTransactionError, testCreditMessage, type Deployment, type ListingView, type Passport, type Plan, type PlanStep, type TxStage,
 } from '@portion/sdk';
 import {
   api as http, API_BASE, UserError,
@@ -12,6 +12,9 @@ import {
 import { nativeFeeReview } from './fee-review';
 import { formatUnits } from '@portion/sdk/units';
 import { loadUpload, saveUpload, type UploadCheckpoint, type UploadReceipt } from './upload-checkpoint';
+import { reserveLocalReceipt, settleLocalReceipt } from './receipt-journal';
+import { stringToHex } from '@polkadot/util';
+import { walletAddress } from './wallet';
 
 const usdLabel = (v: bigint) => `${formatUnits(v,6,6)} pUSD`;
 const stageMap: Record<TxStage, StageName> = { signing: 'signing', broadcast: 'broadcast', inBlock: 'inBlock', finalized: 'done', failed: 'failed' };
@@ -116,15 +119,19 @@ export class LiveBackend implements Backend {
     const rows = await http<{ ts: number; amount: string; kind: 'revenue' | 'slash' }[]>(`/api/listings/${id}/revenue`);
     return rows.map(r => ({ ...r, amount: BigInt(r.amount) }));
   }
-  drip(address: string) {
-    return http<DripResult>('/api/drip', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ address }) });
+  async drip(address: string, who: Passport) {
+    if(walletAddress(address)!==who.address || !('signer' in who.pair) || !who.pair.signer.signRaw) throw new UserError('Connect the recipient native wallet with message-signing support before requesting credits.');
+    const challenge = await http<{address:string;day:string;message:string}>(`/api/faucet/challenge?address=${encodeURIComponent(who.address)}`);
+    if(challenge.address!==who.address || !/^\d{4}-\d{2}-\d{2}$/.test(challenge.day) || !this.deployment || challenge.message!==testCreditMessage(who.address,challenge.day,this.deployment.portion)) throw new UserError('The credit challenge does not match this recipient, deployment and purpose. Nothing was signed.');
+    const signed=await who.pair.signer.signRaw({address:who.pair.address,data:stringToHex(challenge.message),type:'bytes'});
+    return http<DripResult>('/api/drip', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ address:who.address,signature:signed.signature }) });
   }
 
   // ───────────── actions ─────────────
 
   private async ensureGas(who: Passport, min = 1n * 10n ** 14n) {
     const free = await nativeFree(this.chain, who.address);
-    if (free < min) throw new UserError('Your Passport needs a little tPOT for fees and refundable storage deposits.', 'faucet');
+    if (free < min) throw new UserError('Your wallet needs tPOT for network fees and storage deposits.', 'faucet');
   }
 
   private async ensurePusd(who: Passport, need: bigint) {
@@ -132,8 +139,12 @@ export class LiveBackend implements Backend {
     if (have < need) throw new UserError('You do not have enough pUSD for this. Get some from the faucet.', 'faucet');
   }
 
-  private async wrap(title: string, plan: Plan, who: Passport, cost?: string): Promise<Prepared> {
-    if (this.client instanceof CoreClient) plan = await mappedCorePlan(this.chain, plan, who);
+  prepareNativeTool(title: string, plan: Plan, who: Passport, cost?: string) {
+    return this.wrap(title,plan,who,cost,false);
+  }
+
+  private async wrap(title: string, plan: Plan, who: Passport, cost?: string, coreReceipt = true): Promise<Prepared> {
+    if (coreReceipt && this.client instanceof CoreClient) plan = await mappedCorePlan(this.chain, plan, who);
     const quote = await nativeFeeReview(this.chain, [plan.tx], who.address);
     return {
       title,
@@ -141,17 +152,24 @@ export class LiveBackend implements Backend {
       cost,
       nativeReview: quote.review,
       run: async (onStage) => {
+        let receiptId: string | undefined;
         try {
           await quote.check(0);
-          const out = await submit(this.chain, plan.tx, who.pair, (s, d) => onStage(stageMap[s], d));
+          const nonce = (await this.chain.rpc.system.accountNextIndex(who.address)).toString();
+          receiptId = reserveLocalReceipt(localStorage,who.address,title,plan.tx.method.hash.toHex(),nonce);
+          const out = await submit(this.chain, plan.tx, who.pair, (s, d) => onStage(stageMap[s], d),{nonce});
           let warning: string | undefined;
-          if (out.ok && this.deployment?.contractVersion === 'core-v1') {
+          try { settleLocalReceipt(localStorage,receiptId,{ok:out.ok,txHash:out.txHash,blockNumber:out.blockNumber}); }
+          catch { warning = 'The local submission receipt could not be updated. Keep the finalized hash and reconcile it before repeating this action.'; }
+          if (out.ok && coreReceipt && this.deployment?.contractVersion === 'core-v1') {
             try { await http('/api/receipts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: out.blockNumber, txHash: out.txHash }) }); }
-            catch { warning = 'Transaction finalized, but its history receipt could not be published. Keep the transaction hash.'; }
+            catch { warning = [warning,'Transaction finalized, but its history receipt could not be published. Keep the transaction hash.'].filter(Boolean).join(' '); }
           }
-          return { ok: out.ok, txHash: out.txHash, blockNumber: out.blockNumber, error: out.error, warning };
+          return { ok: out.ok, txHash: out.txHash, blockNumber: out.blockNumber, error: out.error, warning, receiptId };
         } catch (e) {
-          return { ok: false, error: (e as Error).message, ...(e instanceof UnconfirmedTransactionError ? { unconfirmed: true, txHash: e.txHash } : {}) };
+          const result: ActionResult = { ok: false, error: (e as Error).message, receiptId, ...(e instanceof UnconfirmedTransactionError ? { unconfirmed: true, txHash: e.txHash } : {}) };
+          if (receiptId) { try { settleLocalReceipt(localStorage,receiptId,result); } catch { /* Preserve the pending record. */ } }
+          return result;
         }
       },
     };
@@ -192,7 +210,7 @@ export class LiveBackend implements Backend {
       case 'stake': {
         const l = await c.listing(intent.id);
         const bal = await c.shareBalance(l.assetId, who.address);
-        if (bal < BigInt(intent.amount)) throw new UserError('You hold fewer shares than that in your Passport.');
+        if (bal < BigInt(intent.amount)) throw new UserError('You hold fewer wallet shares than that.');
         return this.wrap('Stake shares to earn', c.planStake(l, intent.amount), who);
       }
       case 'unstake': {

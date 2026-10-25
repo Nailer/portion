@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { contentHash, storedInBlock, ReviveContract } from '@portion/sdk';
 import { publicApi } from '../src/public-api';
+import { restoreDocumentArchive } from '../src/document-archive';
 const blobs = vi.hoisted(() => new Map<string, Uint8Array>());
 vi.mock('@vercel/blob', () => ({
   list: vi.fn(async ({ prefix }: { prefix: string }) => ({ hasMore: false, blobs: [...blobs.keys()].filter(key => key.startsWith(prefix)).map(pathname => ({ pathname, url: 'https://public.test/' + pathname })) })),
@@ -75,5 +76,21 @@ describe('durable public API', () => {
     expect(await (await app.request(`/api/transactions/${hash}?block=9`)).json()).toMatchObject({ finalized: true, ok: true, signer: 'native-account', blockNumber: 9 });
     records.length = 0;
     expect((await app.request(`/api/transactions/${hash}?block=9`)).status).toBe(503);
+  });
+  it('refuses an unproved credit recipient without connecting to the chain or signing',async()=>{
+    const connect=vi.fn(); const app=publicApi(deployment,connect);
+    const response=await app.request('/api/drip',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({address:'5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4',signature:'0x00'})});
+    expect(response.status).toBe(401); expect(connect).not.toHaveBeenCalled();
+  });
+  it('serves restored hash-verified bytes after a fresh API instance without native document retention',async()=>{
+    const photo=new Uint8Array([1,2,3]); const coverHash=contentHash(photo);
+    const terms=new TextEncoder().encode(JSON.stringify({v:1,assetId:777,nftCollection:9,nftItem:3,name:'Fixture',summary:'',terms:'Fixture terms',category:0,coverHash})); const docHash=contentHash(terms);
+    const archive={v:1,contract:deployment.portion,collection:9,exportedAt:new Date().toISOString(),source:'isolated restart fixture',catalog:[{assetId:777,docHash}],documents:[{hash:docHash,base64:Buffer.from(terms).toString('base64')},{hash:coverHash,base64:Buffer.from(photo).toString('base64')}]};
+    const restored=restoreDocumentArchive(JSON.parse(JSON.stringify(archive)),deployment.portion);
+    for(const [hash,bytes] of restored.documents) blobs.set(`portion/core-v1/${deployment.portion}/docs/${hash}`,bytes);
+    const unavailableNative=vi.fn(async()=>{throw new Error('Native document history is unavailable');});
+    const fresh=publicApi(deployment,unavailableNative);
+    expect(await (await fresh.request(`/api/doc/${docHash}`)).text()).toBe(new TextDecoder().decode(terms));
+    expect(unavailableNative).not.toHaveBeenCalled();
   });
 });

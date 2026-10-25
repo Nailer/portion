@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { parseUnits, submit, type PlanStep } from '@portion/sdk';
+import { parseUnits, type PlanStep } from '@portion/sdk';
 import { useApp } from '../state/app';
 import { usePassport } from '../state/passport';
 import { useRunner } from '../state/runner';
@@ -65,13 +65,7 @@ export function Pools() {
       throw new UserError('You need tPOT to stake and to pay fees.', 'faucet');
     }
     const tx = build();
-    return { title, steps, cost, run: async (onStage) => {
-      try {
-        const out = await submit(api, tx, passport.pair, (s, d) => onStage(s === 'finalized' ? 'done' : (s as any), d));
-        void reloadBalances();
-        return { ok: out.ok, txHash: out.txHash, blockNumber: out.blockNumber, error: out.error };
-      } catch (e) { return { ok: false, error: (e as Error).message }; }
-    } };
+    return live.prepareNativeTool(title,{tx,steps},passport,cost);
   };
 
   const create = () => actPrepared(prep(
@@ -95,6 +89,7 @@ export function Pools() {
     <div>
       <h1 className="page-title">Pool Studio</h1>
       <p className="page-lede">Staking pools let participants back validators together. Pool records and minimum bonds below come from the connected chain. Automatic reinvestment requires a separately running keeper; granting permission alone does not start one.</p>
+      <p className="notice">Advanced native tool, separate from equipment funding. Native stake is locked under the chain’s unbonding rules. No hosted compounding keeper or separate-user browser staking result is claimed.</p>
 
       {data.mine && (
         <>

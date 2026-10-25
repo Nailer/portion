@@ -6,6 +6,8 @@ export interface JournalReceipt {
   status: 'finalized' | 'failed' | 'unconfirmed' | 'reconciled';
   txs: { label: string; hash: string; block?: number }[];
   warning?: string;
+  callHash?: string;
+  nonce?: string;
 }
 type Store = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 export function readReceipts(store: Store): JournalReceipt[] {
@@ -31,15 +33,34 @@ export function rememberReceipt(store: Store, owner: string, title: string, resu
   store.setItem(KEY, JSON.stringify(retained));
 }
 export const clearReceipts = (store: Store) => store.removeItem(KEY);
-export function recordReconciledOutcome(store: Store, owner: string, hash: string, block: number, ok: boolean) {
+export function recordReconciledOutcome(store: Store, owner: string, hash: string, block: number, ok: boolean, metadata?: { callHash: string; nonce: string }) {
   const rows = readReceipts(store);
   for (const row of rows) {
     if (row.owner !== owner || row.status !== 'unconfirmed') continue;
     const last = row.txs.at(-1);
-    if (last?.hash.toLowerCase() === hash.toLowerCase()) {
+    if (last?.hash.toLowerCase() === hash.toLowerCase() || metadata && row.callHash?.toLowerCase() === metadata.callHash.toLowerCase() && row.nonce === metadata.nonce) {
       row.status = ok ? 'reconciled' : 'failed';
-      last.block = block;
+      if (last?.hash.toLowerCase() === hash.toLowerCase()) last.block = block;
+      else row.txs.push({label:'Verified transaction',hash,block});
     }
   }
   store.setItem(KEY, JSON.stringify(rows));
+}
+export function reserveLocalReceipt(store: Store, owner: string, title: string, callHash: string, nonce: string) {
+  if (!HASH.test(callHash) || !/^\d+$/.test(nonce)) throw new Error('Submission identity is invalid.');
+  const rows = readReceipts(store);
+  if (rows.filter(row => row.status==='unconfirmed').length >= 190 || rows.some(row=>row.owner===owner && row.title===title && row.status==='unconfirmed')) throw new Error('An earlier outcome must be reconciled before this action can be submitted.');
+  const id = crypto.randomUUID();
+  const row: JournalReceipt = {id,owner,title:title.slice(0,200),recordedAt:Date.now(),status:'unconfirmed',txs:[],callHash,nonce};
+  const unsettled = rows.filter(row=>row.status==='unconfirmed');
+  store.setItem(KEY,JSON.stringify([row,...unsettled,...rows.filter(row=>row.status!=='unconfirmed').slice(0,199-unsettled.length)]));
+  return id;
+}
+export function settleLocalReceipt(store: Store, id: string, result: ActionResult) {
+  const rows = readReceipts(store); const row = rows.find(row=>row.id===id);
+  if (!row) throw new Error('Submission receipt is missing; reconcile before retrying.');
+  row.status = result.unconfirmed ? 'unconfirmed' : result.ok ? 'finalized' : 'failed';
+  if (result.txHash && HASH.test(result.txHash)) row.txs = [{label:'Transaction',hash:result.txHash,...(result.blockNumber?{block:result.blockNumber}:{})}];
+  if (result.warning) row.warning=result.warning.slice(0,1000);
+  store.setItem(KEY,JSON.stringify(rows));
 }

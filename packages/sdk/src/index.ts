@@ -13,3 +13,4 @@ export * from './abi';
 export * from './cover';
 
 export * from './core';
+export * from './test-credit';

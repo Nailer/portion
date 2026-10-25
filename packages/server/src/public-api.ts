@@ -5,13 +5,14 @@ import { Keyring } from '@polkadot/keyring';
 import { cryptoWaitReady, decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import {
   connect, TESTNET, PortionCoreArtifact, ReviveContract, storedInBlock, contentHash, MAX_DOC_BYTES,
-  coreDocument, CoreClient, nativeFree, submit, ss58ToH160, decodeFailure, UnconfirmedTransactionError, type Deployment, type CoreRecord,
+  coreDocument, CoreClient, nativeFree, submit, ss58ToH160, decodeFailure, UnconfirmedTransactionError, testCreditMessage, type Deployment, type CoreRecord,
 } from '@portion/sdk';
 import type { ApiPromise } from '@polkadot/api';
 import { verifyListing } from './verify.js';
 import { storedJson } from './blob-pages.js';
 import { revenueCoverage } from './receipt-coverage.js';
 import { blobCreditStore, reserveCredits } from './credit-control.js';
+import { validCreditAuthorization } from './credit-authorization.js';
 
 interface Receipt { block: number; ts: number; txHash: string; rows: { kind: string; listingId: number; actor: string | null; data: Record<string, unknown> }[] }
 const HASH = /^0x[0-9a-f]{64}$/i;
@@ -181,6 +182,7 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
   });
   app.get('/api/listings/:id/proof', async c => chain(async api => {
     const client = new CoreClient(api, deployment!, { catalog, document: async hash => JSON.parse(new TextDecoder().decode(await readDoc(hash))) });
+    await client.rules();
     return c.json(await verifyListing(api, await client.listing(Number(c.req.param('id')))));
   }));
   const creditIssuer = async () => {
@@ -191,6 +193,13 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
   };
   const day = () => new Date().toISOString().slice(0, 10);
   const creditControl = blobCreditStore(prefix + 'credit-control/v2.json');
+  app.get('/api/faucet/challenge', c => {
+    let address: string;
+    try { const bytes=decodeAddress(c.req.query('address') ?? ''); if(bytes.length!==32) throw new Error(); address=encodeAddress(bytes,42); }
+    catch { return c.json({error:'A native public account is required.'},400); }
+    c.header('Cache-Control','private, no-store');
+    return c.json({address,day:day(),message:testCreditMessage(address,day(),deployment!.portion)});
+  });
   app.get('/api/faucet', async c => chain(async api => {
     const issuer = await creditIssuer();
     const funds = await nativeFree(api, issuer.address);
@@ -207,12 +216,14 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
     let address: string;
     try { const bytes = decodeAddress(input.address); if (bytes.length !== 32) throw new Error(); address = encodeAddress(bytes, 42); }
     catch { return c.json({ error: 'Connect a native wallet and use its public address.' }, 400); }
+    const authorizedDay = day();
+    if (!await validCreditAuthorization(address,authorizedDay,deployment!.portion,input.signature)) return c.json({error:'Approve the current test-credit request message in the recipient wallet. Invalid or expired ownership proof; no mint was submitted.'},401);
     return chain(async api => {
       const issuer = await creditIssuer();
       const asset: any = (await api.query.assets.asset(deployment!.pusdAssetId)).toJSON();
       if (asset?.issuer !== issuer.address) return c.json({ error: 'Test-credit issuer permission is unavailable.' }, 503);
       if (await nativeFree(api, address) === 0n) return c.json({ error: 'Fund this account with tPOT from the official testnet faucet first. Native tokens are needed for its transactions and storage deposits.' }, 400);
-      const requestDay = day();
+      const requestDay = authorizedDay;
       const path = `credits/${requestDay}/${address}`;
       if (await read(path)) return c.json({ error: 'This account already requested credits today. Check its on-chain balance and try again after UTC midnight.' }, 429);
       const claims = await list({ prefix: prefix + `credits/${requestDay}/`, limit: 21 });
@@ -223,21 +234,25 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
       catch (error) { return c.json({ error: error instanceof Error ? error.message : 'Credit reservation is busy. No mint was submitted by this request.' }, 429); }
       // Reserve before quoting or signing. A crash/unknown mint keeps the lock, even across UTC midnight.
       let signingStarted = false;
+      let completed: {ok:boolean;txHash:string;blockNumber?:number} | undefined;
       try {
         const fee = BigInt((await tx.paymentInfo(issuer.address)).partialFee.toString());
         if (fee > 5n * 10n ** 12n || await nativeFree(api, issuer.address) < fee + 25n * 10n ** 12n) {
           await lease.finish(); return c.json({ error: 'Test-credit service budget is unavailable. This attempt is reserved for today; no mint was submitted.' }, 503);
         }
         await write(path, new TextEncoder().encode(JSON.stringify({ status: 'pending', address, requestedAt: new Date().toISOString() })));
+        const nonce=(await api.rpc.system.accountNextIndex(issuer.address)).toString();
+        await lease.markSubmission(nonce,tx.method.hash.toHex());
         signingStarted = true;
-        const out = await submit(api, tx, issuer);
+        const out = await submit(api, tx, issuer,undefined,{nonce});
+        completed=out;
         await write(path, new TextEncoder().encode(JSON.stringify({ status: out.ok ? 'finalized' : 'failed', address, tx: out.txHash, block: out.blockNumber })), 'application/json', true);
         await lease.finish();
         if (!out.ok) return c.json({ error: `Credit issuance failed on-chain: ${out.error}. Keep hash ${out.txHash}. This attempt counts toward today's quota.` }, 503);
         return c.json({ ss58: address, h160: ss58ToH160(address), viaEvm: false, tx: out.txHash, block: out.blockNumber, pot: '0', pusd: '500000000' });
       } catch (error) {
         if (!signingStarted) { try { await lease.finish(); } catch { /* A retained lock is safer than another mint. */ } }
-        return c.json({ error: `Credit request could not be completed. ${signingStarted ? 'Its outcome may be unknown; issuance is paused for reconciliation. Do not retry.' : 'No mint was submitted. The reserved attempt remains counted.'} ${error instanceof UnconfirmedTransactionError && error.txHash ? `Keep hash ${error.txHash}.` : ''}` }, 503);
+        return c.json({ error: `Credit request could not be completed. ${completed ? `The transaction finalized ${completed.ok?'successfully':'with failure'}; recording/release is pending. Keep hash ${completed.txHash}${completed.blockNumber?` in block ${completed.blockNumber}`:''}. Do not mint again.` : signingStarted ? 'Its outcome may be unknown; issuance is paused for reconciliation. Do not retry.' : 'No mint was submitted. The reserved attempt remains counted.'} ${error instanceof UnconfirmedTransactionError && error.txHash ? `Keep hash ${error.txHash}.` : ''}` }, 503);
       }
     });
   });

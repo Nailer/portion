@@ -18,6 +18,7 @@ export type StageName = 'preparing' | 'signing' | 'broadcast' | 'inBlock' | 'don
 export interface ActionResult {
   ok: boolean;
   unconfirmed?: boolean;
+  receiptId?: string;
   txHash?: string;
   blockNumber?: number;
   error?: string;
@@ -139,7 +140,7 @@ export interface Backend {
   proof(id: number): Promise<ProofView | null>;
   activity(q: { listing?: number; actor?: string; limit?: number }): Promise<ActivityRow[]>;
   revenue(id: number): Promise<{ ts: number; amount: bigint; kind: 'revenue' | 'slash' }[]>;
-  drip(address: string): Promise<DripResult>;
+  drip(address: string, who: Passport): Promise<DripResult>;
   head(): Promise<number>;
   /** Local wall-clock time in seconds; not a finalized chain timestamp. */
   now(): number;

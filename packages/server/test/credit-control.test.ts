@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { reserveCredits, type CreditState, type CreditStore } from '../src/credit-control';
+import { reserveCredits, creditOutcomeMatches, type CreditState, type CreditStore } from '../src/credit-control';
 function storeFixture() {
   let current: { state: CreditState; etag: string } | null = null; let revision = 0;
   const store: CreditStore = {
@@ -36,5 +36,15 @@ describe('durable credit reservation', () => {
     const next = await reserveCredits(store, 'another', '2026-10-25');
     await expect(lease.finish()).rejects.toThrow('Precondition');
     await next.finish();
+  });
+  it('records the exact signing nonce and call before execution and accepts only that issuer outcome',async()=>{
+    const {store,read}=storeFixture(); const lease=await reserveCredits(store,'recipient','2026-10-25');
+    expect(read()?.state.pending?.phase).toBe('reserved');
+    const callHash='0x'+'ab'.repeat(32); await lease.markSubmission('7',callHash);
+    const evidence={signer:'issuer',nonce:'7',callHash};
+    expect(creditOutcomeMatches(read()!.state,evidence,'issuer')).toBe(true);
+    expect(creditOutcomeMatches(read()!.state,{...evidence,nonce:'8'},'issuer')).toBe(false);
+    expect(creditOutcomeMatches(read()!.state,evidence,'another-issuer')).toBe(false);
+    await lease.finish(); expect(read()?.state.pending).toBeUndefined();
   });
 });

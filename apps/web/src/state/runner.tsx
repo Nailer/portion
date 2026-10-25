@@ -103,7 +103,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
     try { r = await prepared.run((s, d) => { setStage(s); setDetail(d); }); }
     catch (e) { r = { ok: false, error: (e as Error).message || 'The transaction could not be completed.' }; }
     submitting.current = false;
-    try { rememberReceipt(localStorage, reviewedIdentity.current.passport!.address, prepared.title, r); }
+    try { if (!r.receiptId) rememberReceipt(localStorage, reviewedIdentity.current.passport!.address, prepared.title, r); }
     catch { r.warning = [r.warning, 'Local receipt history could not be saved. Copy your hashes before closing.'].filter(Boolean).join(' '); }
     setResult(r);
     setPhase(r.ok ? 'result' : 'error');
