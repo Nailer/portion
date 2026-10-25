@@ -44,6 +44,7 @@ function AccountChip() {
             <dt>Contract address</dt><dd className="mono">{passport.h160} <CopyButton text={passport.h160} /></dd>
           </dl></details>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn ghost sm" onClick={() => { setOpen(false); openPassport(); }}>Switch account</button>
             <Link className="btn ghost sm" to="/faucet" onClick={() => setOpen(false)}>Get tokens</Link>
             <button className="btn ghost sm" onClick={() => { signOut(); setOpen(false); }}>Sign out</button>
           </div>

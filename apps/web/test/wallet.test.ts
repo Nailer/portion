@@ -22,7 +22,7 @@ describe('wallet-owned signing', () => {
   it('creates an external signer account without a recovery phrase or spending key', () => {
     const account = walletPassport({ address }, wallet);
     expect(account.kind).toBe('extension');
-    expect(account.pair).toEqual({ address, signer });
+    expect(account.pair).toMatchObject({ address, signer: { signPayload: expect.any(Function) } });
     expect(account).not.toHaveProperty('mnemonic');
     expect(account.pair).not.toHaveProperty('secretKey');
     expect(account.address).toBe(walletAddress(address));
@@ -35,5 +35,21 @@ describe('wallet-owned signing', () => {
     expect(() => walletAddress('0x1111111111111111111111111111111111111111')).toThrow();
     await expect(requestWallet({ enable: async () => ({ ...wallet, signer: {} }) })).rejects.toThrow('native transaction signing');
     await expect(requestWallet({ enable: async () => ({ ...wallet, accounts: { get: async () => [] } }) })).rejects.toThrow('No compatible accounts');
+  });
+  it('checks authorization again before each signature and rejects another account or network', async () => {
+    const signPayload = vi.fn().mockResolvedValue({ id: 1, signature: '0x00' });
+    let active = true;
+    const account = walletPassport({ address }, { ...wallet, signer: { signPayload } }, () => {
+      if (!active) throw new Error('Account changed');
+    });
+    const payload: any = { address, genesisHash: '0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd' };
+    const external = (account.pair as any).signer;
+    await external.signPayload(payload);
+    active = false;
+    await expect(external.signPayload(payload)).rejects.toThrow('Account changed');
+    active = true;
+    await expect(external.signPayload({ ...payload, address: '5DXZ6Qniy2tuTLxtZDDWFmHS2FXTkeaxnxCDETKaiUuBN6k7' })).rejects.toThrow('different account');
+    await expect(external.signPayload({ ...payload, genesisHash: '0x' + '00'.repeat(32) })).rejects.toThrow('different network');
+    expect(signPayload).toHaveBeenCalledTimes(1);
   });
 });

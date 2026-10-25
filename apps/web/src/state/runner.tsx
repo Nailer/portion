@@ -53,12 +53,13 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
   const close = useCallback(() => { preparation.current++; setPhase(null); setPrepared(undefined); setResult(undefined); setError(undefined); }, []);
 
   const actPrepared = useCallback(async (prepare: () => Promise<Prepared>, opts?: { onDone?: (r: ActionResult) => void }) => {
+    if (submitting.current) return;
     if (!backend) return;
     if (!passport) { setPassportOpen(true); return; }
     last.current = { prepare, onDone: opts?.onDone };
     reviewedIdentity.current = { passport, backend };
     const request = ++preparation.current;
-    setPhase('preparing'); setError(undefined); setResult(undefined);
+    setPhase('preparing'); setPrepared(undefined); setError(undefined); setResult(undefined);
     try {
       const next = await prepare();
       if (request !== preparation.current) return;
@@ -75,6 +76,16 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
     if (!backend || !passport) { setPassportOpen(true); return; }
     return actPrepared(() => backend.prepare(intent, passport), opts);
   }, [backend, passport, actPrepared]);
+
+  useEffect(() => {
+    if ((phase === 'preparing' || phase === 'confirm') &&
+      (reviewedIdentity.current.passport !== passport || reviewedIdentity.current.backend !== backend)) {
+      preparation.current++;
+      setPrepared(undefined);
+      setError({ message: 'Your account or network changed. Start a new review before approving.' });
+      setPhase('error');
+    }
+  }, [passport, backend, phase]);
 
   const run = async () => {
     if (!prepared || submitting.current) return;

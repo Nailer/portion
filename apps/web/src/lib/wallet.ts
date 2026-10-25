@@ -4,7 +4,7 @@ import type { Signer } from '@polkadot/api/types';
 
 export interface WalletAccount { address: string; name?: string; type?: string }
 export interface InjectedWallet {
-  accounts: { get(): Promise<WalletAccount[]>; subscribe?: (callback: (accounts: WalletAccount[]) => void) => (() => void) };
+  accounts: { get(): Promise<WalletAccount[]>; subscribe?: (callback: (accounts: WalletAccount[]) => void) => (() => void) | Promise<() => void> };
   signer: Signer;
 }
 export interface WalletProvider { enable(origin: string): Promise<InjectedWallet>; version?: string }
@@ -27,9 +27,18 @@ export async function requestWallet(provider: WalletProvider | undefined) {
   return { wallet, accounts };
 }
 
-export function walletPassport(account: WalletAccount, wallet: InjectedWallet): Passport {
+export function walletPassport(account: WalletAccount, wallet: InjectedWallet, assertActive: () => void = () => {}): Passport {
   const address = walletAddress(account.address);
-  return { address, h160: ss58ToH160(address), kind: 'extension', pair: { address: account.address, signer: wallet.signer } };
+  // Check every request, including later signatures in a multi-transaction upload.
+  // A signature already approved by the extension cannot be revoked here.
+  const signer: Signer = { signPayload: async payload => {
+    assertActive();
+    if (walletAddress(payload.address) !== address) throw new Error('The signing request belongs to a different account. Start a new review.');
+    if (payload.genesisHash.toLowerCase() !== '0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd') throw new Error('The signing request is for a different network.');
+    if (!wallet.signer.signPayload) throw new Error('Native signing is unavailable.');
+    return wallet.signer.signPayload(payload);
+  } };
+  return { address, h160: ss58ToH160(address), kind: 'extension', pair: { address: account.address, signer } };
 }
 
 export function installedWallets(): WalletProviders {

@@ -24,13 +24,15 @@ export function PassportProvider({ children }: { children: ReactNode }) {
   const wallet = useRef<InjectedWallet | null>(null);
   const walletUnsubscribe = useRef<(() => void) | undefined>();
   const selectedWalletAddress = useRef<string | null>(null);
+  const connectionRequest = useRef(0);
+  const authorization = useRef(0);
   const activePassport = passport;
   const balanceRequest = useRef(0);
   const [balances, setBalances] = useState<Balances | null>(null);
 
   // Never restore, write or expose secrets from the legacy browser account store.
   // Existing records remain untouched so this update cannot destroy someone's only backup.
-  useEffect(() => () => walletUnsubscribe.current?.(), []);
+  useEffect(() => () => { connectionRequest.current++; authorization.current++; walletUnsubscribe.current?.(); }, []);
   const reloadBalances = useCallback(async () => {
     const request = ++balanceRequest.current;
     if (!backend || !activePassport) { setBalances(null); return; }
@@ -42,29 +44,47 @@ export function PassportProvider({ children }: { children: ReactNode }) {
   const value = useMemo<PassportState>(() => ({
     passport: activePassport, loading: false, balances, reloadBalances, walletAccounts,
     requestConnection: async provider => {
+      const request = ++connectionRequest.current;
+      authorization.current++;
+      walletUnsubscribe.current?.(); walletUnsubscribe.current = undefined;
+      wallet.current = null; selectedWalletAddress.current = null;
+      balanceRequest.current++;
+      setPassport(null); setBalances(null); setAccounts([]);
       const result = await requestWallet(installedWallets()[provider]);
-      walletUnsubscribe.current?.();
+      if (request !== connectionRequest.current) throw new Error('This wallet connection was replaced or cancelled. Connect again.');
       wallet.current = result.wallet;
       setAccounts(result.accounts);
-      walletUnsubscribe.current = result.wallet.accounts.subscribe?.(accounts => {
+      const unsubscribe = await result.wallet.accounts.subscribe?.(accounts => {
+        if (request !== connectionRequest.current) return;
         const compatible = accounts.filter(account => { try { walletAddress(account.address); return true; } catch { return false; } });
         setAccounts(compatible);
         if (selectedWalletAddress.current && !compatible.some(account => walletAddress(account.address) === selectedWalletAddress.current)) {
+          authorization.current++;
           selectedWalletAddress.current = null;
           balanceRequest.current++;
           setPassport(null); setBalances(null);
         }
       });
+      if (request !== connectionRequest.current) { unsubscribe?.(); return; }
+      walletUnsubscribe.current = unsubscribe;
     },
     selectAccount: address => {
       const account = walletAccounts.find(account => account.address === address);
       if (!account || !wallet.current) throw new Error('Choose an account currently shared by your wallet.');
-      const connected = walletPassport(account, wallet.current);
+      const source = wallet.current;
+      const revision = ++authorization.current;
+      const addressKey = walletAddress(account.address);
+      const connected = walletPassport(account, source, () => {
+        if (authorization.current !== revision || wallet.current !== source || selectedWalletAddress.current !== addressKey) {
+          throw new Error('Your wallet account changed or disconnected. Start a new review before signing.');
+        }
+      });
       selectedWalletAddress.current = connected.address;
       balanceRequest.current++;
       setBalances(null); setPassport(connected);
     },
     signOut: () => {
+      connectionRequest.current++; authorization.current++;
       walletUnsubscribe.current?.(); walletUnsubscribe.current = undefined;
       wallet.current = null; selectedWalletAddress.current = null;
       balanceRequest.current++;
