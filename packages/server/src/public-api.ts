@@ -9,6 +9,8 @@ import {
 } from '@portion/sdk';
 import type { ApiPromise } from '@polkadot/api';
 import { verifyListing } from './verify.js';
+import { storedJson } from './blob-pages.js';
+import { revenueCoverage } from './receipt-coverage.js';
 
 interface Receipt { block: number; ts: number; txHash: string; rows: { kind: string; listingId: number; actor: string | null; data: Record<string, unknown> }[] }
 const HASH = /^0x[0-9a-f]{64}$/i;
@@ -37,13 +39,7 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
     return bytes;
   };
   const catalog = async (): Promise<CoreRecord[]> => {
-    const result = await list({ prefix: prefix + 'catalog/', limit: 1000 });
-    if (result.hasMore) throw new Error('Catalog pagination limit reached; indexing service needs expansion.');
-    return Promise.all(result.blobs.map(async blob => {
-      const response = await fetch(blob.url);
-      if (!response.ok) throw new Error('Catalog record unavailable.');
-      return response.json() as Promise<CoreRecord>;
-    }));
+    return storedJson<CoreRecord>(prefix + 'catalog/');
   };
   app.use('*', async (c, next) => {
     c.header('X-Content-Type-Options', 'nosniff');
@@ -93,9 +89,7 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
     });
   });
   const receiptList = async (): Promise<Receipt[]> => {
-    const result = await list({ prefix: prefix + 'receipts/', limit: 1000 });
-    if (result.hasMore) throw new Error('Receipt index needs pagination.');
-    return Promise.all(result.blobs.map(async blob => { const response = await fetch(blob.url); if (!response.ok) throw new Error('Receipt unavailable.'); return response.json() as Promise<Receipt>; }));
+    return storedJson<Receipt>(prefix + 'receipts/');
   };
   app.post('/api/receipts', async c => {
     const input = await c.req.json();
@@ -149,6 +143,18 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
     const rows = (await receiptList()).flatMap(receipt => receipt.rows.filter(row => row.listingId === id && ['RevenueDeposited', 'Slashed'].includes(row.kind))
       .map(row => ({ ts: receipt.ts, amount: String(row.data.net ?? row.data.toHolders ?? '0'), kind: row.kind === 'Slashed' ? 'slash' : 'revenue' })));
     return c.json(rows.sort((a, b) => a.ts - b.ts));
+  });
+  app.get('/api/listings/:id/history', async c => {
+    const id = Number(c.req.param('id'));
+    if (!Number.isSafeInteger(id) || id < 0) return c.json({ error: 'A native asset identifier is required.' }, 400);
+    c.header('Cache-Control', 'private, no-store');
+    return chain(async api => {
+      const hash = await api.rpc.chain.getFinalizedHead();
+      const header = await api.rpc.chain.getHeader(hash);
+      const at = await api.at(hash);
+      const listing = await new ReviveContract(at as unknown as ApiPromise, deployment!.portion, PortionCoreArtifact.abi).read('listing', [id]);
+      return c.json({ ...revenueCoverage(await receiptList(), id, BigInt(listing.revenue), header.number.toNumber()), finalizedHash: hash.toHex() });
+    });
   });
   app.get('/api/listings/:id/proof', async c => chain(async api => {
     const client = new CoreClient(api, deployment!, { catalog, document: async hash => JSON.parse(new TextDecoder().decode(await readDoc(hash))) });

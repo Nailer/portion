@@ -9,6 +9,7 @@ import { Health } from '../components/Health';
 import { Crumb, Empty, Spinner, useAsync } from '../components/ui';
 import { ago, cadenceLabel, economics, pot, span, usd } from '../lib/format';
 import type { ActivityRow } from '../lib/backend';
+import { api as serviceApi } from '../lib/backend';
 
 const safeAmount = (value: string) => { try { const n = parseUnits(value,6); return n > 0n ? n : 0n; } catch { return 0n; } };
 
@@ -76,6 +77,7 @@ export function ListingPage() {
   const { data: docMeta } = useAsync(async () => (l ? backend!.docMeta(l.docHash) : null), [l?.docHash]);
   const { data: proof } = useAsync(async () => (l ? backend!.proof(id) : null), [l?.id, tick]);
   const { data: revenue } = useAsync(() => backend!.revenue(id), [id, tick]);
+  const { data: coverage } = useAsync(() => serviceApi<{ contractTotal: string; publishedTotal: string; missingAllocation: string | null; totalsMatch: boolean; inconsistent: boolean; finalizedBlock: number }>(`/api/listings/${id}/history`), [id, tick]);
   const { data: activity } = useAsync(() => backend!.activity({ listing: id, limit: 12 }), [id, tick]);
   const { data: pool } = useAsync(async () => (l ? backend!.pool(l) : null), [l?.id, tick]);
   const { data: spare } = useAsync(async () => (l && passport ? backend!.shareBalance(l.assetId, passport.address) : 0n), [l?.id, passport?.address, tick]);
@@ -173,6 +175,7 @@ export function ListingPage() {
           <section className="block">
             <h2>Revenue paid in</h2>
             {revenue ? <RevenueChart rows={revenue} /> : <p className="notice">Revenue history unavailable. No payment totals are inferred.</p>}
+            <p className="notice">Published receipts are partial history. {coverage ? coverage.inconsistent ? 'Receipt totals differ from the contract; do not rely on the chart until reconciled.' : <>Receipts account for {usd(coverage.publishedTotal)} of {usd(coverage.contractTotal)} in cumulative contract allocations at finalized block {coverage.finalizedBlock.toLocaleString()}. {coverage.totalsMatch ? 'Matching totals do not prove complete history.' : `${usd(coverage.missingAllocation)} has no published allocation receipt yet.`}</> : 'Receipt coverage could not be reconciled. Missing records do not mean zero income.'}</p>
           </section>
 
           <section className="block">

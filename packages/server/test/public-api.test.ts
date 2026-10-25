@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { contentHash, storedInBlock } from '@portion/sdk';
+import { contentHash, storedInBlock, ReviveContract } from '@portion/sdk';
 import { publicApi } from '../src/public-api';
 const blobs = vi.hoisted(() => new Map<string, Uint8Array>());
 vi.mock('@vercel/blob', () => ({
@@ -40,5 +40,18 @@ describe('durable public API', () => {
     const { app } = fixture();
     expect(await (await app.request('/api/catalog')).json()).toEqual([]);
     expect(await (await app.request('/api/health')).json()).toMatchObject({ indexedHistoryComplete: false, mode: 'core-v1-public-receipts' });
+  });
+  it('reconciles published allocations with one finalized contract snapshot', async () => {
+    const { app, api } = fixture();
+    const finalized = { toHex: () => '0xfinal' };
+    api.rpc.chain.getFinalizedHead = async () => finalized;
+    api.at = vi.fn(async () => ({ snapshot: true }));
+    vi.spyOn(ReviveContract.prototype, 'read').mockResolvedValue({ revenue: 200n });
+    blobs.set(`portion/core-v1/${deployment.portion}/receipts/fixture`, new TextEncoder().encode(JSON.stringify({ block: 9, ts: 1, txHash: 'fixture', rows: [{ kind: 'RevenueDeposited', listingId: 777, actor: null, data: { net: '50' } }] })));
+    const response = await app.request('/api/listings/777/history');
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ finalizedBlock: 10, finalizedHash: '0xfinal', contractTotal: '200', publishedTotal: '50', missingAllocation: '150', indexedHistoryComplete: false });
+    expect(api.at).toHaveBeenCalledWith(finalized);
+    expect(api.disconnect).toHaveBeenCalled();
   });
 });
