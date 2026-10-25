@@ -101,15 +101,15 @@ export function App() {
       )}
 
       <main className="wrap page" key={loc.pathname}>
-        {!['/', '/business', '/guide'].includes(loc.pathname) && status === 'connecting' && <div className="empty"><Spinner /><h3>Connecting to Portaldot V3…</h3><p>Opening a connection to the testnet.</p></div>}
-        {!['/', '/business', '/guide'].includes(loc.pathname) && status === 'offline' && (
+        {!['/', '/business', '/guide', '/receipts'].includes(loc.pathname) && status === 'connecting' && <div className="empty"><Spinner /><h3>Connecting to Portaldot V3…</h3><p>Opening a connection to the testnet.</p></div>}
+        {!['/', '/business', '/guide', '/receipts'].includes(loc.pathname) && status === 'offline' && (
           <div className="empty">
             <h3>The Portaldot testnet is not answering</h3>
             <p>{error}. Live data is unavailable. No balances or activity will be invented.</p>
             <button className="btn primary" onClick={reconnect}>Retry connection</button>
           </div>
         )}
-        {(['/', '/business', '/guide'].includes(loc.pathname) || (status === 'ready' && backend)) && (
+        {(['/', '/business', '/guide', '/receipts'].includes(loc.pathname) || (status === 'ready' && backend)) && (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/listing/:id" element={backend?.deployed ? <ListingPage /> : <Unavailable />} />
