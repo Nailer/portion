@@ -99,7 +99,7 @@ export function ListingPage() {
   const staked = me?.staked ?? 0;
   const cost = BigInt(shares) * l.vault.salePrice;
   const fee = (cost * BigInt(rules.saleFeeBps)) / 10_000n;
-  const canBuy = l.saleOpen && l.vault.forSale > 0;
+  const canBuy = l.saleOpen && l.vault.forSale > 0 && l.health !== 'Defaulted' && l.health !== 'WoundDown';
   const nowSec = backend!.now();
   const toSlash = l.lastDepositAt + 2 * l.cadence - nowSec;
 
@@ -246,7 +246,7 @@ export function ListingPage() {
                 </>
               ) : <button className="btn primary" onClick={openPassport}>Connect wallet to buy</button>}
             </>
-          ) : <p className="notice">{l.health === 'WoundDown' ? 'This listing has been wound down.' : 'The primary sale is closed. Shares may still trade on the native DEX.'}</p>)}
+          ) : <p className="notice">{l.health === 'WoundDown' ? 'This listing has been wound down.' : l.health === 'Defaulted' ? 'New funding is blocked while this listing is in default.' : l.saleOpen && l.vault.forSale === 0 ? 'This primary offer is sold out.' : 'The primary sale is closed. Secondary trading requires an actual funded pool.'}</p>)}
 
           {tab === 'trade' && (
             <div style={{ display: 'grid', gap: 14 }}>

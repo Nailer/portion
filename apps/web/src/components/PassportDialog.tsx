@@ -46,7 +46,7 @@ export function PassportDialog() {
       </>}
       {busy && <p className="auth-progress" role="status">Approve the connection in your wallet…</p>}
       {error && <p className="auth-error" role="alert">{error}</p>}
-      <p className="auth-footnote"><Icon name="shield" size={14}/><span>We never ask for your recovery phrase.<br/>Live asset funding is not available until the contracts are deployed.</span></p>
+      <p className="auth-footnote"><Icon name="shield" size={14}/><span>We never ask for your recovery phrase.<br/>Testnet only. Connecting does not approve a transaction.</span></p>
     </section>
   </Dialog>;
 }
