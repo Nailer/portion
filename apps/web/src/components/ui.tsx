@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { startRead, type ReadState } from '../lib/async-read';
 
 export function Spinner({ label }: { label?: string }) {
   return <span className="spinner" role="status" aria-label={label ?? 'Loading'} />;
@@ -16,18 +17,12 @@ export function Empty({ title, children, action }: { title: string; children?: R
 }
 
 export function useAsync<T>(fn: () => Promise<T>, deps: unknown[]): { data?: T; error?: Error; loading: boolean } {
-  const [state, set] = useState<{ data?: T; error?: Error; loading: boolean }>({ loading: true });
+  const [state, set] = useState<ReadState<T> & {source:unknown[]}>({ loading: true,source:deps });
   useEffect(() => {
-    let dead = false;
-    set({ loading: true });
-    fn().then(
-      (data) => { if (!dead) set({ data, loading: false }); },
-      (error) => { if (!dead) set({ error, loading: false }); },
-    );
-    return () => { dead = true; };
+    return startRead(fn,next=>set({...next,source:deps}));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
-  return state;
+  return state.source.length!==deps.length || state.source.some((value,index)=>!Object.is(value,deps[index])) ? {loading:true} : state;
 }
 
 export function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {

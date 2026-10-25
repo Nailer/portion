@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Deployment } from '@portion/sdk';
 import { api as serviceApi, type Backend } from '../lib/backend';
 import { keccak256 } from 'ethers';
+import { releaseDeployment } from '../lib/deployment-identity';
 
 const bundled = import.meta.glob('../../../../deployments/portaldot-testnet.json', { eager: true, import: 'default' }) as Record<string, Deployment>;
 const bundledDeployment = Object.values(bundled)[0];
@@ -49,8 +50,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const api = await withTimeout(connection, 12_000, 'The Portaldot testnet did not answer in time.').catch(e => { expired = true; throw e; });
         cleanup = () => void api.disconnect();
         const verified = await withTimeout((async () => {
-          let deployment: Deployment | undefined = bundledDeployment;
-          try { deployment = await serviceApi<Deployment | null>('/api/deployment', { signal: AbortSignal.timeout(5000) }) ?? deployment; } catch { /* server optional for reads */ }
+          let advertised: Deployment | null | undefined;
+          try { advertised = await serviceApi<Deployment | null>('/api/deployment', { signal: AbortSignal.timeout(5000) }); } catch { /* Services may be unavailable; never replace the pinned financial identity. */ }
+          const deployment = releaseDeployment(bundledDeployment,advertised);
           if (dead) throw new Error('Connection was replaced.');
           if (api.genesisHash.toHex() !== '0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd') throw new Error('The RPC returned an unexpected network. Financial actions are disabled.');
           if (deployment) {
@@ -65,6 +67,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             await candidate.rules();
             const asset = await api.query.assets.asset(deployment.pusdAssetId);
             if ((asset as any).isNone) throw new Error('The configured payment asset does not exist on this chain.');
+            const metadata = await api.query.assets.metadata(deployment.pusdAssetId);
+            if (Number((metadata as any).decimals.toString()) !== 6) throw new Error('Payment-asset decimals differ from this Core version. Financial amounts cannot be interpreted safely.');
           }
           return new LiveBackend(api, deployment);
         })(), 20_000, 'Contract or payment-asset verification timed out. Retry the connection; financial actions remain unavailable.');

@@ -68,8 +68,11 @@ export class CoreClient extends PortionClient {
     }))).filter(position => position.staked > 0 || position.pending > 0n);
   }
   async rules() {
-    const token = String(await this.contract.read('paymentToken')).toLowerCase();
+    const [payment, nativeShare, treasury] = await Promise.all([this.contract.read('paymentToken'),this.contract.read('shareToken',[this.deployment.pusdAssetId]),this.contract.read('treasury')]);
+    const token = String(payment).toLowerCase();
     if (token !== this.pusdToken.toLowerCase()) throw new Error('Core payment asset does not match deployment configuration.');
+    if (String(nativeShare).toLowerCase() !== assetErc20Address(this.deployment.pusdAssetId).toLowerCase()) throw new Error('Core native share-address mapping differs from the configured runtime.');
+    if (String(treasury).toLowerCase() !== ss58ToH160(this.deployment.treasury).toLowerCase()) throw new Error('Core treasury differs from the disclosed deployment account.');
     return { saleFeeBps: 100, revenueFeeBps: 50, minBondBps: 500, slashTipBps: 100, minCadence: 60 }; }
   async freeAssetId() {
     for (let attempt = 0; attempt < 25; attempt++) {
