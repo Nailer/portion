@@ -48,25 +48,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
         connection.then(api => { if (expired || dead) void api.disconnect(); }, () => {});
         const api = await withTimeout(connection, 12_000, 'The Portaldot testnet did not answer in time.').catch(e => { expired = true; throw e; });
         cleanup = () => void api.disconnect();
-        let deployment: Deployment | undefined = bundledDeployment;
-        try { deployment = await serviceApi<Deployment | null>('/api/deployment', { signal: AbortSignal.timeout(5000) }) ?? deployment; } catch { /* server optional for reads */ }
-        if (dead) { void api.disconnect(); return; }
-        if (api.genesisHash.toHex() !== '0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd') throw new Error('The RPC returned an unexpected network. Financial actions are disabled.');
-        if (deployment) {
-          const account = await api.query.revive.accountInfoOf(deployment.portion);
-          if ((account as any).isNone) throw new Error('The configured Portion contract could not be verified on this chain.');
-          if (deployment.contractVersion === 'core-v1') {
-            const response = await fetch(TESTNET.evmRpc, { method: 'POST', headers: { 'content-type': 'application/json' }, signal: AbortSignal.timeout(6000), body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getCode', params: [deployment.portion, 'latest'] }) });
-            const code = await response.json();
-            if (!code.result || keccak256(code.result) !== keccak256(PortionCoreArtifact.runtimeBytecode)) throw new Error('Core runtime bytecode could not be verified.');
+        const verified = await withTimeout((async () => {
+          let deployment: Deployment | undefined = bundledDeployment;
+          try { deployment = await serviceApi<Deployment | null>('/api/deployment', { signal: AbortSignal.timeout(5000) }) ?? deployment; } catch { /* server optional for reads */ }
+          if (dead) throw new Error('Connection was replaced.');
+          if (api.genesisHash.toHex() !== '0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd') throw new Error('The RPC returned an unexpected network. Financial actions are disabled.');
+          if (deployment) {
+            const account = await api.query.revive.accountInfoOf(deployment.portion);
+            if ((account as any).isNone) throw new Error('The configured Portion contract could not be verified on this chain.');
+            if (deployment.contractVersion === 'core-v1') {
+              const response = await fetch(TESTNET.evmRpc, { method: 'POST', headers: { 'content-type': 'application/json' }, signal: AbortSignal.timeout(6000), body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getCode', params: [deployment.portion, 'latest'] }) });
+              const code = await response.json();
+              if (!code.result || keccak256(code.result) !== keccak256(PortionCoreArtifact.runtimeBytecode)) throw new Error('Core runtime bytecode could not be verified.');
+            }
+            const candidate = new LiveBackend(api, deployment);
+            await candidate.rules();
+            const asset = await api.query.assets.asset(deployment.pusdAssetId);
+            if ((asset as any).isNone) throw new Error('The configured payment asset does not exist on this chain.');
           }
-          const candidate = new LiveBackend(api, deployment);
-          await candidate.rules();
-          const asset = await api.query.assets.asset(deployment.pusdAssetId);
-          if ((asset as any).isNone) throw new Error('The configured payment asset does not exist on this chain.');
-        }
+          return new LiveBackend(api, deployment);
+        })(), 20_000, 'Contract or payment-asset verification timed out. Retry the connection; financial actions remain unavailable.');
         if (dead) return;
-        setBackend(new LiveBackend(api, deployment));
+        setBackend(verified);
         setStatus('ready');
         cleanup = () => void api.disconnect();
       } catch (e) {

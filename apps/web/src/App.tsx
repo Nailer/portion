@@ -21,7 +21,7 @@ const Business = lazy(() => import('./pages/Business').then(module => ({ default
 const Receipts = lazy(() => import('./pages/Receipts').then(module => ({ default: module.Receipts })));
 
 const Logo = BrandMark;
-function Unavailable() { return <div className="market-empty"><h1>Asset funding is not live yet.</h1><p>Portion’s contracts have not been deployed. Listings, purchases, operator payments and claims are unavailable. No wallet funds will be requested here.</p><Link className="btn primary" to="/network">View the real network</Link><Link className="btn ghost" to="/guide">See the development stages</Link></div>; }
+function Unavailable() { return <div className="market-empty"><h1>Funding is unavailable for this connection.</h1><p>A configured funding contract could not be verified. Inspect the network status before using listings, purchases, payments or claims.</p><Link className="btn primary" to="/network">View the real network</Link><Link className="btn ghost" to="/guide">See the development stages</Link></div>; }
 
 function AccountChip() {
   const { passport, balances, signOut, loading } = usePassport();
@@ -97,7 +97,7 @@ export function App() {
       </header>
 
       {backend?.mode === 'live' && !backend.deployed && (
-        <div className="banner" role="status"><div className="wrap"><b>Contracts are not deployed yet.</b> <span>You are connected to Portaldot, but Portion's contracts have not been deployed to it.</span></div></div>
+        <div className="banner" role="status"><div className="wrap"><b>Funding contract unavailable.</b> <span>The current connection has no verified funding contract.</span></div></div>
       )}
 
       <main className="wrap page" key={loc.pathname}>

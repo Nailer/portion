@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useRunner } from '../state/runner';
 import { useApp } from '../state/app';
+import { Readiness } from '../components/Readiness';
 export function Guide() {
   const { openPassport } = useRunner();
   const { backend } = useApp();
@@ -10,6 +11,7 @@ export function Guide() {
       <article><span className="eyebrow">I WANT TO PARTICIPATE</span><h2>Understand before funding.</h2><p>Review available assets, the operator’s terms, payment records and backing checks. Your payment goes to the operator after the sale fee; it is not spending-controlled escrow.</p><Link className="btn primary" to="/">Review published assets →</Link><small>Public browsing needs no wallet. Closed offers cannot accept purchases.</small></article>
       <article><span className="eyebrow">I AM REVIEWING PORTION</span><h2>Inspect the evidence.</h2><p>Check the deployed contract, network identity and actual test receipts. Separate verified chain records from operator claims and planned features.</p><Link className="btn primary" to="/network">Inspect network evidence →</Link><small>The existing lifecycle test used one development account in both roles.</small></article>
     </section>
+    <Readiness/>
     {!backend?.deployed && <p className="notice">Contract availability has not been verified in this session. Check the Network console before proceeding.</p>}
     <ol className="guide-steps"><li><h2>Connect your wallet</h2><p>Use Portaldot Wallet or another compatible native browser wallet. Approve account access in the extension and choose an account. Portion never asks for a recovery phrase or creates a wallet for you.</p><button className="btn primary" onClick={openPassport}>Connect wallet</button></li>
     <li><h2>Get ready for testnet transactions</h2><p>Your wallet needs tPOT for network fees and refundable storage deposits, plus pUSD test credits for bonds and purchases. Existing balances are read from the chain. The deployment wallet is not an unlimited public faucet.</p><Link to="/faucet">Check test-credit availability →</Link></li>

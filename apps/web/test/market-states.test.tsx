@@ -25,4 +25,10 @@ describe('honest market states', () => {
     expect(html).toContain('Sale closed');
     expect(html).not.toContain('% of');
   });
+  it('marks a closed offer sold out when every native share was purchased', () => {
+    state.backend = { docUrl: () => '/verified-image', now: () => 2 };
+    const html = renderToStaticMarkup(<MemoryRouter><ListingRow l={{...listing,vault:{...listing.vault,sold:100}}}/></MemoryRouter>);
+    expect(html).toContain('Sold out');
+    expect(html).toContain('100 shares purchased');
+  });
 });

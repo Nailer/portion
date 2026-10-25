@@ -9,6 +9,7 @@ import { compressImage } from '../lib/image';
 import { tokenizeSteps } from '../lib/steps';
 import { cadenceLabel, usd } from '../lib/format';
 import { saveListingDraft, readListingDraft, clearListingDraft } from '../lib/listing-draft';
+import { Readiness } from '../components/Readiness';
 
 interface Photo { bytes: Uint8Array; mime: string; url: string }
 
@@ -105,6 +106,7 @@ export function Create() {
       <div className="eyebrow" style={{marginTop:28}}>CREATE AN ASSET LISTING</div>
       <h1>Put your next asset<br/><span>in motion.</span></h1>
       <p className="page-lede">Describe the business, choose your funding terms, and set a payment schedule. Review everything before publishing.</p>
+      <details><summary>Check your wallet and service readiness</summary><Readiness/></details>
       <section className="workspace-info" aria-label="Unsigned listing draft"><div><b>Keep your progress</b><p>Save these business details on this browser. No photo, wallet credentials or transaction is saved or submitted. Anyone using this browser profile may read the draft.</p>{savedDraft && <small>Last saved {new Date(savedDraft).toLocaleString()}</small>}<p role="status">{draftMessage}</p></div><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button className="btn ghost sm" type="button" onClick={saveDraft}>Save draft</button><button className="btn ghost sm" type="button" disabled={!savedDraft} onClick={restoreDraft}>Restore draft</button><button className="btn ghost sm" type="button" onClick={() => { try { clearListingDraft(localStorage); setSavedDraft(null); setDraftMessage('Saved draft removed. The current form is unchanged.'); } catch { setDraftMessage('This browser could not remove the saved draft.'); } }}>Clear saved draft</button></div></section>
       <nav className="create-progress" aria-label="Listing creation steps">{['Your asset','Funding','Payments','Review'].map((label,i)=><button key={label} type="button" disabled={i>step} aria-current={step===i?'step':undefined} onClick={()=>{setStep(i);setTouched(false);}}><span>{i<step?'✓':String(i+1).padStart(2,'0')}</span>{label}</button>)}</nav>
 

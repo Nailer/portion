@@ -10,6 +10,8 @@ import { Crumb, Empty, Spinner, useAsync } from '../components/ui';
 import { ago, cadenceLabel, economics, pot, span, usd } from '../lib/format';
 import type { ActivityRow } from '../lib/backend';
 import { api as serviceApi } from '../lib/backend';
+import { receiptCsv, downloadCsv } from '../lib/receipt-export';
+import { LiveBackend } from '../lib/live';
 
 const safeAmount = (value: string) => { try { const n = parseUnits(value,6); return n > 0n ? n : 0n; } catch { return 0n; } };
 
@@ -40,7 +42,7 @@ function describe(a: ActivityRow): string {
   switch (a.kind) {
     case 'Listed': return 'Listed on Portion';
     case 'Bought': return `Someone bought ${d.shares} share${Number(d.shares) === 1 ? '' : 's'} for ${usd(d.cost)}`;
-    case 'RevenueDeposited': return `${usd(d.net)} of revenue paid in${d.qualifying === false ? ' (did not reset the cadence clock)' : ''}`;
+    case 'RevenueDeposited': return d.net === undefined || d.fee === undefined ? 'Deposit receipt amounts are unavailable' : `${usd(BigInt(d.net)+BigInt(d.fee),6)} deposited: ${usd(d.fee,6)} fee, ${usd(d.net,6)} allocated${d.qualifying === false ? ' (did not reset the cadence clock)' : ''}`;
     case 'Claimed': return `${usd(d.amount)} claimed by a holder`;
     case 'Slashed': return `Bond slashed: ${usd(d.toHolders)} went to holders`;
     case 'BondToppedUp': return `Operator added ${usd(d.amount ?? d.newBond)} to the bond`;
@@ -121,7 +123,7 @@ export function ListingPage() {
             <div className="fact"><small>Total share price reference</small><b>{usd(BigInt(Math.round(e.raise * 1e6)), 0)}</b></div>
             <div className="fact"><small>Promised minimum</small><b>{usd(l.minPerPeriod, 0)} {cadenceLabel(l.cadence)}</b></div>
             <div className="fact"><small>Fee on deposited revenue</small><b>{(rules.revenueFeeBps) / 100}%</b></div>
-            <div className="fact"><small>Paid so far</small><b>{usd(l.vault.totalRevenue)}</b></div>
+            <div className="fact"><small>Cumulative allocation (deposits and bond recovery)</small><b>{usd(l.vault.totalRevenue,6)}</b></div>
             <div className="fact"><small>Operator bond</small><b>{usd(l.vault.bond)}</b></div>
           </div>
 
@@ -130,10 +132,10 @@ export function ListingPage() {
             <div style={{ maxWidth: 520 }}><Health l={l} /></div>
             <p className="note" style={{ marginTop: 12 }}>
               The operator must pay in at least {usd(l.minPerPeriod, 0)} {cadenceLabel(l.cadence)}. After {span(2 * l.cadence)} without a qualifying payment, anyone can slash the
-              {' '}{usd(l.vault.bond)} bond and it is split between holders.{l.strikes !== null && l.strikes > 0 && <> This operator has been slashed {l.strikes} time{l.strikes > 1 ? 's' : ''}.</>}
+              {' '}{usd(l.vault.bond,6)} bond. The caller receives {(rules.slashTipBps / 100)}% of the bond; the remainder goes to current stakers, or the treasury if nobody is staked. Slashing requires a transaction; no automatic keeper is promised.{l.strikes !== null && l.strikes > 0 && <> This operator has been slashed {l.strikes} time{l.strikes > 1 ? 's' : ''}.</>}
             </p>
             {l.health === 'Defaulted' && l.vault.bond > 0n && (
-              <div style={{ marginTop: 14 }}><button className="btn primary" onClick={() => act({ kind: 'slash', id })}>Slash the bond and pay holders</button></div>
+              <div style={{ marginTop: 14 }}><button className="btn primary" onClick={() => act({ kind: 'slash', id })}>Review bond recovery</button></div>
             )}
             {l.health === 'Late' && <p className="note" style={{ marginTop: 10 }}>Slashable in {span(toSlash)} if no payment arrives.</p>}
           </section>
@@ -185,6 +187,7 @@ export function ListingPage() {
               {(activity ?? []).map((a) => <li key={a.id}><span>{describe(a)}</span><time>{ago(a.ts, nowSec)}</time></li>)}
               {activity && !activity.length && <li><span>No activity indexed yet.</span></li>}
             </ul>
+            <button className="btn ghost sm" disabled={!activity?.length} onClick={() => downloadCsv(`portion-asset-${id}-partial-receipts.csv`,receiptCsv(activity ?? [],backend!.chainLabel,backend instanceof LiveBackend ? backend.deployment?.pusdAssetId : undefined))}>Export displayed receipts (CSV)</button><p className="note">Exact event units, timestamps and partial-history labels are included. This exports the displayed receipt selection, not full business accounts.</p>
           </section>
 
           {isOperator && (
@@ -208,7 +211,7 @@ export function ListingPage() {
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {l.saleOpen && <button className="btn ghost sm" onClick={() => act({ kind: 'operator', fn: 'closeSale', id })}>Close the sale</button>}
                 {l.health !== 'WoundDown' && <button className="btn ghost sm" disabled={l.vault.totalStaked > 0n || (l.health === 'Defaulted' && l.vault.bond > 0n)} onClick={() => act({ kind: 'operator', fn: 'windDown', id })}>Wind the listing down</button>}
-                {l.health === 'WoundDown' && l.vault.bond > 0n && <button className="btn ghost sm" onClick={() => act({ kind: 'operator', fn: 'withdrawBond', id })}>Withdraw the bond</button>}
+                {l.health === 'WoundDown' && l.vault.bond > 0n && <><p className="note">Bond withdrawal opens {span(2*l.cadence)} after winding down. {nowSec < l.closedAt + 2*l.cadence ? `${span(l.closedAt + 2*l.cadence-nowSec)} remains.` : 'The waiting period has elapsed.'}</p><button className="btn ghost sm" disabled={nowSec < l.closedAt + 2*l.cadence} onClick={() => act({ kind: 'operator', fn: 'withdrawBond', id })}>Review bond withdrawal</button></>}
               </div>
             </section>
           )}
@@ -242,6 +245,7 @@ export function ListingPage() {
               <div className="sum-line"><span>If all shares are staked</span><b>{usd(l.minPerPeriod * BigInt(10000 - (rules.revenueFeeBps)) / 10000n * BigInt(shares) / BigInt(l.totalShares))} {cadenceLabel(l.cadence)}</b></div>
               <div className="sum-line"><span>Included Portion fee ({(rules.saleFeeBps) / 100}%)</span><b>{usd(fee)}</b></div>
               <div className="total"><span>You pay</span><b>{usd(cost)}</b></div><p className="hint" style={{fontSize:11,color:'var(--ink-3)',lineHeight:1.8}}>The payment illustration assumes the stated deposit and every share staked. Actual allocations use the shares staked when money arrives. Income and principal repayment are not guaranteed.</p>
+              <p className="notice">The sale payment goes directly to the operator after the fee. Portion does not currently hold it for approved spending. The bond provides limited recovery, not insurance of your purchase.</p>
               {passport ? (
                 <>
                   <button className="btn primary" onClick={() => act({ kind: 'buy', id, shares })}>Buy {shares} share{shares === 1 ? '' : 's'}</button>
@@ -249,7 +253,7 @@ export function ListingPage() {
                 </>
               ) : <button className="btn primary" onClick={openPassport}>Connect wallet to buy</button>}
             </>
-          ) : <p className="notice">{l.health === 'WoundDown' ? 'This listing has been wound down.' : l.health === 'Defaulted' ? 'New funding is blocked while this listing is in default.' : l.saleOpen && l.vault.forSale === 0 ? 'This primary offer is sold out.' : 'The primary sale is closed. Secondary trading requires an actual funded pool.'}</p>)}
+          ) : <p className="notice">{l.health === 'WoundDown' ? 'This listing has been wound down.' : l.health === 'Defaulted' ? 'New funding is blocked while this listing is in default.' : l.vault.sold === l.totalShares || l.saleOpen && l.vault.forSale === 0 ? 'This primary offer is sold out.' : 'The primary sale is closed. Secondary trading requires an actual funded pool.'}</p>)}
 
           {tab === 'trade' && (
             <div style={{ display: 'grid', gap: 14 }}>
