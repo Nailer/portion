@@ -1,5 +1,6 @@
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
-import { ss58ToH160, type Passport } from '@portion/sdk';
+import type { Passport } from '@portion/sdk';
+import { ss58ToH160 } from '@portion/sdk/addresses';
 import type { Signer } from '@polkadot/api/types';
 
 export interface WalletAccount { address: string; name?: string; type?: string }

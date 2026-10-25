@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CATEGORIES, type ListingView } from '@portion/sdk';
+import type { ListingView } from '@portion/sdk';
+import { CATEGORIES } from '@portion/sdk/constants';
 import { useApp } from '../state/app';
 import { useRunner } from '../state/runner';
 import { Health } from '../components/Health';

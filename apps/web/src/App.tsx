@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { BrandMark, Icon } from './components/Icon';
 import { NavLink, Route, Routes, Link, useLocation } from 'react-router-dom';
 import { useApp } from './state/app';
@@ -8,17 +8,17 @@ import { PassportDialog } from './components/PassportDialog';
 import { Spinner, CopyButton } from './components/ui';
 import { pot, usd, short } from './lib/format';
 import { Home } from './pages/Home';
-import { ListingPage } from './pages/Listing';
-import { Create } from './pages/Create';
-import { Portfolio } from './pages/Portfolio';
-import { Network } from './pages/Network';
-import { Pools } from './pages/Pools';
-import { Faucet } from './pages/Faucet';
-import { Teleport } from './pages/Teleport';
-import { Guide } from './pages/Guide';
-import { Operator } from './pages/Operator';
-import { Business } from './pages/Business';
-import { Receipts } from './pages/Receipts';
+const ListingPage = lazy(() => import('./pages/Listing').then(module => ({ default: module.ListingPage })));
+const Create = lazy(() => import('./pages/Create').then(module => ({ default: module.Create })));
+const Portfolio = lazy(() => import('./pages/Portfolio').then(module => ({ default: module.Portfolio })));
+const Network = lazy(() => import('./pages/Network').then(module => ({ default: module.Network })));
+const Pools = lazy(() => import('./pages/Pools').then(module => ({ default: module.Pools })));
+const Faucet = lazy(() => import('./pages/Faucet').then(module => ({ default: module.Faucet })));
+const Teleport = lazy(() => import('./pages/Teleport').then(module => ({ default: module.Teleport })));
+const Guide = lazy(() => import('./pages/Guide').then(module => ({ default: module.Guide })));
+const Operator = lazy(() => import('./pages/Operator').then(module => ({ default: module.Operator })));
+const Business = lazy(() => import('./pages/Business').then(module => ({ default: module.Business })));
+const Receipts = lazy(() => import('./pages/Receipts').then(module => ({ default: module.Receipts })));
 
 const Logo = BrandMark;
 function Unavailable() { return <div className="market-empty"><h1>Asset funding is not live yet.</h1><p>Portion’s contracts have not been deployed. Listings, purchases, operator payments and claims are unavailable. No wallet funds will be requested here.</p><Link className="btn primary" to="/network">View the real network</Link><Link className="btn ghost" to="/guide">See the development stages</Link></div>; }
@@ -110,7 +110,7 @@ export function App() {
           </div>
         )}
         {(['/', '/business', '/guide', '/receipts'].includes(loc.pathname) || (status === 'ready' && backend)) && (
-          <Routes>
+          <Suspense fallback={<div className="empty"><Spinner label="Loading page"/></div>}><Routes>
             <Route path="/" element={<Home />} />
             <Route path="/listing/:id" element={backend?.deployed ? <ListingPage /> : <Unavailable />} />
             <Route path="/create" element={backend?.deployed ? <Create /> : <Unavailable />} />
@@ -124,7 +124,7 @@ export function App() {
             <Route path="/business" element={<Business />} />
             <Route path="/receipts" element={<Receipts />} />
             <Route path="*" element={<div className="empty"><h3>Page not found</h3><Link className="btn primary" to="/">Back to the market</Link></div>} />
-          </Routes>
+          </Routes></Suspense>
         )}
       </main>
       <PassportDialog />

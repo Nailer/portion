@@ -8,7 +8,10 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./abi": "./src/abi.ts"
+    "./abi": "./src/abi.ts",
+    "./addresses": "./src/addresses.ts",
+    "./units": "./src/units.ts",
+    "./constants": "./src/constants.ts"
   },
   "dependencies": {
     "@polkadot/api": "^16.4.0",

@@ -7,7 +7,7 @@ import { useRunner } from '../state/runner';
 import { LiveBackend } from '../lib/live';
 import { Empty, Spinner, useAsync } from '../components/ui';
 import { pot, short } from '../lib/format';
-import type { Prepared } from '../lib/backend';
+import { UserError, type Prepared } from '../lib/backend';
 
 const native = (key: string, method: string, title: string, detail: string): PlanStep => ({ key, lane: 'native', pallet: 'NominationPools', method, title, detail });
 
@@ -62,7 +62,6 @@ export function Pools() {
   const prep = (title: string, steps: PlanStep[], build: () => ReturnType<typeof api.tx.utility.batchAll>, cost?: string): (() => Promise<Prepared>) => async () => {
     if (!passport) throw new Error('Open a Passport first.');
     if ((balances?.pot ?? 0n) < 1n * 10n ** 14n) {
-      const { UserError } = await import('../lib/backend');
       throw new UserError('You need tPOT to stake and to pay fees.', 'faucet');
     }
     const tx = build();

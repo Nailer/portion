@@ -1,4 +1,5 @@
-import { formatUnits, type ListingView } from '@portion/sdk';
+import type { ListingView } from '@portion/sdk';
+import { formatUnits } from '@portion/sdk/units';
 
 const big = (v: bigint | number | string): bigint => (typeof v === 'number' ? BigInt(Math.round(v)) : BigInt(v));
 export const usd = (v: bigint | number | string | null, frac = 2) => v === null ? 'Unavailable' : `${formatUnits(big(v), 6, frac)} pUSD`;

@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { connect, TESTNET, PortionCoreArtifact, type Deployment } from '@portion/sdk';
+import type { Deployment } from '@portion/sdk';
 import { api as serviceApi, type Backend } from '../lib/backend';
 import { keccak256 } from 'ethers';
-import { LiveBackend } from '../lib/live';
 
 const bundled = import.meta.glob('../../../../deployments/portaldot-testnet.json', { eager: true, import: 'default' }) as Record<string, Deployment>;
 const bundledDeployment = Object.values(bundled)[0];
@@ -42,6 +41,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setBackend(null);
     (async () => {
       try {
+        const [{ connect, TESTNET, PortionCoreArtifact }, { LiveBackend }] = await Promise.all([import('@portion/sdk'), import('../lib/live')]);
+        if (dead) return;
         const connection = connect(TESTNET.ws);
         let expired = false;
         connection.then(api => { if (expired || dead) void api.disconnect(); }, () => {});
