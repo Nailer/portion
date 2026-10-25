@@ -52,4 +52,11 @@ describe('wallet-owned signing', () => {
     await expect(external.signPayload({ ...payload, genesisHash: '0x' + '00'.repeat(32) })).rejects.toThrow('different network');
     expect(signPayload).toHaveBeenCalledTimes(1);
   });
+  it('does not pass a signature back for broadcast if the account changed while approval was open', async () => {
+    let resolve!: (value: any) => void; let active = true;
+    const account = walletPassport({address},{...wallet,signer:{signPayload: () => new Promise(r => { resolve=r; })}},() => { if(!active) throw new Error('Account changed during approval'); });
+    const pending = (account.pair as any).signer.signPayload({address,genesisHash:'0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd'});
+    active = false; resolve({id:1,signature:'0x00'});
+    await expect(pending).rejects.toThrow('changed during approval');
+  });
 });

@@ -158,7 +158,7 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
       const failure = decodeFailure(at as unknown as ApiPromise, events);
       if (!success && !failure) return c.json({ error: 'A final dispatch outcome could not be verified.' }, 503);
       const tx = body.block.extrinsics[index];
-      return c.json({ finalized: true, ok: success && !failure, txHash: txHash.toLowerCase(), blockNumber: block, blockHash: hash.toHex(), signer: tx.isSigned ? tx.signer.toString() : null, ...(failure ? { error: failure } : {}) });
+      return c.json({ finalized: true, ok: success && !failure, txHash: txHash.toLowerCase(), blockNumber: block, blockHash: hash.toHex(), callHash: tx.method.hash.toHex(), nonce: tx.nonce.toString(), signer: tx.isSigned ? tx.signer.toString() : null, ...(failure ? { error: failure } : {}) });
     });
   });
   app.get('/api/listings/:id/revenue', async c => {

@@ -37,7 +37,9 @@ export function walletPassport(account: WalletAccount, wallet: InjectedWallet, a
     if (walletAddress(payload.address) !== address) throw new Error('The signing request belongs to a different account. Start a new review.');
     if (payload.genesisHash.toLowerCase() !== '0xd4f9acbcf7f52388d8b095abe3c198d19fc510e0343e643e87cfbccb155283bd') throw new Error('The signing request is for a different network.');
     if (!wallet.signer.signPayload) throw new Error('Native signing is unavailable.');
-    return wallet.signer.signPayload(payload);
+    const signature = await wallet.signer.signPayload(payload);
+    assertActive();
+    return signature;
   } };
   return { address, h160: ss58ToH160(address), kind: 'extension', pair: { address: account.address, signer } };
 }

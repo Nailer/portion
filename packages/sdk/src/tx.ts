@@ -56,6 +56,7 @@ export function submit(
   tx: SubmittableExtrinsic<'promise'>,
   pair: TransactionSigner,
   onStage?: (s: TxStage, detail?: string) => void,
+  submission?: { nonce: string },
 ): Promise<TxOutcome> {
   return new Promise((resolve, reject) => {
     let unsub: (() => void) | undefined;
@@ -65,13 +66,15 @@ export function submit(
     const cleanup = () => { clearTimeout(timer); unsub?.(); unsub = undefined; };
     const fail = (error: Error) => {
       if (settled) return;
-      settled = true; cleanup(); onStage?.('failed', error.message); reject(error);
+      const reported = txHash && !(error instanceof UnconfirmedTransactionError) ? new UnconfirmedTransactionError(error.message, txHash) : error;
+      settled = true; cleanup(); onStage?.('failed', reported.message); reject(reported);
     };
     const unknown = (reason: string) => new UnconfirmedTransactionError(reason, txHash);
     const timer = setTimeout(() => fail(unknown('Transaction tracking timed out')), 180_000);
     onStage?.('signing');
     const account = 'signer' in pair ? pair.address : pair;
-    const options = 'signer' in pair ? { nonce: -1, signer: pair.signer } : { nonce: -1 };
+    const nonce = submission?.nonce ?? -1;
+    const options = 'signer' in pair ? { nonce, signer: pair.signer } : { nonce };
     try {
       Promise.resolve(tx.signAndSend(account, options, (result) => {
         if (settled || finalizing) return;

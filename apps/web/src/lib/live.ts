@@ -9,8 +9,11 @@ import {
   type ActionResult, type ActivityRow, type Backend, type Balances, type DocMeta, type DripResult, type Intent,
   type PoolView, type Prepared, type ProofView, type Rules, type StageName, type TokenizeForm,
 } from './backend';
+import { nativeFeeReview } from './fee-review';
+import { formatUnits } from '@portion/sdk/units';
+import { loadUpload, saveUpload, type UploadCheckpoint, type UploadReceipt } from './upload-checkpoint';
 
-const usdLabel = (v: bigint) => `${(Number(v) / 1e6).toFixed(2)} pUSD`;
+const usdLabel = (v: bigint) => `${formatUnits(v,6,6)} pUSD`;
 const stageMap: Record<TxStage, StageName> = { signing: 'signing', broadcast: 'broadcast', inBlock: 'inBlock', finalized: 'done', failed: 'failed' };
 
 export class LiveBackend implements Backend {
@@ -86,7 +89,7 @@ export class LiveBackend implements Backend {
   }
   async docJson(hash: string) {
     try {
-      const r = await fetch(this.docUrl(hash));
+      const r = await fetch(this.docUrl(hash), { signal: AbortSignal.timeout(10000) });
       if (!r.ok) return null;
       const bytes = new Uint8Array(await r.arrayBuffer());
       if (bytes.length > MAX_DOC_BYTES || contentHash(bytes).toLowerCase() !== hash.toLowerCase()) return null;
@@ -131,12 +134,15 @@ export class LiveBackend implements Backend {
 
   private async wrap(title: string, plan: Plan, who: Passport, cost?: string): Promise<Prepared> {
     if (this.client instanceof CoreClient) plan = await mappedCorePlan(this.chain, plan, who);
+    const quote = await nativeFeeReview(this.chain, [plan.tx], who.address);
     return {
       title,
       steps: plan.steps,
       cost,
+      nativeReview: quote.review,
       run: async (onStage) => {
         try {
+          await quote.check(0);
           const out = await submit(this.chain, plan.tx, who.pair, (s, d) => onStage(stageMap[s], d));
           let warning: string | undefined;
           if (out.ok && this.deployment?.contractVersion === 'core-v1') {
@@ -159,11 +165,19 @@ export class LiveBackend implements Backend {
         const proof = await this.proof(intent.id);
         if (!proof?.verified) throw new UserError('Buying is unavailable until the listing’s native backing checks pass.');
         const l = await c.listing(intent.id);
+        if (l.health === 'Defaulted' || l.health === 'WoundDown') throw new UserError('New funding is blocked for this listing.');
         if (!l.saleOpen) throw new UserError('This sale is closed.');
         if (intent.shares < 1 || intent.shares > l.vault.forSale) throw new UserError(`Only ${l.vault.forSale} shares are available.`);
         const cost = BigInt(intent.shares) * l.vault.salePrice;
         await this.ensurePusd(who, cost);
-        return this.wrap(`Buy ${intent.shares} share${intent.shares === 1 ? '' : 's'} of ${l.name}`, c.planBuy(l, intent.shares), who, 'Your pUSD goes to the operator after the contract’s sale fee.');
+        const prepared = await this.wrap(`Buy ${intent.shares} share${intent.shares === 1 ? '' : 's'} of ${l.name}`, c.planBuy(l, intent.shares), who, `You pay ${usdLabel(cost)}. This includes the sale fee; the remainder goes directly to the operator, without spending controls.`);
+        const run = prepared.run;
+        return { ...prepared, run: async stage => {
+          const latest = await c.listing(intent.id);
+          if (!latest.saleOpen || latest.vault.forSale < intent.shares || latest.vault.salePrice !== l.vault.salePrice || latest.health === 'Defaulted' || latest.health === 'WoundDown') throw new UserError('The offer changed. Start a new review before buying.');
+          await this.ensurePusd(who, cost);
+          return run(stage);
+        } };
       }
       case 'claim': {
         if (!intent.ids.length) throw new UserError('Nothing to claim yet.');
@@ -172,7 +186,8 @@ export class LiveBackend implements Backend {
       case 'deposit': {
         const l = await c.listing(intent.id);
         await this.ensurePusd(who, intent.amount);
-        return this.wrap(`Deposit revenue into ${l.name}`, c.planDeposit(l, intent.amount), who, 'Every staked share receives its portion straight away.');
+        const fee = intent.amount * BigInt((await this.rules()).revenueFeeBps) / 10000n;
+        return this.wrap(`Deposit revenue into ${l.name}`, c.planDeposit(l, intent.amount), who, `Deposit ${usdLabel(intent.amount)} including ${usdLabel(fee)} fee. ${usdLabel(intent.amount-fee)} is allocated to current stakers; holders claim it separately.`);
       }
       case 'stake': {
         const l = await c.listing(intent.id);
@@ -240,66 +255,106 @@ export class LiveBackend implements Backend {
 
   private async prepareTokenize(f: TokenizeForm, who: Passport): Promise<Prepared> {
     const c = this.need();
+    if (!(c instanceof CoreClient)) throw new UserError('The recoverable creation flow requires Core v1.');
     const rules = await this.rules();
-    const price = parseUnits(f.pricePusd, 6);
-    const bond = parseUnits(f.bondPusd, 6);
-    const minPer = parseUnits(f.minPerPeriodPusd, 6);
-    const needBond = (BigInt(f.sharesForSale) * price * BigInt(rules.minBondBps)) / 10_000n;
+    const price = parseUnits(f.pricePusd, 6), bond = parseUnits(f.bondPusd, 6), minPer = parseUnits(f.minPerPeriodPusd, 6);
+    const needBond = BigInt(f.sharesForSale) * price * BigInt(rules.minBondBps) / 10000n;
     if (bond < needBond) throw new UserError(`The bond must be at least ${rules.minBondBps / 100}% of the raise.`);
-    await this.ensureGas(who, 6n * 10n ** 14n);
-    await this.ensurePusd(who, bond);
-
-    const core = c instanceof CoreClient;
-    const identifiers = core ? { assetId: await c.freeAssetId(), nftItem: await c.freeNftItem() } : undefined;
-    const enc = new TextEncoder();
-    if (!f.image) throw new UserError('Upload an actual image of the asset.');
-    const cover = f.image.bytes;
-    const terms = enc.encode(JSON.stringify({ v: 1, ...identifiers, nftCollection: this.deployment!.deedsCollection, coverHash: contentHash(cover), sharesForSale: f.sharesForSale, name: f.name, summary: f.summary, category: f.category, terms: f.terms }));
-    if (cover.length > MAX_DOC_BYTES) throw new UserError(`The photo is ${(cover.length / 1024).toFixed(0)} KB after compression; the on-chain limit is 32 KB.`);
-    if (terms.length > MAX_DOC_BYTES) throw new UserError('The terms are longer than 32 KB.');
+    if (!f.image) throw new UserError('Upload the actual asset photo. To resume, select the same photo and business terms.');
+    const enc = new TextEncoder(), cover = f.image.bytes;
+    if (cover.length > MAX_DOC_BYTES) throw new UserError('The compressed photo exceeds the on-chain document limit.');
     const coverHash = contentHash(cover);
+    const fingerprint = contentHash(enc.encode(JSON.stringify({ owner: who.address, contract: this.deployment!.portion,
+      name: f.name, summary: f.summary, category: f.category, terms: f.terms, totalShares: f.totalShares,
+      sharesForSale: f.sharesForSale, price: price.toString(), cadence: f.cadenceSeconds, minimum: minPer.toString(), bond: bond.toString(), coverHash })));
+    let checkpoint = loadUpload(localStorage, fingerprint);
+    if (!checkpoint) {
+      checkpoint = { v: 1, fingerprint, owner: who.address, contract: this.deployment!.portion,
+        assetId: await c.freeAssetId(), nftItem: await c.freeNftItem(), documents: {} };
+      saveUpload(localStorage, checkpoint);
+    }
+    const saved: UploadCheckpoint = checkpoint;
+    if (saved.owner !== who.address || saved.contract.toLowerCase() !== this.deployment!.portion.toLowerCase()) throw new UserError('The saved upload belongs to another wallet or deployment.');
+    if (saved.pending) throw new UserError(`The earlier ${saved.pending.stage.toLowerCase()} transaction is unconfirmed. Check its exact hash and finalized block in the receipt centre before continuing.`);
+    const identifiers = { assetId: saved.assetId, nftItem: saved.nftItem };
+    const terms = enc.encode(JSON.stringify({ v: 1, ...identifiers, nftCollection: this.deployment!.deedsCollection, coverHash,
+      sharesForSale: f.sharesForSale, name: f.name, summary: f.summary, category: f.category, terms: f.terms }));
+    if (terms.length > MAX_DOC_BYTES) throw new UserError('The terms exceed the on-chain document limit.');
     const docHash = contentHash(terms);
-
-    const originalPlan = await c.planTokenize(who, {
-      ...identifiers, name: f.name, summary: f.summary, category: f.category, totalShares: f.totalShares, sharesForSale: f.sharesForSale,
-      salePrice: price, cadence: f.cadenceSeconds, minPerPeriod: minPer, bond, docHash, coverHash,
-    });
-    const mappedPlan = core ? await mappedCorePlan(this.chain, originalPlan, who) : originalPlan;
-    const plan = { ...originalPlan, tx: mappedPlan.tx, steps: mappedPlan.steps };
-    const storage: PlanStep[] = [
-      { key: 'doc', lane: 'storage', pallet: 'TransactionStorage', method: 'store', title: 'Store the terms on-chain', detail: `${terms.length.toLocaleString()} bytes, content hash ${docHash.slice(0, 12)}…` },
-      { key: 'cover', lane: 'storage', pallet: 'TransactionStorage', method: 'store', title: 'Store the photo on-chain', detail: `${(cover.length / 1024).toFixed(1)} KB, content hash ${coverHash.slice(0, 12)}…` },
-    ];
-    return {
-      title: `Tokenize ${f.name}`,
-      steps: [...storage, ...plan.steps],
-      cost: `You lock a ${f.bondPusd} pUSD bond. Network fees and storage deposits are additional; review them in your wallet.`,
-      run: async (onStage) => {
+    const blockOf = async (receipt: UploadReceipt) => receipt.blockNumber ?? (await this.chain.rpc.chain.getHeader(receipt.blockHash)).number.toNumber();
+    const publishCreation = async (): Promise<ActionResult> => {
+      const receipt = saved.creation!;
+      const actual = await c.contract.read('listing', [saved.assetId]);
+      if (String(actual.docHash).toLowerCase() !== docHash.toLowerCase() || String(actual.operator).toLowerCase() !== who.h160.toLowerCase()) throw new UserError('The finalized listing does not match this upload. Do not create it again.');
+      const blockNumber = await blockOf(receipt);
+      let warning: string | undefined;
+      try { await http('/api/receipts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: blockNumber, txHash: receipt.txHash }) }); }
+      catch { warning = 'Creation finalized, but public receipt publication is pending. Retry publication, not asset creation.'; }
+      return { ok: true, txHash: receipt.txHash, blockNumber, listingId: saved.assetId, warning };
+    };
+    if (saved.creation) return { title: `Publish existing ${f.name} receipt`, steps: [], cost: 'This reuses the finalized creation transaction. No new chain transaction is needed.', run: publishCreation };
+    await this.ensureGas(who, 6n * 10n ** 14n); await this.ensurePusd(who, bond);
+    const input = { ...identifiers, name: f.name, summary: f.summary, category: f.category, totalShares: f.totalShares,
+      sharesForSale: f.sharesForSale, salePrice: price, cadence: f.cadenceSeconds, minPerPeriod: minPer, bond, docHash, coverHash };
+    const original = await c.planTokenize(who,input);
+    const plan = await mappedCorePlan(this.chain, original, who);
+    const documentTxs = { Terms: storeTx(this.chain,terms), Photo: storeTx(this.chain,cover) };
+    const remaining: typeof plan.tx[] = [];
+    const quoteIndex = new Map<string,number>();
+    for (const label of ['Terms','Photo'] as const) if (!saved.documents[label]) { quoteIndex.set(label,remaining.length); remaining.push(documentTxs[label]); }
+    quoteIndex.set('Creation',remaining.length); remaining.push(plan.tx);
+    const quote = await nativeFeeReview(this.chain,remaining,who.address);
+    const steps: PlanStep[] = (['Terms','Photo'] as const).map(label => ({ key: label, lane: 'storage', pallet: 'TransactionStorage', method: saved.documents[label] ? 'reuse' : 'store',
+      title: saved.documents[label] ? `Reuse finalized ${label.toLowerCase()}` : `Store ${label.toLowerCase()} on-chain`, detail: saved.documents[label] ? 'Retry only verified public-copy publication; no second store.' : `${label === 'Terms' ? terms.length : cover.length} bytes; a separate signature is required.` }));
+    return { title: `Tokenize ${f.name}`, recoveryKey: fingerprint, steps: [...steps,...plan.steps], nativeReview: quote.review,
+      cost: `Lock ${f.bondPusd} pUSD as the operator bond. Native execution fees and additional storage deposits are separate. Accepted document steps are reused.`,
+      run: async onStage => {
         const txs: NonNullable<ActionResult['txs']> = [];
+        const send = async (stage: 'Terms' | 'Photo' | 'Creation', tx: typeof plan.tx) => {
+          const current = loadUpload(localStorage,fingerprint);
+          if (!current || current.pending || current.creation || current.assetId !== saved.assetId || current.nftItem !== saved.nftItem) throw new UserError('Upload state changed. Start a new review; no automatic retry was made.');
+          await quote.check(quoteIndex.get(stage)!);
+          const nonce = (await this.chain.rpc.system.accountNextIndex(who.address)).toString();
+          saved.pending = { stage, callHash: tx.method.hash.toHex(), nonce }; saveUpload(localStorage,saved);
+          let out;
+          try { out = await submit(this.chain,tx,who.pair,(s,d) => onStage(stageMap[s],d),{ nonce }); }
+          catch (error) {
+            if (error instanceof UnconfirmedTransactionError) { if (error.txHash) saved.pending.txHash = error.txHash; }
+            else delete saved.pending;
+            saveUpload(localStorage,saved); throw error;
+          }
+          delete saved.pending;
+          if (out.ok) {
+            const receipt = { txHash: out.txHash, blockHash: out.blockHash, blockNumber: out.blockNumber };
+            if (stage === 'Creation') saved.creation = receipt; else saved.documents[stage] = receipt;
+          }
+          try { saveUpload(localStorage,saved); }
+          catch { throw new UnconfirmedTransactionError('Finalized receipt could not be saved locally; reconcile it before retrying',out.txHash); }
+          return out;
+        };
         try {
-          onStage('preparing', 'Storing documents', 0);
-          for (const [label, bytes] of [['Terms', terms], ['Photo', cover]] as const) {
-            const r = await submit(this.chain, storeTx(this.chain, bytes), who.pair);
-            if (!r.ok) return { ok: false, error: `${label} could not be stored: ${r.error}`, txs };
-            txs.push({ label: `${label} stored`, hash: r.txHash, block: r.blockNumber });
-            if (core) {
-              try { await http(`/api/doc/${contentHash(bytes)}/pin`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: r.blockNumber }) }); }
-              catch { return { ok: false, error: `${label} is finalized on-chain, but its public copy could not be published. Keep the receipt and retry publication before creating the listing.`, txs }; }
+          for (const label of ['Terms','Photo'] as const) {
+            onStage('preparing',saved.documents[label] ? `Reusing finalized ${label.toLowerCase()}` : `Storing ${label.toLowerCase()}`);
+            if (!saved.documents[label]) {
+              const out = await send(label,documentTxs[label]);
+              if (!out.ok) return { ok: false, error: `${label} failed on-chain: ${out.error}`, txs, txHash: out.txHash, blockNumber: out.blockNumber };
             }
+            const receipt = saved.documents[label]!; const block = await blockOf(receipt);
+            txs.push({ label: `${label} stored`, hash: receipt.txHash, block });
+            try { await http(`/api/doc/${label === 'Terms' ? docHash : coverHash}/pin`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block }) }); }
+            catch { return { ok: false, error: `${label} is finalized. Its public copy is pending; repeat the same form/photo to resume publication without another store.`, txs }; }
           }
-          const out = await submit(this.chain, plan.tx, who.pair, (s, d) => onStage(stageMap[s], d, 2));
-          if (!out.ok) return { ok: false, error: out.error, txs, txHash: out.txHash };
+          const [asset,item] = await Promise.all([this.chain.query.assets.asset(saved.assetId),this.chain.query.nfts.item(this.deployment!.deedsCollection,saved.nftItem)]);
+          if ((asset as any).isSome || (item as any).isSome) throw new UserError('The allocated asset or deed identifier is now occupied. Check existing receipts; changed identifiers require new immutable terms and a new review.');
+          const out = await send('Creation',plan.tx);
+          if (!out.ok) return { ok: false, error: out.error, txs, txHash: out.txHash, blockNumber: out.blockNumber };
           txs.push({ label: 'Atomic tokenize batch', hash: out.txHash, block: out.blockNumber });
-          if (core) {
-            let warning: string | undefined;
-            try { await http('/api/receipts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: out.blockNumber, txHash: out.txHash }) }); }
-            catch { warning = 'Asset creation finalized, but publication is pending. Keep the receipt; do not create the asset again.'; }
-            return { ok: true, txHash: out.txHash, blockNumber: out.blockNumber, txs, listingId: plan.assetId, warning };
-          }
-          const [found, id] = await c.contract.read('idOfAsset', [plan.assetId]);
-          return { ok: true, txHash: out.txHash, blockNumber: out.blockNumber, txs, listingId: found ? Number(id) : undefined };
-        } catch (e) {
-          return { ok: false, error: (e as Error).message, txs, ...(e instanceof UnconfirmedTransactionError ? { unconfirmed: true, txHash: e.txHash } : {}) };
+          try { return { ...await publishCreation(), txs }; }
+          catch { return { ok: true, txHash: out.txHash, blockNumber: out.blockNumber, listingId: saved.assetId, txs,
+            warning: 'Creation finalized, but its listing/public receipt could not be checked. Keep these hashes and retry receipt publication; do not create it again.' }; }
+        } catch (error) {
+          return { ok: false, error: (error as Error).message, txs,
+            ...(error instanceof UnconfirmedTransactionError ? { unconfirmed: true, txHash: error.txHash } : {}) };
         }
       },
     };

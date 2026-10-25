@@ -6,7 +6,7 @@ import { api, UserError, type ActionResult, type Intent, type Prepared, type Sta
 import { Dialog } from '../components/Dialog';
 import { StepList } from '../components/StepList';
 import { Spinner, CopyButton } from '../components/ui';
-import { explorerBlock } from '../lib/format';
+import { explorerBlock, pot } from '../lib/format';
 import { rememberReceipt, readReceipts } from '../lib/receipt-journal';
 
 type Phase = 'preparing' | 'confirm' | 'running' | 'result' | 'error';
@@ -64,7 +64,8 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
     try {
       const next = await prepare();
       if (request !== preparation.current) return;
-      if (readReceipts(localStorage).some(row => row.owner === passport.address && row.title === next.title && row.status === 'unconfirmed')) {
+      if (readReceipts(localStorage).filter(row => row.status === 'unconfirmed').length >= 190) throw new Error('Reconcile your unresolved receipts before preparing another action.');
+      if (!next.recoveryKey && readReceipts(localStorage).some(row => row.owner === passport.address && row.title === next.title && row.status === 'unconfirmed')) {
         throw new Error('A previous attempt has an unknown outcome. Open the receipt centre and reconcile it before preparing this action again.');
       }
       setPrepared(next);
@@ -128,10 +129,11 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
               <>
                 <h2 id="sheet-title">{prepared.title}</h2>
                 <p className="sheet-sub">
-                  {prepared.steps.some(s => s.lane === 'storage') ? 'Documents are stored first, then the listing is created in an atomic batch. The separate transactions each require a signature.' : 'Review the transaction. Your wallet will ask you to approve it.'}
+                  {!prepared.steps.length ? 'This checks or publishes an already finalized record. No new wallet signature is requested.' : prepared.steps.some(s => s.lane === 'storage') ? 'Accepted documents are reused. Missing documents are stored first, then the listing is created in an atomic batch. Separate transactions require separate signatures.' : 'Review the transaction. Your wallet will ask you to approve it.'}
                 </p>
                 <details className="transaction-details"><summary>See what happens in this transaction ({prepared.steps.length} {prepared.steps.length === 1 ? 'step' : 'steps'})</summary><StepList steps={prepared.steps} state={phase === 'running' ? 'running' : 'idle'} /></details>
                 {prepared.cost && <p className="sheet-cost">{prepared.cost}</p>}
+                {prepared.nativeReview && <div className="notice"><b>Estimated native execution fee: {pot(prepared.nativeReview.estimatedFee,6)}</b><p>Reviewed estimate threshold: {pot(prepared.nativeReview.estimateThreshold,6)}. Additional storage deposits and any refunds are not included in this estimate; inspect them in your wallet. A deposit limit is not a fee already spent.</p><small>{prepared.nativeReview.source}. Observed {new Date(prepared.nativeReview.observedAt).toLocaleTimeString()}; reference finalized block {prepared.nativeReview.referenceBlock}. Valid for two minutes. Fee estimates are checked before opening your wallet; a higher estimate requires a new review. The network may change fees before inclusion.</small></div>}
                 <div className="sheet-actions">
                   {phase === 'confirm' ? (
                     <>
@@ -169,10 +171,10 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
 
             {phase === 'error' && error && (
               <>
-                <h2 id="sheet-title">{error.fix === 'faucet' ? 'You need a few tokens first' : 'Transaction could not be confirmed'}</h2>
+                <h2 id="sheet-title">{error.fix === 'faucet' ? 'You need a few tokens first' : result?.unconfirmed ? 'Outcome unknown — check before retrying' : /reject|denied|cancelled|canceled/i.test(error.message) ? 'Wallet request declined' : result?.blockNumber ? 'Transaction failed in a finalized block' : !result ? 'Review unavailable' : 'Action could not be completed'}</h2>
                 <p className="sheet-error">{error.message}</p>
                 {result?.unconfirmed && <p className="notice">The outcome is unknown. Do not submit the action again until its transaction has been reconciled against finalized chain records.</p>}
-                {result?.txHash && <p><code>{result.txHash}</code> <CopyButton text={result.txHash}/></p>}
+                {result?.txHash && <p><code style={{overflowWrap:'anywhere'}}>{result.txHash}</code> <CopyButton text={result.txHash}/></p>}
                 {!!result?.txs?.length && <div className="notice"><p>Earlier steps were finalized. Keep these receipts before retrying.</p>{result.txs.map(tx => <p key={tx.hash}><b>{tx.label}</b> · <code>{tx.hash.slice(0, 18)}…</code> <CopyButton text={tx.hash}/>{tx.block && <a href={explorerBlock(tx.block)} target="_blank" rel="noreferrer"> View block</a>}</p>)}</div>}
                 <div className="sheet-actions">
                   <button className="btn ghost" onClick={close}>Close</button>

@@ -29,9 +29,12 @@ export interface ActionResult {
 
 export interface Prepared {
   title: string;
+  /** A durable upload checkpoint, checked independently before each native step. */
+  recoveryKey?: string;
   steps: PlanStep[];
   /** One honest sentence about what the user pays or locks. */
   cost?: string;
+  nativeReview?: { estimatedFee: bigint; estimateThreshold: bigint; observedAt: number; expiresAt: number; source: string; referenceBlock: number };
   run(onStage: (s: StageName, detail?: string, stepIndex?: number) => void): Promise<ActionResult>;
 }
 
@@ -97,6 +100,7 @@ export interface DocMeta {
 
 export interface ActivityRow {
   id: number | string;
+  txHash?: string;
   block: number;
   ts: number;
   kind: string;
@@ -154,7 +158,7 @@ export class UserError extends Error {
 export const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? '';
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, init);
+  const res = await fetch(`${API_BASE}${path}`, { ...init, signal: init?.signal ?? AbortSignal.timeout(30000) });
   if (!res.ok) {
     let msg = res.statusText;
     try {

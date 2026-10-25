@@ -67,7 +67,7 @@ describe('durable public API', () => {
   it('verifies a transaction only in its supplied finalized block, and requires a dispatch outcome', async () => {
     const { app, api } = fixture(); const hash = '0x' + 'ab'.repeat(32);
     const event = { kind: 'success' };
-    api.rpc.chain.getBlock = async () => ({ block: { extrinsics: [{ hash: { toHex: () => hash }, isSigned: true, signer: { toString: () => 'native-account' } }] } });
+    api.rpc.chain.getBlock = async () => ({ block: { extrinsics: [{ hash: { toHex: () => hash }, isSigned: true, signer: { toString: () => 'native-account' }, method: { hash: { toHex: () => hash } }, nonce: { toString: () => '1' } }] } });
     const records: any[] = [{ phase: { isApplyExtrinsic: true, asApplyExtrinsic: { toNumber: () => 0 } }, event }];
     api.at = async () => ({ query: { system: { events: async () => records } }, events: { system: { ExtrinsicSuccess: { is: (e: any) => e.kind === 'success' }, ExtrinsicFailed: { is: (e: any) => e.kind === 'failed' } } } });
     expect((await app.request(`/api/transactions/${hash}?block=11`)).status).toBe(409);

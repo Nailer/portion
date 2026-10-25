@@ -40,6 +40,15 @@ describe('Core v1 adapter', () => {
 });
 
 describe('Core account mapping', () => {
+  it('keeps an already mapped native plan and rejects an address collision', async () => {
+    const { mappedCorePlan } = await import('../src/core');
+    const api: any = { call: { reviveApi: { accountId: vi.fn(async () => ({ toString: (): string => 'native' })) } }, query: { revive: { originalAccount: vi.fn(async () => ({isSome:true})) } } };
+    const plan: any = { tx: {method:{}},steps:[] }; const who: any = {address:'native',h160:'contract'};
+    expect(await mappedCorePlan(api,plan,who)).toBe(plan);
+    expect(api.query.revive.originalAccount).not.toHaveBeenCalled();
+    api.call.reviveApi.accountId.mockResolvedValue({toString:()=> 'another-native-account'});
+    await expect(mappedCorePlan(api,plan,who)).rejects.toThrow('already linked');
+  });
   it('prepends mapping in a flat batch and never nests a filtered utility batch', async () => {
     const { mappedCorePlan } = await import('../src/core');
     const mappingCall = { section: 'revive', method: 'mapAccount' };

@@ -24,7 +24,11 @@ export function rememberReceipt(store: Store, owner: string, title: string, resu
     status: result.unconfirmed ? 'unconfirmed' : result.ok ? 'finalized' : 'failed',
     txs: valid.map(tx => ({ label: tx.label.slice(0,100), hash: tx.hash, ...(tx.block ? { block: tx.block } : {}) })),
     ...(result.warning ? { warning: result.warning.slice(0,1000) } : {}) };
-  store.setItem(KEY, JSON.stringify([row, ...readReceipts(store)].slice(0,200)));
+  const all = [row, ...readReceipts(store)];
+  const unresolved = all.filter(receipt => receipt.status === 'unconfirmed');
+  if (unresolved.length > 200) throw new Error('Too many unresolved receipts. Reconcile them before submitting more actions.');
+  const retained = [...unresolved,...all.filter(receipt => receipt.status !== 'unconfirmed').slice(0,200-unresolved.length)].sort((a,b) => b.recordedAt-a.recordedAt);
+  store.setItem(KEY, JSON.stringify(retained));
 }
 export const clearReceipts = (store: Store) => store.removeItem(KEY);
 export function recordReconciledOutcome(store: Store, owner: string, hash: string, block: number, ok: boolean) {
