@@ -7,6 +7,7 @@ import { Dialog } from '../components/Dialog';
 import { StepList } from '../components/StepList';
 import { Spinner, CopyButton } from '../components/ui';
 import { explorerBlock } from '../lib/format';
+import { rememberReceipt, readReceipts } from '../lib/receipt-journal';
 
 type Phase = 'preparing' | 'confirm' | 'running' | 'result' | 'error';
 
@@ -63,6 +64,9 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
     try {
       const next = await prepare();
       if (request !== preparation.current) return;
+      if (readReceipts(localStorage).some(row => row.owner === passport.address && row.title === next.title && row.status === 'unconfirmed')) {
+        throw new Error('A previous attempt has an unknown outcome. Open the receipt centre and reconcile it before preparing this action again.');
+      }
       setPrepared(next);
       setPhase('confirm');
     } catch (e) {
@@ -98,6 +102,8 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
     try { r = await prepared.run((s, d) => { setStage(s); setDetail(d); }); }
     catch (e) { r = { ok: false, error: (e as Error).message || 'The transaction could not be completed.' }; }
     submitting.current = false;
+    try { rememberReceipt(localStorage, reviewedIdentity.current.passport!.address, prepared.title, r); }
+    catch { r.warning = [r.warning, 'Local receipt history could not be saved. Copy your hashes before closing.'].filter(Boolean).join(' '); }
     setResult(r);
     setPhase(r.ok ? 'result' : 'error');
     if (!r.ok) setError({ message: r.error ?? 'The transaction failed.' });
@@ -155,6 +161,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
                 </ul>
                 <div className="sheet-actions">
                   {result.listingId !== undefined && <button className="btn primary" onClick={() => { close(); nav(`/listing/${result.listingId}`); }}>Open the listing</button>}
+                  <button className="btn ghost" onClick={() => { close(); nav('/receipts'); }}>Open receipt centre</button>
                   <button className={`btn ${result.listingId !== undefined ? 'ghost' : 'primary'}`} onClick={close}>Close</button>
                 </div>
               </>
@@ -164,9 +171,12 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
               <>
                 <h2 id="sheet-title">{error.fix === 'faucet' ? 'You need a few tokens first' : 'Transaction could not be confirmed'}</h2>
                 <p className="sheet-error">{error.message}</p>
+                {result?.unconfirmed && <p className="notice">The outcome is unknown. Do not submit the action again until its transaction has been reconciled against finalized chain records.</p>}
+                {result?.txHash && <p><code>{result.txHash}</code> <CopyButton text={result.txHash}/></p>}
                 {!!result?.txs?.length && <div className="notice"><p>Earlier steps were finalized. Keep these receipts before retrying.</p>{result.txs.map(tx => <p key={tx.hash}><b>{tx.label}</b> · <code>{tx.hash.slice(0, 18)}…</code> <CopyButton text={tx.hash}/>{tx.block && <a href={explorerBlock(tx.block)} target="_blank" rel="noreferrer"> View block</a>}</p>)}</div>}
                 <div className="sheet-actions">
                   <button className="btn ghost" onClick={close}>Close</button>
+                  <button className="btn ghost" onClick={() => { close(); nav('/receipts'); }}>Open receipt centre</button>
                   {error.fix === 'faucet' && <button className="btn primary" onClick={() => { close(); nav('/faucet'); }}>Check faucet availability</button>}
                 </div>
               </>

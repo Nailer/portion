@@ -18,6 +18,7 @@ import { Teleport } from './pages/Teleport';
 import { Guide } from './pages/Guide';
 import { Operator } from './pages/Operator';
 import { Business } from './pages/Business';
+import { Receipts } from './pages/Receipts';
 
 const Logo = BrandMark;
 function Unavailable() { return <div className="market-empty"><h1>Asset funding is not live yet.</h1><p>Portion’s contracts have not been deployed. Listings, purchases, operator payments and claims are unavailable. No wallet funds will be requested here.</p><Link className="btn primary" to="/network">View the real network</Link><Link className="btn ghost" to="/guide">See the development stages</Link></div>; }
@@ -82,6 +83,7 @@ export function App() {
             <details ref={tools} className="tools-nav"><summary>Tools <span>⌄</span></summary><div className="tools-menu">
               <NavLink to="/business" onClick={close}>Revenue model</NavLink>
               <NavLink to="/network" onClick={close}>Network console</NavLink>
+              <NavLink to="/receipts" onClick={close}>Receipt centre</NavLink>
               <NavLink to="/pools" onClick={close}>Staking pools</NavLink>
               <NavLink to="/teleport" onClick={close}>Teleport bridge</NavLink>
               <NavLink to="/faucet" onClick={close}>Testnet faucet</NavLink>
@@ -120,6 +122,7 @@ export function App() {
             <Route path="/teleport" element={<Teleport />} />
             <Route path="/guide" element={<Guide />} />
             <Route path="/business" element={<Business />} />
+            <Route path="/receipts" element={<Receipts />} />
             <Route path="*" element={<div className="empty"><h3>Page not found</h3><Link className="btn primary" to="/">Back to the market</Link></div>} />
           </Routes>
         )}

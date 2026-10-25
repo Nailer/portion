@@ -36,6 +36,16 @@ describe('durable public API', () => {
     expect((await app.request(`/api/doc/${'0x' + 'ab'.repeat(32)}/pin`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"block":11}' })).status).toBe(409);
     expect(blobs.size).toBe(0);
   });
+  it('repairs a missing anchor after a document copy succeeded in an earlier request', async () => {
+    const { app } = fixture(); const data = new TextEncoder().encode('previously copied document'); const hash = contentHash(data);
+    const prefix = `portion/core-v1/${deployment.portion}/`;
+    blobs.set(prefix + `docs/${hash}`, data);
+    vi.mocked(storedInBlock).mockResolvedValue([{ data, hash, size: data.length, block: 9, index: 0 }]);
+    const response = await app.request(`/api/doc/${hash}/pin`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"block":9}' });
+    expect(response.status).toBe(200);
+    expect(blobs.has(prefix + `anchors/${hash}`)).toBe(true);
+    expect(blobs.get(prefix + `docs/${hash}`)).toEqual(data);
+  });
   it('keeps an empty published catalog empty and labels receipt coverage honestly', async () => {
     const { app } = fixture();
     expect(await (await app.request('/api/catalog')).json()).toEqual([]);
@@ -53,5 +63,17 @@ describe('durable public API', () => {
     expect(await response.json()).toMatchObject({ finalizedBlock: 10, finalizedHash: '0xfinal', contractTotal: '200', publishedTotal: '50', missingAllocation: '150', indexedHistoryComplete: false });
     expect(api.at).toHaveBeenCalledWith(finalized);
     expect(api.disconnect).toHaveBeenCalled();
+  });
+  it('verifies a transaction only in its supplied finalized block, and requires a dispatch outcome', async () => {
+    const { app, api } = fixture(); const hash = '0x' + 'ab'.repeat(32);
+    const event = { kind: 'success' };
+    api.rpc.chain.getBlock = async () => ({ block: { extrinsics: [{ hash: { toHex: () => hash }, isSigned: true, signer: { toString: () => 'native-account' } }] } });
+    const records: any[] = [{ phase: { isApplyExtrinsic: true, asApplyExtrinsic: { toNumber: () => 0 } }, event }];
+    api.at = async () => ({ query: { system: { events: async () => records } }, events: { system: { ExtrinsicSuccess: { is: (e: any) => e.kind === 'success' }, ExtrinsicFailed: { is: (e: any) => e.kind === 'failed' } } } });
+    expect((await app.request(`/api/transactions/${hash}?block=11`)).status).toBe(409);
+    expect((await app.request(`/api/transactions/0x${'cd'.repeat(32)}?block=9`)).status).toBe(404);
+    expect(await (await app.request(`/api/transactions/${hash}?block=9`)).json()).toMatchObject({ finalized: true, ok: true, signer: 'native-account', blockNumber: 9 });
+    records.length = 0;
+    expect((await app.request(`/api/transactions/${hash}?block=9`)).status).toBe(503);
   });
 });

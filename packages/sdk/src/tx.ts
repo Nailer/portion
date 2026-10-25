@@ -19,6 +19,13 @@ export interface TxOutcome {
 
 export type TxStage = 'signing' | 'broadcast' | 'inBlock' | 'finalized' | 'failed';
 
+export class UnconfirmedTransactionError extends Error {
+  constructor(reason: string, readonly txHash?: string) {
+    super(`${reason}. The transaction outcome is unconfirmed${txHash ? ` (${txHash})` : ''}. Check the account history before retrying.`);
+    this.name = 'UnconfirmedTransactionError';
+  }
+}
+
 function dispatchMessage(api: ApiPromise, error: any): string {
   if (error?.isModule) {
     try {
@@ -60,7 +67,7 @@ export function submit(
       if (settled) return;
       settled = true; cleanup(); onStage?.('failed', error.message); reject(error);
     };
-    const unknown = (reason: string) => new Error(`${reason}. The transaction outcome is unconfirmed${txHash ? ` (${txHash})` : ''}. Check the account history before retrying.`);
+    const unknown = (reason: string) => new UnconfirmedTransactionError(reason, txHash);
     const timer = setTimeout(() => fail(unknown('Transaction tracking timed out')), 180_000);
     onStage?.('signing');
     const account = 'signer' in pair ? pair.address : pair;

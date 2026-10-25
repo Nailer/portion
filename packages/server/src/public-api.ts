@@ -5,7 +5,7 @@ import { Keyring } from '@polkadot/keyring';
 import { cryptoWaitReady, decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import {
   connect, TESTNET, PortionCoreArtifact, ReviveContract, storedInBlock, contentHash, MAX_DOC_BYTES,
-  coreDocument, CoreClient, nativeFree, submit, ss58ToH160, type Deployment, type CoreRecord,
+  coreDocument, CoreClient, nativeFree, submit, ss58ToH160, decodeFailure, type Deployment, type CoreRecord,
 } from '@portion/sdk';
 import type { ApiPromise } from '@polkadot/api';
 import { verifyListing } from './verify.js';
@@ -75,7 +75,9 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
     const hash = c.req.param('hash'); if (!HASH.test(hash)) return c.json({ error: 'Invalid hash.' }, 400);
     const body = await c.req.json();
     if (!Number.isSafeInteger(body.block) || body.block < 1) return c.json({ error: 'Finalized block is required.' }, 400);
-    const existing = await read(`docs/${hash}`); if (existing) return c.json({ ok: true, already: true });
+    const existing = await read(`docs/${hash}`);
+    if (existing && contentHash(existing).toLowerCase() !== hash.toLowerCase()) throw new Error('Stored document content is inconsistent.');
+    if (existing && await read(`anchors/${hash}`)) return c.json({ ok: true, already: true });
     return chain(async api => {
       const finalized = await api.rpc.chain.getFinalizedHead();
       const head = (await api.rpc.chain.getHeader(finalized)).number.toNumber();
@@ -83,7 +85,7 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
       const blockHash = await api.rpc.chain.getBlockHash(body.block);
       const found = (await storedInBlock(api, blockHash.toHex())).find(item => item.hash.toLowerCase() === hash.toLowerCase());
       if (!found || found.size > MAX_DOC_BYTES) return c.json({ error: 'Accepted document not found in this block.' }, 404);
-      await write(`docs/${hash}`, found.data, imageType(found.data));
+      if (!existing) await write(`docs/${hash}`, found.data, imageType(found.data));
       await write(`anchors/${hash}`, new TextEncoder().encode(JSON.stringify({ hash, block: found.block, index: found.index, size: found.size, finalizedHash: blockHash.toHex(), verifiedAtBlock: head, expiresAtBlock: found.block + 100800, blocksLeft: found.block + 100800 - head })));
       return c.json({ ok: true });
     });
@@ -137,6 +139,26 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
     const listing = c.req.query('listing'); const actor = c.req.query('actor')?.toLowerCase();
     const rows = (await receiptList()).flatMap(receipt => receipt.rows.map((row, i) => ({ ...row, id: `${receipt.txHash}:${i}`, block: receipt.block, ts: receipt.ts, txHash: receipt.txHash })));
     return c.json(rows.filter(row => (listing === undefined || row.listingId === Number(listing)) && (!actor || row.actor === actor)).sort((a, b) => b.block - a.block).slice(0, 200));
+  });
+  app.get('/api/transactions/:hash', async c => {
+    const txHash = c.req.param('hash'); const block = Number(c.req.query('block'));
+    if (!HASH.test(txHash) || !Number.isSafeInteger(block) || block < 1) return c.json({ error: 'An actual transaction hash and block number are required.' }, 400);
+    c.header('Cache-Control', 'private, no-store');
+    return chain(async api => {
+      const final = await api.rpc.chain.getFinalizedHead();
+      if (block > (await api.rpc.chain.getHeader(final)).number.toNumber()) return c.json({ error: 'This block is not finalized yet.' }, 409);
+      const hash = await api.rpc.chain.getBlockHash(block);
+      const [body, at] = await Promise.all([api.rpc.chain.getBlock(hash), api.at(hash)]);
+      const index = body.block.extrinsics.findIndex(tx => tx.hash.toHex().toLowerCase() === txHash.toLowerCase());
+      if (index < 0) return c.json({ error: 'Transaction not found in that block. Its overall outcome remains unknown; do not infer failure or retry.' }, 404);
+      const records: any = await at.query.system.events();
+      const events = [...records].filter((record: any) => record.phase.isApplyExtrinsic && record.phase.asApplyExtrinsic.toNumber() === index);
+      const success = events.some(record => at.events.system.ExtrinsicSuccess.is(record.event));
+      const failure = decodeFailure(at as unknown as ApiPromise, events);
+      if (!success && !failure) return c.json({ error: 'A final dispatch outcome could not be verified.' }, 503);
+      const tx = body.block.extrinsics[index];
+      return c.json({ finalized: true, ok: success && !failure, txHash: txHash.toLowerCase(), blockNumber: block, blockHash: hash.toHex(), signer: tx.isSigned ? tx.signer.toString() : null, ...(failure ? { error: failure } : {}) });
+    });
   });
   app.get('/api/listings/:id/revenue', async c => {
     const id = Number(c.req.param('id'));

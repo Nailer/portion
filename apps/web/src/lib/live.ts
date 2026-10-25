@@ -2,7 +2,7 @@ import type { ApiPromise } from '@polkadot/api';
 import {
   createPoolAndSeed, quoteExactIn, reserves, swapExactIn, withId, FALLBACK_LIMITS,
   PortionClient, CoreClient, mappedCorePlan, assetBalance, contentHash, nativeFree, parseUnits, storeTx, submit, MAX_DOC_BYTES,
-  TESTNET, type Deployment, type ListingView, type Passport, type Plan, type PlanStep, type TxStage,
+  TESTNET, UnconfirmedTransactionError, type Deployment, type ListingView, type Passport, type Plan, type PlanStep, type TxStage,
 } from '@portion/sdk';
 import {
   api as http, API_BASE, UserError,
@@ -145,7 +145,7 @@ export class LiveBackend implements Backend {
           }
           return { ok: out.ok, txHash: out.txHash, blockNumber: out.blockNumber, error: out.error, warning };
         } catch (e) {
-          return { ok: false, error: (e as Error).message };
+          return { ok: false, error: (e as Error).message, ...(e instanceof UnconfirmedTransactionError ? { unconfirmed: true, txHash: e.txHash } : {}) };
         }
       },
     };
@@ -299,7 +299,7 @@ export class LiveBackend implements Backend {
           const [found, id] = await c.contract.read('idOfAsset', [plan.assetId]);
           return { ok: true, txHash: out.txHash, blockNumber: out.blockNumber, txs, listingId: found ? Number(id) : undefined };
         } catch (e) {
-          return { ok: false, error: (e as Error).message, txs };
+          return { ok: false, error: (e as Error).message, txs, ...(e instanceof UnconfirmedTransactionError ? { unconfirmed: true, txHash: e.txHash } : {}) };
         }
       },
     };

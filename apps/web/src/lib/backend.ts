@@ -17,6 +17,7 @@ export type StageName = 'preparing' | 'signing' | 'broadcast' | 'inBlock' | 'don
 
 export interface ActionResult {
   ok: boolean;
+  unconfirmed?: boolean;
   txHash?: string;
   blockNumber?: number;
   error?: string;
