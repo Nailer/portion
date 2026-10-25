@@ -2,9 +2,9 @@ import { useRef, type PointerEvent } from 'react';
 
 export interface WheelProps {
   total: number;
-  /** shares held by people other than you and the operator */
+  /** other currently staked shares */
   others: number;
-  /** shares you already own */
+  /** the connected account's current earning stake */
   owned: number;
   /** shares you are about to buy */
   selecting: number;

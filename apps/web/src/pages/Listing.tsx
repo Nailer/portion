@@ -12,6 +12,8 @@ import type { ActivityRow } from '../lib/backend';
 import { api as serviceApi } from '../lib/backend';
 import { receiptCsv, downloadCsv } from '../lib/receipt-export';
 import { LiveBackend } from '../lib/live';
+import { shareAllocation } from '../lib/share-allocation';
+import { VerifiedPhoto } from '../components/VerifiedPhoto';
 
 const safeAmount = (value: string) => { try { const n = parseUnits(value,6); return n > 0n ? n : 0n; } catch { return 0n; } };
 
@@ -104,6 +106,7 @@ export function ListingPage() {
   const cost = BigInt(shares) * l.vault.salePrice;
   const fee = (cost * BigInt(rules.saleFeeBps)) / 10_000n;
   const canBuy = l.saleOpen && l.vault.forSale > 0 && l.health !== 'Defaulted' && l.health !== 'WoundDown';
+  const allocation = shareAllocation(l,staked);
   const nowSec = backend!.now();
   const toSlash = l.lastDepositAt + 2 * l.cadence - nowSec;
 
@@ -112,7 +115,7 @@ export function ListingPage() {
       <Crumb to="/">← The market</Crumb>
       <div className="listing-grid" style={{ marginTop: 16 }}>
         <div>
-          <img className="cover" src={backend!.docUrl(l.coverHash)} alt={`${l.name}`} />
+          <VerifiedPhoto className="cover" hash={l.coverHash} alt={`${l.name}, operator-supplied image`} eager/>
           <div className="listing-head">
             <h1>{l.name}</h1>
             <p className="lede">{l.summary}</p>
@@ -120,8 +123,8 @@ export function ListingPage() {
 
           <div className="facts">
             <div className="fact"><small>Price per share</small><b>{usd(l.vault.salePrice)}</b></div>
-            <div className="fact"><small>Total share price reference</small><b>{usd(BigInt(Math.round(e.raise * 1e6)), 0)}</b></div>
-            <div className="fact"><small>Promised minimum</small><b>{usd(l.minPerPeriod, 0)} {cadenceLabel(l.cadence)}</b></div>
+            <div className="fact"><small>Total share price reference</small><b>{usd(l.vault.salePrice*BigInt(l.totalShares),6)}</b></div>
+            <div className="fact"><small>Promised minimum</small><b>{usd(l.minPerPeriod,6)} {cadenceLabel(l.cadence)}</b></div>
             <div className="fact"><small>Fee on deposited revenue</small><b>{(rules.revenueFeeBps) / 100}%</b></div>
             <div className="fact"><small>Cumulative allocation (deposits and bond recovery)</small><b>{usd(l.vault.totalRevenue,6)}</b></div>
             <div className="fact"><small>Operator bond</small><b>{usd(l.vault.bond)}</b></div>
@@ -131,7 +134,7 @@ export function ListingPage() {
             <h2>Does the operator pay?</h2>
             <div style={{ maxWidth: 520 }}><Health l={l} /></div>
             <p className="note" style={{ marginTop: 12 }}>
-              The operator must pay in at least {usd(l.minPerPeriod, 0)} {cadenceLabel(l.cadence)}. After {span(2 * l.cadence)} without a qualifying payment, anyone can slash the
+              The operator must pay in at least {usd(l.minPerPeriod,6)} {cadenceLabel(l.cadence)}. After {span(2 * l.cadence)} without a qualifying payment, anyone can slash the
               {' '}{usd(l.vault.bond,6)} bond. The caller receives {(rules.slashTipBps / 100)}% of the bond; the remainder goes to current stakers, or the treasury if nobody is staked. Slashing requires a transaction; no automatic keeper is promised.{l.strikes !== null && l.strikes > 0 && <> This operator has been slashed {l.strikes} time{l.strikes > 1 ? 's' : ''}.</>}
             </p>
             {l.health === 'Defaulted' && l.vault.bond > 0n && (
@@ -197,7 +200,7 @@ export function ListingPage() {
                 <div className="field">
                   <label htmlFor="dep">Pay revenue in (pUSD)</label>
                   <div className="input-affix"><input id="dep" type="number" min="0" step="any" value={depositAmt} onChange={(ev) => setDepositAmt(ev.target.value)} /><span>pUSD</span></div>
-                  <p className="hint">At least {usd(l.minPerPeriod, 0)} resets the clock. Holders can claim immediately.</p>
+                  <p className="hint">At least {usd(l.minPerPeriod,6)} resets the clock. Holders can claim immediately.</p>
                   <button className="btn primary sm" style={{ marginTop: 10 }} disabled={safeAmount(depositAmt) === 0n} onClick={() => act({ kind: 'deposit', id, amount: safeAmount(depositAmt) })}>Pay in revenue</button>
                 </div>
                 <div className="field">
@@ -224,16 +227,16 @@ export function ListingPage() {
             <button role="tab" aria-selected={tab === 'mine'} onClick={() => setTab('mine')}>Yours{staked ? ` (${staked})` : ''}</button>
           </div>
 
-          <div className="wheel-wrap">
-            <Wheel total={l.totalShares} others={Math.max(0, l.vault.sold - staked)} owned={staked} selecting={tab === 'buy' && canBuy ? shares : 0} available={canBuy ? l.vault.forSale : 0} onSelect={tab === 'buy' && canBuy ? setShares : undefined} size={240} />
+          {allocation ? <><div className="wheel-wrap">
+            <Wheel total={l.totalShares} others={allocation.otherStake} owned={staked} selecting={tab === 'buy' && canBuy ? shares : 0} available={allocation.available} onSelect={tab === 'buy' && canBuy ? setShares : undefined} size={240} label="Current earning stake and sale inventory" />
           </div>
           <WheelLegend items={[
             { cls: 'w-selecting', label: 'You are buying', value: tab === 'buy' && canBuy ? shares.toLocaleString() : '0' },
-            { cls: 'w-owned', label: 'You own', value: staked.toLocaleString() },
-            { cls: 'w-others', label: 'Held by others', value: Math.max(0, l.vault.sold - staked).toLocaleString() },
-            { cls: 'w-available', label: 'Still for sale', value: (canBuy ? l.vault.forSale - (tab === 'buy' ? shares : 0) : 0).toLocaleString() },
-            { cls: 'w-operator', label: 'Operator keeps', value: Math.max(0, l.totalShares - l.vault.sold - l.vault.forSale).toLocaleString() },
-          ]} />
+            { cls: 'w-owned', label: 'Your earning stake', value: passport ? staked.toLocaleString() : 'Connect to read' },
+            { cls: 'w-others', label: passport ? 'Other earning stake' : 'All earning stake', value: allocation.otherStake.toLocaleString() },
+            { cls: 'w-available', label: !canBuy && allocation.available ? 'Offer inventory (funding blocked)' : 'Offer inventory', value: (allocation.available - (tab === 'buy' && canBuy ? shares : 0)).toLocaleString() },
+            { cls: 'w-operator', label: 'Outside earning pool and offer', value: allocation.outside.toLocaleString() },
+          ]} /></> : <p className="notice">Share counts could not be reconciled. No ownership chart is inferred.</p>}
 
           {tab === 'buy' && (canBuy ? (
             <>
@@ -260,7 +263,7 @@ export function ListingPage() {
               {pool ? (
                 <>
                   <div className="sum-line"><span>Market price</span><b>{usd(pool.price)} per share</b></div>
-                  <div className="sum-line"><span>Pool depth</span><b>{pool.shares.toString()} shares · {usd(pool.pusd, 0)}</b></div>
+                  <div className="sum-line"><span>Pool depth</span><b>{pool.shares.toString()} shares · {usd(pool.pusd,6)}</b></div>
                   <div className="field" style={{ marginBottom: 0 }}>
                     <label htmlFor="dexin">Spend</label>
                     <div className="input-affix"><input id="dexin" type="number" min="0" step="any" value={dexIn} onChange={(ev) => setDexIn(ev.target.value)} /><span>pUSD</span></div>
@@ -298,9 +301,12 @@ export function ListingPage() {
             passport ? (
               <div className="mine">
                 <div className="line"><span>Shares earning</span><b>{staked.toLocaleString()}</b></div>
-                <div className="line"><span>Revenue waiting for you</span><b>{usd(me?.pending ?? 0n)}</b></div>
-                <button className="btn primary" disabled={!me || me.pending === 0n} onClick={() => act({ kind: 'claim', ids: [id] })}>Claim {usd(me?.pending ?? 0n)}</button>
+                <div className="line"><span>Shares in your wallet (not earning)</span><b>{spare === undefined ? 'Unavailable' : spare.toString()}</b></div>
+                <div className="line"><span>Deposited income ready to claim</span><b>{usd(me?.pending ?? 0n,6)}</b></div>
+                <button className="btn primary" disabled={!me || me.pending === 0n} onClick={() => act({ kind: 'claim', ids: [id] })}>Claim {usd(me?.pending ?? 0n,6)}</button>
                 {staked > 0 && <button className="btn ghost sm" onClick={() => act({ kind: 'unstake', id, amount: staked })}>Take my shares out of the vault</button>}
+                {spare !== undefined && spare > 0n && spare <= BigInt(Number.MAX_SAFE_INTEGER) && <button className="btn ghost sm" disabled={l.health === 'Defaulted' || l.health === 'WoundDown'} onClick={() => act({kind:'stake',id,amount:Number(spare)})}>Stake wallet shares for future deposits</button>}
+                <p className="note">Unstaking returns share tokens, not your purchase payment. Existing claimable allocations remain yours after unstaking; new stake does not receive earlier deposits.</p>
               </div>
             ) : <button className="btn primary" onClick={openPassport}>Connect an account</button>
           )}

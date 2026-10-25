@@ -11,7 +11,8 @@
     "./abi": "./src/abi.ts",
     "./addresses": "./src/addresses.ts",
     "./units": "./src/units.ts",
-    "./constants": "./src/constants.ts"
+    "./constants": "./src/constants.ts",
+    "./storage": "./src/storage.ts"
   },
   "dependencies": {
     "@polkadot/api": "^16.4.0",

@@ -9,16 +9,16 @@ import { Icon } from '../components/Icon';
 import { InfrastructureScene } from '../components/InfrastructureScene';
 import { Spinner, useAsync } from '../components/ui';
 import { cadenceLabel, economics, usd } from '../lib/format';
+import { VerifiedPhoto } from '../components/VerifiedPhoto';
 
 export function ListingRow({ l }: { l: ListingView }) {
-  const { backend } = useApp();
   const e = economics(l);
   return <Link to={`/listing/${l.id}`} className="asset-card">
-    <div className={`asset-card-art category-${l.category}`}><img src={backend!.docUrl(l.coverHash)} alt="" loading="lazy"/><span className="asset-category">{CATEGORIES[l.category] ?? 'Other'}</span><span className="asset-open"><Icon name="external" size={17}/></span></div>
+    <div className={`asset-card-art category-${l.category}`}><VerifiedPhoto hash={l.coverHash} alt={`${l.name}, operator-supplied image`} className="asset-verified-photo"/><span className="asset-category">{CATEGORIES[l.category] ?? 'Other'}</span><span className="asset-open"><Icon name="external" size={17}/></span></div>
     <div className="asset-card-body"><div className="asset-card-top"><span>ASSET {l.id}</span><Health l={l} compact/></div><h3>{l.name}</h3><p className="asset-summary">{l.summary}</p>
       <div className="asset-figures"><div><small>Per share</small><b>{usd(l.vault.salePrice)}</b></div><div><small>Payment schedule</small><b>{cadenceLabel(l.cadence)}</b></div></div>
       <div className="funding-label"><span>{l.saleOpen ? `${Math.round(e.soldPct * 100)}% of current offer funded` : `${l.vault.sold.toLocaleString()} shares purchased`}</span><b>{!l.saleOpen ? l.vault.sold === l.totalShares ? 'Sold out' : 'Sale closed' : l.vault.forSale === 0 ? 'Sold out' : l.health === 'Defaulted' || l.health === 'WoundDown' ? 'Funding unavailable' : `${l.vault.forSale.toLocaleString()} available`}</b></div>{l.saleOpen && <div className="funded"><i style={{width:`${Math.min(100,e.soldPct * 100)}%`}}/></div>}
-      <div className="asset-card-bottom"><span>Operator bond <b>{usd(l.vault.bond,0)}</b></span><strong>View asset <Icon name="arrow" size={15}/></strong></div>
+      <div className="asset-card-bottom"><span>Operator bond <b>{usd(l.vault.bond,6)}</b></span><strong>View asset <Icon name="arrow" size={15}/></strong></div>
     </div>
   </Link>;
 }

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CADENCES, CATEGORIES, parseUnits } from '@portion/sdk';
 import { useApp } from '../state/app';
 import { usePassport } from '../state/passport';
@@ -10,8 +10,9 @@ import { tokenizeSteps } from '../lib/steps';
 import { cadenceLabel, usd } from '../lib/format';
 import { saveListingDraft, readListingDraft, clearListingDraft } from '../lib/listing-draft';
 import { Readiness } from '../components/Readiness';
+import { offeredShares, fundingAmounts, pusdInput } from '../lib/funding-preview';
 
-interface Photo { bytes: Uint8Array; mime: string; url: string }
+interface Photo { bytes: Uint8Array; mime: string; url: string; width: number; height: number }
 
 export function Create() {
   const { backend, status, reconnect } = useApp();
@@ -31,6 +32,9 @@ export function Create() {
   const [bond, setBond] = useState('');
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [photoErr, setPhotoErr] = useState<string>();
+  const [photoBusy,setPhotoBusy] = useState(false);
+  const photoRequest = useRef(0);
+  useEffect(()=>()=>{photoRequest.current++;},[]);
   const [touched, setTouched] = useState(false);
   const [draftMessage, setDraftMessage] = useState('');
   const [savedDraft, setSavedDraft] = useState<number | null>(null);
@@ -48,18 +52,17 @@ export function Create() {
       const d = saved.draft;
       setName(d.name); setSummary(d.summary); setCategory(d.category); setTerms(d.terms); setTotalShares(d.totalShares);
       setPercentForSale(d.percentForSale); setPrice(d.price); setCadence(d.cadence); setMinPer(d.minPer); setBond(d.bond);
-      setPhoto(null); setStep(0); setTouched(false); setDraftMessage('Draft restored. Upload the asset photo and review all terms and current costs before publishing.');
+      photoRequest.current++; setPhotoBusy(false); setPhoto(null); setStep(0); setTouched(false); setDraftMessage('Draft restored. Upload the asset photo and review all terms and current costs before publishing.');
     } catch (error) { setDraftMessage(`Draft could not be restored: ${(error as Error).message}`); }
   };
   const { data: rules, error: rulesError } = useAsyncRules(backend);
 
-  const forSale = Math.round((totalShares * percentForSale) / 100);
-  const raise = forSale * Number(price || 0);
-  const minBond = (raise * (rules?.minBondBps ?? 0)) / 10_000;
-  useEffect(() => { setBond((b) => (b === '' || Number(b) < minBond ? (Math.ceil(minBond * 100) / 100).toString() : b)); }, [minBond]);
-
   const safeUnits = (v: string) => { try { return parseUnits(v, 6); } catch { return 0n; } };
-  const netRaise = safeUnits(price) * BigInt(forSale) * BigInt(10000 - (rules?.saleFeeBps ?? 0)) / 10000n;
+  const forSale=offeredShares(totalShares,percentForSale);
+  const funding=rules?fundingAmounts(price,forSale,rules.saleFeeBps,rules.minBondBps):null;
+  const minBond=funding?.minimumBond ?? 0n;
+  useEffect(()=>{setBond(value=>value==='' || safeUnits(value)<minBond?pusdInput(minBond):value);},[minBond]);
+  const netRaise=funding?.netEstimate ?? null;
   useEffect(() => () => { if (photo?.url) URL.revokeObjectURL(photo.url); }, [photo?.url]);
 
   const errors: Record<string, string> = {};
@@ -70,21 +73,24 @@ export function Create() {
   if (safeUnits(price) <= 0n) errors.price = 'Set a positive price with at most six decimal places.';
   if (safeUnits(minPer) <= 0n) errors.minPer = 'Set a positive minimum with at most six decimal places.';
   if (cadence < (rules?.minCadence ?? 60)) errors.cadence = 'That period is too short.';
-  if (safeUnits(bond) <= 0n || Number(bond) < minBond) errors.bond = `The bond must be at least ${usd(BigInt(Math.ceil(minBond * 1e6)))} (${(rules?.minBondBps ?? 0) / 100}% of the raise).`;
+  if (safeUnits(bond) <= 0n || safeUnits(bond) < minBond) errors.bond = `The bond must be at least ${usd(minBond)} (${(rules?.minBondBps ?? 0) / 100}% of the raise).`;
   if (forSale < 1 || forSale > totalShares) errors.shares = 'Choose at least one share to offer for funding.';
   if (!Number.isSafeInteger(totalShares) || totalShares < 10 || totalShares > 1000000) errors.shares = 'Use a whole number between 10 and 1,000,000.';
   if (!photo) errors.photo = 'Upload a real asset photo.';
-  const valid = !!rules && Object.keys(errors).length === 0;
-  const groups = [['name','summary','terms'],['shares','price'],['cadence','minPer','bond']];
+  const valid = !!rules && !photoBusy && Object.keys(errors).length === 0;
+  const groups = [['name','summary','terms','photo'],['shares','price'],['cadence','minPer','bond']];
   const next = () => { setTouched(true); if (!(groups[step] ?? []).some(k => errors[k])) {setStep(Math.min(3,step+1));setTouched(false);} };
 
-  const onPhoto = async (f?: File | null) => {
-    setPhotoErr(undefined);
-    if (!f) return setPhoto(null);
+  const onPhoto = async (file?: File | null) => {
+    const request=++photoRequest.current; setPhotoErr(undefined); setPhoto(null);
+    if(!file) {setPhotoBusy(false);return;}
+    setPhotoBusy(true);
     try {
-      const c = await compressImage(f);
-      setPhoto({ bytes: c.bytes, mime: c.mime, url: URL.createObjectURL(new Blob([c.bytes as BlobPart], { type: c.mime })) });
-    } catch (e) { setPhotoErr((e as Error).message); }
+      const image=await compressImage(file);
+      if(request!==photoRequest.current) return;
+      setPhoto({...image,url:URL.createObjectURL(new Blob([image.bytes as BlobPart],{type:image.mime}))});
+    } catch(error) {if(request===photoRequest.current) setPhotoErr((error as Error).message);}
+    finally {if(request===photoRequest.current) setPhotoBusy(false);}
   };
 
   const submit = () => {
@@ -132,8 +138,8 @@ export function Create() {
               <label>Photo</label>
               <div className="drop">
                 {photo && <img src={photo.url} alt="Your uploaded asset" />}
-                <input type="file" accept="image/*" aria-label="Upload a photo" onChange={(e) => onPhoto(e.target.files?.[0])} />
-                <p className="hint">{photo ? `Compressed to ${(photo.bytes.length / 1024).toFixed(1)} KB so it fits in one on-chain document.` : 'Upload a real photo of the asset. A photo is required.'}</p>
+                <input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Upload a photo" onChange={(e) => { const file=e.target.files?.[0]; e.currentTarget.value=''; void onPhoto(file); }} />
+                <p className="hint">{photoBusy ? 'Preparing your photo…' : photo ? `${photo.width} × ${photo.height} pixels · ${(photo.bytes.length / 1024).toFixed(1)} KB. Check the actual preview before publishing.` : 'Upload a real photo of the asset. A photo is required.'}</p>
                 {photoErr && <p className="err">{photoErr}</p>}
               </div>
             </div>
@@ -141,7 +147,7 @@ export function Create() {
               <label htmlFor="terms">How you earn and how you will pay</label>
               <textarea id="terms" rows={5} value={terms} onChange={(e) => setTerms(e.target.value)} placeholder="Customers pay per charge. I report takings every week and pay in 70% of the net." />
               {show('terms') && <p className="err">{show('terms')}</p>}
-              <p className="hint">This text is stored on-chain and hashed into the deed, so it cannot be quietly changed later.</p>
+              <p className="hint">The final image and terms are public and hashed into the deed. Do not include identity documents, bank details or private customer data. A photo alone is not independent proof of equipment ownership.</p>
             </div>
           </fieldset>
 
@@ -162,7 +168,7 @@ export function Create() {
             <div className="field">
               <label htmlFor="pct">Offer {percentForSale}% for sale ({forSale.toLocaleString()} shares). You keep {(totalShares - forSale).toLocaleString()}.</label>
               <input id="pct" type="range" min={5} max={100} step={5} value={percentForSale} onChange={(e) => setPercentForSale(Number(e.target.value))} />
-              <p className="hint">If it all sells you raise {usd(BigInt(Math.round(raise * 1e6)), 0)}.</p>
+              <p className="hint">If it all sells the gross raise is {usd(funding?.gross ?? null)}.</p>
             </div>
           </fieldset>
 
@@ -182,7 +188,7 @@ export function Create() {
             <div className="field">
               <label htmlFor="bond">Bond you lock</label>
               <div className="input-affix"><input id="bond" type="number" min="0" step="any" value={bond} onChange={(e) => setBond(e.target.value)} /><span>pUSD</span></div>
-              {show('bond') ? <p className="err">{show('bond')}</p> : <p className="hint">If you miss payments for two periods in a row, anyone can slash this and it goes to your share-holders. Minimum {usd(BigInt(Math.ceil(minBond * 1e6)))}.</p>}
+              {show('bond') ? <p className="err">{show('bond')}</p> : <p className="hint">After two missed periods, someone can slash the bond. The caller takes the disclosed tip; the rest goes to current stakers, or treasury if none remain. Minimum {usd(minBond)}. This is not principal insurance.</p>}
             </div>
           </fieldset>
 
@@ -201,7 +207,7 @@ export function Create() {
               <h3>{name || 'Your listing'}</h3>
               <p style={{ color: 'var(--ink-2)', fontSize: 14 }}>{summary || 'Your one-line summary appears here.'}</p>
               <div className="sum-line"><span>Price per share</span><b>{usd(safeUnits(price))}</b></div>
-              <div className="sum-line"><span>Promise</span><b>{usd(safeUnits(minPer), 0)} {cadenceLabel(cadence)}</b></div>
+              <div className="sum-line"><span>Promise</span><b>{usd(safeUnits(minPer),6)} {cadenceLabel(cadence)}</b></div>
               <div className="sum-line"><span>Offered shares</span><b>{forSale.toLocaleString()}</b></div><div className="sum-line"><span>Estimated proceeds after sale fee</span><b>{usd(netRaise)}</b></div><p className="hint">Preview only. Funding depends on purchases; revenue depends on the operator’s business.</p>
             </div>
           </div>
