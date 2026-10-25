@@ -17,3 +17,4 @@ coverage/
 /api/index.cjs
 
 /serverless/bundle.cjs
+backups/

@@ -1,3 +1,7 @@
+# Legacy SQLite indexer recipe — not the current hosted service
+
+The Vercel release retains partial app-published receipts; it does not run this persistent indexer. See [current receipt coverage](RECEIPT-COVERAGE.md). The procedures below apply only to a separately operated legacy indexer and authorize no new service or Google Cloud work.
+
 # Finalized index operations
 
 The indexer now follows finalized heads. Each block's event rows and cursor commit in one SQLite transaction. Replay replaces that block's derived events instead of counting payments twice. Missing/pruned blocks stop progress and make financial-history endpoints unavailable. `/api/health` exposes cursor, finalized head, source range, completeness and errors.
