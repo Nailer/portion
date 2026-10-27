@@ -2,24 +2,79 @@ import { Link } from 'react-router-dom';
 import { useRunner } from '../state/runner';
 import { useApp } from '../state/app';
 import { Readiness } from '../components/Readiness';
+import { useReveal } from '../lib/scroll';
+
+type Step = { h: string; p: string; cost: string; next: string; to?: string; cta?: string };
+
+const OPERATOR: Step[] = [
+  { h: 'Draft your offer', p: 'Describe the asset, upload a real photo, set the shares, price, the deposit schedule you expect to keep, and a bond.', cost: 'Free. No wallet needed.', next: 'The draft is saved only in this browser, only if you choose to save it.', to: '/create', cta: 'Prepare an offer' },
+  { h: 'Connect a Portaldot wallet', p: 'Approve account access in the extension. Portion never asks for a recovery phrase and never creates a wallet for you.', cost: 'Free. Your wallet needs tPOT for network fees and storage deposits, and test pUSD for the bond.', next: 'Balances are read from the chain. Missing or unavailable is never shown as zero.' },
+  { h: 'Review, then publish', p: 'You approve two document stores (terms and image) and one atomic batch that creates the deed, shares, approvals and the listing.', cost: 'Up to three wallet approvals. Fee estimates are shown before you sign. They are estimates, not enforced caps; storage deposits are separate.', next: 'The listing appears after its finalized receipt is verified. If a later step fails, earlier finalized steps are kept and resumed, not repeated.' },
+  { h: 'Record revenue deposits', p: 'When you decide to share revenue, deposit it. The 0.5% fee is shown first; the rest is split among shares staked at that moment.', cost: 'The deposit amount, the fee, and a network fee. A deposit needs at least one staked share.', next: 'Holders can claim immediately. A deposit at or above your stated minimum resets the late clock.', to: '/operator', cta: 'Open the workspace' },
+  { h: 'Keep to your schedule', p: 'After one missed period the listing is late; after two it is in default, new purchases stop and anyone can submit a bond recovery.', cost: 'The bond is held by the contract.', next: 'The bond is limited recovery, not insurance, and nothing runs automatically.' },
+];
+const PARTICIPANT: Step[] = [
+  { h: 'Read the record', p: 'Open an asset to see its hashed terms, native backing checks, bond, deposit history and activity.', cost: 'Free. No wallet needed.', next: 'You will see exactly where the money would go and what is not guaranteed.', to: '/', cta: 'See published assets' },
+  { h: 'Connect and check readiness', p: 'Connect a Portaldot wallet. Check your tPOT and pUSD balances below before you try anything.', cost: 'Free to connect.', next: 'Test credits come from a limited, explicit request. Nothing is assigned automatically.', to: '/faucet', cta: 'Check test credits' },
+  { h: 'Buy shares, if an offer is open', p: 'Choose how many shares, review the total and the fee, and approve in your wallet.', cost: 'Price × shares, including a 1% fee, plus a network fee.', next: 'Your payment goes directly to the operator. Shares start earning when staked. Right now no offer is open.' },
+  { h: 'Stake and claim', p: 'Stake shares so they receive future deposits, and claim what has been allocated to you.', cost: 'A network fee per action.', next: 'Claims are pulled, not pushed. Unstaking returns shares, not your purchase price.', to: '/portfolio', cta: 'Open your portfolio' },
+];
+const REVIEWER: Step[] = [
+  { h: 'Check the deployment', p: 'Compare the contract address, block and transaction hash with the chain.', cost: 'Free. No wallet needed.', next: 'You learn that the contract exists and matches the recorded bytecode.', to: '/evidence', cta: 'Open the evidence' },
+  { h: 'Read the recorded lifecycle', p: 'Look up each finalized transaction and the asset record.', cost: 'Free.', next: 'It shows the contract works as written. It was one account in both roles.' },
+  { h: 'Read what is not proven', p: 'Money protections, customer evidence, legal review and the funding gaps are listed plainly.', cost: 'Free.', next: 'Use the investment assessment and cost model to challenge the direction.', to: '/business', cta: 'Read the business model' },
+];
+
+function Path({ id, eyebrow, title, steps }: { id: string; eyebrow: string; title: string; steps: Step[] }) {
+  return <section id={id} className="pv-section" style={{ paddingTop: 0 }} aria-labelledby={`${id}-t`}>
+    <span className="pv-eyebrow" data-reveal>{eyebrow}</span>
+    <h2 id={`${id}-t`} className="pv-title" style={{ fontSize: 'clamp(26px,3vw,36px)' }} data-reveal>{title}</h2>
+    <ol className="pv-flow" style={{ marginTop: 24 }}>
+      {steps.map(s => <li key={s.h} data-reveal>
+        <div><h3>{s.h}</h3><p>{s.p}</p>{s.to && <p><Link className="btn ghost sm" to={s.to}>{s.cta}</Link></p>}</div>
+        <dl className="pv-who"><div><dt>What it costs</dt><dd>{s.cost}</dd></div><div><dt>What happens next</dt><dd>{s.next}</dd></div></dl>
+      </li>)}
+    </ol>
+  </section>;
+}
+
 export function Guide() {
   const { openPassport } = useRunner();
   const { backend } = useApp();
-  return <div className="console"><span className="eyebrow">FROM EQUIPMENT TO SHARED REVENUE</span><h1>A clear path.<br/>A visible record.</h1><p className="page-lede">Portion lets operators publish equipment funding terms and share the business revenue they deposit. This build uses real Portaldot testnet transactions and test credits with no monetary value.</p>
-    <section className="journey-grid" aria-label="Choose what you want to do">
-      <article><span className="eyebrow">I RUN AN ASSET</span><h2>Prepare your funding offer.</h2><p>Describe real equipment, disclose its terms and post a bond. After funding, deposit business revenue for participants to claim.</p><Link className="btn primary" to="/create">Prepare an asset →</Link><small>You can save a draft before connecting. Publishing needs a funded native wallet.</small></article>
-      <article><span className="eyebrow">I WANT TO PARTICIPATE</span><h2>Understand before funding.</h2><p>Review available assets, the operator’s terms, payment records and backing checks. Your payment goes to the operator after the sale fee; it is not spending-controlled escrow.</p><Link className="btn primary" to="/">Review published assets →</Link><small>Public browsing needs no wallet. Closed offers cannot accept purchases.</small></article>
-      <article><span className="eyebrow">I AM REVIEWING PORTION</span><h2>Inspect the evidence.</h2><p>Check the deployed contract, network identity and actual test receipts. Separate verified chain records from operator claims and planned features.</p><Link className="btn primary" to="/network">Inspect network evidence →</Link><small>The existing lifecycle test used one development account in both roles.</small></article>
+  useReveal();
+  return <div className="pv">
+    <section className="pv-section" style={{ paddingBottom: 24 }}>
+      <span className="pv-eyebrow">Guide</span>
+      <h1 className="pv-title" style={{ fontSize: 'clamp(34px,5vw,58px)' }}>Pick your role. Every step shows its cost.</h1>
+      <p className="pv-lede">Portion runs on the Portaldot test network with test tokens. Each step below says what it costs and what happens next, so nothing is a surprise at the wallet prompt.</p>
+      <p className="pv-actions"><a className="btn primary" href="#operator">I run an asset</a><a className="btn ghost" href="#participant">I take part</a><a className="btn ghost" href="#reviewer">I am reviewing</a><button className="btn ghost" onClick={openPassport}>Connect wallet</button></p>
     </section>
+
     <Readiness/>
-    {!backend?.deployed && <p className="notice">Contract availability has not been verified in this session. Check the Network console before proceeding.</p>}
-    <ol className="guide-steps"><li><h2>Connect your wallet</h2><p>Use Portaldot Wallet or another compatible native browser wallet. Approve account access in the extension and choose an account. Portion never asks for a recovery phrase or creates a wallet for you.</p><button className="btn primary" onClick={openPassport}>Connect wallet</button></li>
-    <li><h2>Get ready for testnet transactions</h2><p>Your wallet needs tPOT for network fees and refundable storage deposits, plus pUSD test credits for bonds and purchases. Existing balances are read from the chain. The deployment wallet is not an unlimited public faucet.</p><Link to="/faucet">Check test-credit availability →</Link></li>
-    <li><h2>Operators: publish an asset</h2><p>Choose Raise funds. Enter the actual equipment details, upload a real photo, explain the business and choose the shares, price, payment schedule and bond. Review the terms. Approve the separate document uploads, then the atomic asset-creation batch. The listing appears after its finalized receipt is verified and published.</p><Link to="/create">Raise funds →</Link></li>
-    <li><h2>Participants: review and fund</h2><p>Open Explore, select a published asset and read the operator’s terms, payment record and on-chain backing checks. Enter a share quantity, review the cost and approve the purchase in your wallet. Purchased shares participate in future deposited revenue. A listing does not prove legal ownership of physical equipment or guarantee a return.</p><Link to="/">Explore published assets →</Link></li>
-    <li><h2>Operators: pay revenue</h2><p>Open Workspace, choose your asset and enter the actual revenue available for distribution. Review the fee and participant allocation before approval. A qualifying operator payment resets the schedule.</p><Link to="/operator">Open Workspace →</Link></li>
-    <li><h2>Participants: claim your allocation</h2><p>Open Portfolio to read your shares and claimable amount from the contract. Approve a claim to receive allocated test credits. Unstaking returns shares; it does not repay their purchase price.</p><Link to="/portfolio">Open Portfolio →</Link></li>
-    <li><h2>Keep your receipts</h2><p>Successful transactions require finalization. Copy their hashes and inspect the block. Earlier document uploads can remain finalized if a later step fails. An unconfirmed outcome must be checked before retrying. App receipts are retained; outside transactions may not appear in the indexed history.</p></li></ol>
-    <h2>For judges</h2><p>Follow the operator-to-participant journey with funded testnet wallets and actual supplied asset details. Check the contract address, bytecode, transaction hashes and before/after balances. Distinguish on-chain accounting from self-reported business information.</p><Link className="btn ghost" to="/network">Inspect network and build status</Link>
-    <h2>What comes next</h2><p>Validate a real operator pilot, improve evidence review and receipt exports, and test more wallet environments. Broader marketing should describe the current testnet scope accurately.</p></div>;
+    {!backend?.deployed && <p className="notice">Contract availability has not been verified in this session. Check the network console before proceeding.</p>}
+
+    <div style={{ height: 40 }}/>
+    <Path id="operator" eyebrow="For operators" title="Prepare, publish and record deposits." steps={OPERATOR}/>
+    <Path id="participant" eyebrow="For participants" title="Read first, then take part." steps={PARTICIPANT}/>
+    <Path id="reviewer" eyebrow="For reviewers" title="Check it without a wallet." steps={REVIEWER}/>
+
+    <section className="pv-section" style={{ paddingTop: 0 }} aria-labelledby="fail-t">
+      <span className="pv-eyebrow" data-reveal>If something goes wrong</span>
+      <h2 id="fail-t" className="pv-title" style={{ fontSize: 'clamp(26px,3vw,36px)' }} data-reveal>Your money and your receipts are not lost.</h2>
+      <div className="pv-limits" style={{ gridTemplateColumns: 'repeat(2,minmax(0,1fr))' }}>
+        <article className="pv-limit is-enforced" data-reveal><h3><i/>What Portion does for you</h3><ul>
+          <li>Keeps every finalized step, so a later failure never repeats an earlier payment.</li>
+          <li>Treats an unknown outcome as unknown, never as failed, and blocks a blind retry.</li>
+          <li>Cancels a review if you switch account or network before approving.</li>
+          <li>Keeps receipts on this device and lets you check a hash or block yourself.</li>
+        </ul></article>
+        <article className="pv-limit is-trust" data-reveal><h3><i/>What to do</h3><ul>
+          <li>If a signature request times out, open the <Link to="/receipts">receipt centre</Link> before trying again.</li>
+          <li>If the network is slow, wait. The testnet endpoint can take many seconds to answer.</li>
+          <li>Never share a recovery phrase. Portion will never ask for one.</li>
+          <li>Need tokens? Use the <Link to="/faucet">faucet</Link>; native tPOT comes from the organisers, not from Portion.</li>
+        </ul></article>
+      </div>
+    </section>
+  </div>;
 }

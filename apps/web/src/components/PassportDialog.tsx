@@ -29,14 +29,14 @@ export function PassportDialog() {
     <aside className="auth-story">
       <div className="auth-brand"><BrandMark/><span>Portion</span></div>
       <div className="auth-orbit" aria-hidden="true"><i/><i/><i/><span><Icon name="layers" size={48}/></span><b className="orbit-dot one"/><b className="orbit-dot two"/></div>
-      <span className="eyebrow">YOUR NEXT PERSPECTIVE</span>
-      <h2>Good things.<br/>Built together.</h2>
-      <p>Explore working assets. Understand the terms. Follow every payment.</p>
+      <span className="eyebrow">TEST NETWORK</span>
+      <h2>You approve every step.</h2>
+      <p>Portion reads your account and balances. Nothing is signed until you review a transaction and approve it in your wallet.</p>
       <div className="auth-security"><Icon name="shield" size={22}/><span>Your keys stay in your wallet.<br/><b>We never ask for your recovery phrase.</b></span></div>
     </aside>
     <section className="auth-options">
       <button className="dialog-close" aria-label="Close account dialog" disabled={busy} onClick={closePassport}><Icon name="close"/></button>
-      <span className="eyebrow">WELCOME TO PORTION</span>
+      <span className="eyebrow">CONNECT A WALLET</span>
       <h2 id="pp-title">{choosing ? 'Choose your account.' : 'Connect your wallet.'}</h2>
       <p className="auth-intro">{choosing ? 'Only accounts shared by your wallet appear here. Transactions are approved inside your wallet.' : 'Connect an existing browser wallet. Portion does not create accounts or grant balances.'}</p>
       {choosing ? <div className="wallet-accounts">{walletAccounts.map(account => <button className="auth-choice" key={account.address} disabled={busy} onClick={() => choose(account.address)}><span className="choice-symbol"><Icon name="wallet"/></span><span><b>{account.name || 'Wallet account'}</b><small>{short(account.address, 10, 8)}</small></span><Icon name="arrow"/></button>)}<button className="link-btn" onClick={() => setChoosing(false)}>← Other ways to explore</button></div> : <>
