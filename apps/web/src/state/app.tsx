@@ -20,6 +20,15 @@ interface AppState {
 const Ctx = createContext<AppState>(null as any);
 export const useApp = () => useContext(Ctx);
 
+const PUBLIC_ENTRY = ['/', '/guide', '/business', '/evidence'];
+/** Resolves after the page has loaded and the main thread has had a chance to paint the first screen. */
+function afterFirstPaint(): Promise<void> {
+  return new Promise(resolve => {
+    const idle = () => ('requestIdleCallback' in window ? (window as any).requestIdleCallback(() => resolve(), { timeout: 1500 }) : setTimeout(resolve, 400));
+    if (document.readyState === 'complete') idle(); else window.addEventListener('load', idle, { once: true });
+  });
+}
+
 function withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
   return new Promise((res, rej) => {
     const t = setTimeout(() => rej(new Error(msg)), ms);
@@ -42,6 +51,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setBackend(null);
     (async () => {
       try {
+        // Public landing pages paint first; the heavy chain client loads once the browser is idle.
+        if (attempt === 0 && PUBLIC_ENTRY.includes(window.location.pathname)) await afterFirstPaint();
+        if (dead) return;
         const [{ connect, TESTNET, PortionCoreArtifact }, { LiveBackend }] = await Promise.all([import('@portion/sdk'), import('../lib/live')]);
         if (dead) return;
         const connection = connect(TESTNET.ws);

@@ -110,7 +110,7 @@ export function Create() {
     <div className="create">
       <Link className="crumb" to="/operator">← Your operator workspace</Link>
       <div className="eyebrow" style={{marginTop:28}}>CREATE AN ASSET LISTING</div>
-      <h1>Put your next asset<br/><span>in motion.</span></h1>
+      <h1>Prepare an offer<br/><span>for your asset.</span></h1>
       <p className="page-lede">Describe the business, choose your funding terms, and set a payment schedule. Review everything before publishing.</p>
       <details><summary>Check your wallet and service readiness</summary><Readiness/></details>
       <section className="workspace-info" aria-label="Unsigned listing draft"><div><b>Keep your progress</b><p>Save these business details on this browser. No photo, wallet credentials or transaction is saved or submitted. Anyone using this browser profile may read the draft.</p>{savedDraft && <small>Last saved {new Date(savedDraft).toLocaleString()}</small>}<p role="status">{draftMessage}</p></div><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button className="btn ghost sm" type="button" onClick={saveDraft}>Save draft</button><button className="btn ghost sm" type="button" disabled={!savedDraft} onClick={restoreDraft}>Restore draft</button><button className="btn ghost sm" type="button" onClick={() => { try { clearListingDraft(localStorage); setSavedDraft(null); setDraftMessage('Saved draft removed. The current form is unchanged.'); } catch { setDraftMessage('This browser could not remove the saved draft.'); } }}>Clear saved draft</button></div></section>
@@ -207,7 +207,7 @@ export function Create() {
               <h3>{name || 'Your listing'}</h3>
               <p style={{ color: 'var(--ink-2)', fontSize: 14 }}>{summary || 'Your one-line summary appears here.'}</p>
               <div className="sum-line"><span>Price per share</span><b>{usd(safeUnits(price))}</b></div>
-              <div className="sum-line"><span>Promise</span><b>{usd(safeUnits(minPer),6)} {cadenceLabel(cadence)}</b></div>
+              <div className="sum-line"><span>Stated minimum deposit</span><b>{usd(safeUnits(minPer),6)} {cadenceLabel(cadence)}</b></div>
               <div className="sum-line"><span>Offered shares</span><b>{forSale.toLocaleString()}</b></div><div className="sum-line"><span>Estimated proceeds after sale fee</span><b>{usd(netRaise)}</b></div><p className="hint">Preview only. Funding depends on purchases; revenue depends on the operator’s business.</p>
             </div>
           </div>

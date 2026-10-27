@@ -8,6 +8,7 @@ import { RunnerProvider } from './state/runner';
 import './styles.css';
 import './workspaces.css';
 import './brand.css';
+import './portion.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

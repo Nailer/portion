@@ -7,6 +7,7 @@ import { useRunner } from './state/runner';
 import { PassportDialog } from './components/PassportDialog';
 import { Spinner, CopyButton } from './components/ui';
 import { pot, usd, short } from './lib/format';
+import { useRouteScroll } from './lib/scroll';
 import { Home } from './pages/Home';
 const ListingPage = lazy(() => import('./pages/Listing').then(module => ({ default: module.ListingPage })));
 const Create = lazy(() => import('./pages/Create').then(module => ({ default: module.Create })));
@@ -19,8 +20,10 @@ const Guide = lazy(() => import('./pages/Guide').then(module => ({ default: modu
 const Operator = lazy(() => import('./pages/Operator').then(module => ({ default: module.Operator })));
 const Business = lazy(() => import('./pages/Business').then(module => ({ default: module.Business })));
 const Receipts = lazy(() => import('./pages/Receipts').then(module => ({ default: module.Receipts })));
+const Evidence = lazy(() => import('./pages/Evidence').then(module => ({ default: module.Evidence })));
 
 const Logo = BrandMark;
+const PUBLIC_PATHS = ['/', '/business', '/guide', '/receipts', '/evidence'];
 function Unavailable() { return <div className="market-empty"><h1>Funding is unavailable for this connection.</h1><p>A configured funding contract could not be verified. Inspect the network status before using listings, purchases, payments or claims.</p><Link className="btn primary" to="/network">View the real network</Link><Link className="btn ghost" to="/guide">See the development stages</Link></div>; }
 
 function AccountChip() {
@@ -59,6 +62,7 @@ export function App() {
   const { status, error, backend, reconnect } = useApp();
   const [navOpen, setNavOpen] = useState(false);
   const loc = useLocation();
+  useRouteScroll('main');
   const tools = useRef<HTMLDetailsElement>(null);
   const close = () => { setNavOpen(false); if (tools.current) tools.current.open = false; };
   useEffect(() => { close(); }, [loc.pathname]);
@@ -71,17 +75,20 @@ export function App() {
 
   return (
     <>
+      <a className="skip-link" href="#main">Skip to content</a>
+      <div className="test-strip" role="note"><div className="wrap"><i className="dot" aria-hidden="true"/><span><b>Test network preview.</b> Tokens have no monetary value and nothing here is investment advice.</span><Link to="/guide">What this means</Link></div></div>
       <header className="top">
         <div className="wrap">
           <Link to="/" className="brand" onClick={close}><Logo />Portion</Link>
-          <nav className={`nav${navOpen ? ' open' : ''}`} aria-label="Main">
-            <NavLink to="/" end onClick={close}>Explore</NavLink>
-            <NavLink to="/create" onClick={close}>Raise funds</NavLink>
-            <NavLink to="/portfolio" onClick={close}>Portfolio</NavLink>
-            <NavLink to="/operator" onClick={close}>Workspace</NavLink>
-            <NavLink to="/guide" onClick={close}>How it works</NavLink>
-            <details ref={tools} className="tools-nav"><summary>Tools <span>⌄</span></summary><div className="tools-menu">
-              <NavLink to="/business" onClick={close}>Revenue model</NavLink>
+          <nav id="main-nav" className={`nav${navOpen ? ' open' : ''}`} aria-label="Main">
+            <NavLink to="/" end onClick={close}>Overview</NavLink>
+            <NavLink to="/operator" onClick={close}>Operators</NavLink>
+            <NavLink to="/portfolio" onClick={close}>Participants</NavLink>
+            <NavLink to="/evidence" onClick={close}>Evidence</NavLink>
+            <NavLink to="/guide" onClick={close}>Guide</NavLink>
+            <details ref={tools} className="tools-nav"><summary>More <span aria-hidden="true">⌄</span></summary><div className="tools-menu">
+              <NavLink to="/create" onClick={close}>Prepare an offer</NavLink>
+              <NavLink to="/business" onClick={close}>Business model</NavLink>
               <NavLink to="/network" onClick={close}>Network console</NavLink>
               <NavLink to="/receipts" onClick={close}>Receipt centre</NavLink>
               <NavLink to="/pools" onClick={close}>Staking pools</NavLink>
@@ -92,7 +99,7 @@ export function App() {
           <div className="spacer" />
           <span className="network-chip"><i className="live-indicator" />{status === 'ready' ? 'Testnet connected' : status === 'connecting' ? 'Connecting' : 'Offline'}</span>
           <AccountChip />
-          <button className="btn ghost sm menu-btn" onClick={() => setNavOpen((o) => !o)} aria-label="Menu" aria-expanded={navOpen}>Menu</button>
+          <button className="btn ghost sm menu-btn" onClick={() => setNavOpen((o) => !o)} aria-label="Menu" aria-expanded={navOpen} aria-controls="main-nav">Menu</button>
         </div>
       </header>
 
@@ -100,16 +107,16 @@ export function App() {
         <div className="banner" role="status"><div className="wrap"><b>Funding contract unavailable.</b> <span>The current connection has no verified funding contract.</span></div></div>
       )}
 
-      <main className="wrap page" key={loc.pathname}>
-        {!['/', '/business', '/guide', '/receipts'].includes(loc.pathname) && status === 'connecting' && <div className="empty"><Spinner /><h3>Connecting to Portaldot V3…</h3><p>Opening a connection to the testnet.</p></div>}
-        {!['/', '/business', '/guide', '/receipts'].includes(loc.pathname) && status === 'offline' && (
+      <main id="main" tabIndex={-1} className={`wrap page${loc.key === 'default' ? ' no-arrive' : ''}`} key={loc.pathname}>
+        {!PUBLIC_PATHS.includes(loc.pathname) && status === 'connecting' && <div className="empty"><Spinner /><h3>Connecting to Portaldot V3…</h3><p>Opening a connection to the testnet.</p></div>}
+        {!PUBLIC_PATHS.includes(loc.pathname) && status === 'offline' && (
           <div className="empty">
             <h3>The Portaldot testnet is not answering</h3>
             <p>{error}. Live data is unavailable. No balances or activity will be invented.</p>
             <button className="btn primary" onClick={reconnect}>Retry connection</button>
           </div>
         )}
-        {(['/', '/business', '/guide', '/receipts'].includes(loc.pathname) || (status === 'ready' && backend)) && (
+        {(PUBLIC_PATHS.includes(loc.pathname) || (status === 'ready' && backend)) && (
           <Suspense fallback={<div className="empty"><Spinner label="Loading page"/></div>}><Routes>
             <Route path="/" element={<Home />} />
             <Route path="/listing/:id" element={backend?.deployed ? <ListingPage /> : <Unavailable />} />
@@ -123,15 +130,17 @@ export function App() {
             <Route path="/guide" element={<Guide />} />
             <Route path="/business" element={<Business />} />
             <Route path="/receipts" element={<Receipts />} />
-            <Route path="*" element={<div className="empty"><h3>Page not found</h3><Link className="btn primary" to="/">Back to the market</Link></div>} />
+            <Route path="/evidence" element={<Evidence />} />
+            <Route path="*" element={<div className="empty"><h3>Page not found</h3><Link className="btn primary" to="/">Back to the overview</Link></div>} />
           </Routes></Suspense>
         )}
       </main>
       <PassportDialog />
       <footer className="foot">
         <div className="wrap">
-          <div className="footer-brand"><Link className="brand" to="/"><Logo />Portion</Link><p>Working assets. Shared ambition.</p><small>Built on Portaldot V3 · Test tokens only. No monetary value.</small></div>
-          <span><Link to="/guide">How it works</Link> · <Link to="/faucet">Faucet</Link> · <Link to="/business">Revenue model</Link></span>
+          <div className="footer-brand"><Link className="brand" to="/"><Logo />Portion</Link><p>A shared record for the revenue productive assets earn.</p><small>Built on Portaldot V3 testnet. Test tokens only, no monetary value. Unaudited software; not investment, legal or tax advice.</small></div>
+          <div><h4>Product</h4><ul><li><Link to="/guide">Guide</Link></li><li><Link to="/operator">Operator workspace</Link></li><li><Link to="/portfolio">Portfolio</Link></li><li><Link to="/business">Business model</Link></li></ul></div>
+          <div><h4>Verify</h4><ul><li><Link to="/evidence">Evidence record</Link></li><li><Link to="/receipts">Receipt centre</Link></li><li><Link to="/network">Network console</Link></li><li><a href="https://github.com/Nailer/portion" target="_blank" rel="noreferrer">Source on GitHub</a></li></ul></div>
         </div>
       </footer>
     </>

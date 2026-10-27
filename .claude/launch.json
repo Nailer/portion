@@ -1,7 +1,36 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "portion-web", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "-w", "@portion/web"], "port": 5173 },
-    { "name": "portion-server", "runtimeExecutable": "npm", "runtimeArgs": ["run", "start", "-w", "@portion/server"], "port": 8787 }
+    {
+      "name": "portion-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "-w",
+        "@portion/web"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "portion-server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start",
+        "-w",
+        "@portion/server"
+      ],
+      "port": 8787
+    },
+    {
+      "name": "portion-preview",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "PORTION_API_TARGET=https://portion-one.vercel.app npm run preview -w @portion/web -- --port 4173 --strictPort"
+      ],
+      "port": 4173
+    }
   ]
 }

@@ -56,6 +56,21 @@ function describe(a: ActivityRow): string {
   }
 }
 
+function ClosedOffer({ l, soldOut, onMine }: { l: ListingView; soldOut: boolean; onMine: () => void }) {
+  const wound = l.health === 'WoundDown', defaulted = l.health === 'Defaulted';
+  const title = wound ? 'This listing has been wound down' : defaulted ? 'New funding is blocked: the operator is in default' : soldOut ? `Sold out: all ${l.totalShares.toLocaleString()} shares were bought` : 'The primary sale is closed';
+  const why = wound ? 'The operator closed it. Allocations already earned stay claimable by their holders.' : defaulted ? 'Two payment periods passed without a qualifying deposit. Holders can still claim, and anyone may submit a bond recovery.' : soldOut ? 'This offer cannot take another purchase. Nothing is broken; the purchase button only exists while shares remain.' : 'The operator closed the sale before every share was bought.';
+  return <div className="closed-offer" role="status">
+    <h3>{title}</h3><p>{why}</p>
+    <ul>
+      <li><a href="#activity">See exactly what was bought, deposited and claimed</a></li>
+      <li><button type="button" className="link-btn" onClick={onMine}>Check your own shares and claims</button></li>
+      <li><Link to="/evidence">See how a fresh purchase could be tested</Link></li>
+    </ul>
+    <small>No market exists for these shares yet. Trading needs someone to fund a pool, and Portion does not promise liquidity.</small>
+  </div>;
+}
+
 export function ListingPage() {
   const { id: idParam } = useParams();
   const id = Number(idParam);
@@ -112,7 +127,7 @@ export function ListingPage() {
 
   return (
     <div>
-      <Crumb to="/">← The market</Crumb>
+      <Crumb to="/">← Overview</Crumb>
       <div className="listing-grid" style={{ marginTop: 16 }}>
         <div>
           <VerifiedPhoto className="cover" hash={l.coverHash} alt={`${l.name}, operator-supplied image`} eager/>
@@ -124,17 +139,17 @@ export function ListingPage() {
           <div className="facts">
             <div className="fact"><small>Price per share</small><b>{usd(l.vault.salePrice)}</b></div>
             <div className="fact"><small>Total share price reference</small><b>{usd(l.vault.salePrice*BigInt(l.totalShares),6)}</b></div>
-            <div className="fact"><small>Promised minimum</small><b>{usd(l.minPerPeriod,6)} {cadenceLabel(l.cadence)}</b></div>
+            <div className="fact"><small>Operator’s stated minimum deposit</small><b>{usd(l.minPerPeriod,6)} {cadenceLabel(l.cadence)}</b></div>
             <div className="fact"><small>Fee on deposited revenue</small><b>{(rules.revenueFeeBps) / 100}%</b></div>
             <div className="fact"><small>Cumulative allocation (deposits and bond recovery)</small><b>{usd(l.vault.totalRevenue,6)}</b></div>
             <div className="fact"><small>Operator bond</small><b>{usd(l.vault.bond)}</b></div>
           </div>
 
           <section className="block">
-            <h2>Does the operator pay?</h2>
+            <h2>Is the operator depositing?</h2>
             <div style={{ maxWidth: 520 }}><Health l={l} /></div>
             <p className="note" style={{ marginTop: 12 }}>
-              The operator must pay in at least {usd(l.minPerPeriod,6)} {cadenceLabel(l.cadence)}. After {span(2 * l.cadence)} without a qualifying payment, anyone can slash the
+              The operator has committed to deposit at least {usd(l.minPerPeriod,6)} {cadenceLabel(l.cadence)}; this is a commitment recorded in the listing, not a guaranteed income. After {span(2 * l.cadence)} without a qualifying payment, anyone can slash the
               {' '}{usd(l.vault.bond,6)} bond. The caller receives {(rules.slashTipBps / 100)}% of the bond; the remainder goes to current stakers, or the treasury if nobody is staked. Slashing requires a transaction; no automatic keeper is promised.{l.strikes !== null && l.strikes > 0 && <> This operator has been slashed {l.strikes} time{l.strikes > 1 ? 's' : ''}.</>}
             </p>
             {l.health === 'Defaulted' && l.vault.bond > 0n && (
@@ -183,7 +198,7 @@ export function ListingPage() {
             <p className="notice">Published receipts are partial history. {coverage ? coverage.inconsistent ? 'Receipt totals differ from the contract; do not rely on the chart until reconciled.' : <>Receipts account for {usd(coverage.publishedTotal)} of {usd(coverage.contractTotal)} in cumulative contract allocations at finalized block {coverage.finalizedBlock.toLocaleString()}. {coverage.totalsMatch ? 'Matching totals do not prove complete history.' : `${usd(coverage.missingAllocation)} has no published allocation receipt yet.`}</> : 'Receipt coverage could not be reconciled. Missing records do not mean zero income.'}</p>
           </section>
 
-          <section className="block">
+          <section className="block" id="activity">
             <h2>Activity</h2>
             {!activity && <p className="notice">Activity history unavailable.</p>}
             <ul className="activity">
@@ -256,7 +271,7 @@ export function ListingPage() {
                 </>
               ) : <button className="btn primary" onClick={openPassport}>Connect wallet to buy</button>}
             </>
-          ) : <p className="notice">{l.health === 'WoundDown' ? 'This listing has been wound down.' : l.health === 'Defaulted' ? 'New funding is blocked while this listing is in default.' : l.vault.sold === l.totalShares || l.saleOpen && l.vault.forSale === 0 ? 'This primary offer is sold out.' : 'The primary sale is closed. Secondary trading requires an actual funded pool.'}</p>)}
+          ) : <ClosedOffer l={l} soldOut={l.vault.sold === l.totalShares || l.saleOpen && l.vault.forSale === 0} onMine={() => setTab('mine')} />)}
 
           {tab === 'trade' && (
             <div style={{ display: 'grid', gap: 14 }}>
