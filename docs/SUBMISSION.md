@@ -1,4 +1,4 @@
-# Submission checklist — current evidence, 24 October 2026
+# Submission checklist — current evidence, updated 27 October 2026
 
 This is a checklist and evidence outline, not confirmation of registration/submission or text to paste as the team's application. The founder supplies and verifies team facts and submission responses in their own words.
 
@@ -35,6 +35,14 @@ The check-in accepts a working demo link or an initial video of at most three mi
 - Public final demo video of at most three minutes, with accurate historical/live distinctions.
 - Accessible pitch deck covering customer problem, why Portaldot, actual delivery, business assumptions and reasons for continued support.
 - Final checklist before code freeze; any serious later correction follows organiser instructions and keeps its history.
+
+## Update, 27 October 2026
+
+- Official page re-read through a browser; dates are unchanged. See [HACKATHON-EVIDENCE-MAP.md](HACKATHON-EVIDENCE-MAP.md) for the full requirement-to-evidence table. The official Discord was not accessible to this review, so announcements made only there are unchecked.
+- **The office-hour application deadline (27 Oct 12:00 UTC) had passed** when this was written. Whether the founder applied is unknown; ask the organisers about a late request rather than assuming one.
+- A standard MIT `LICENSE` file was added (the README already said MIT). The founder should confirm the copyright holder name.
+- **Still missing and required: the ≤3-minute demo video and the pitch deck.** A shot list is in [WALKTHROUGH.md](WALKTHROUGH.md) and a deck spine in [INVESTMENT-ASSESSMENT.md](INVESTMENT-ASSESSMENT.md). Team members and the one-sentence overview are the founder's to supply.
+- Commit discipline: the rules forbid committing final core versions all at once in the last 24 hours before 6 Nov 04:00 UTC. Keep the remaining work in small, steady commits.
 
 ## Story and track decision
 

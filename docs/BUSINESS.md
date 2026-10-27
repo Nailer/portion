@@ -2,6 +2,8 @@
 
 ## Decision
 
+> **Update, 27 October 2026.** A fresh review narrowed the first product to **operator revenue-sharing administration** and kept funding as an optional, test-only module. Reasoning, competitor comparison and the cost model are in [INVESTMENT-ASSESSMENT.md](INVESTMENT-ASSESSMENT.md), [MARKET-AND-COMPETITORS.md](MARKET-AND-COMPETITORS.md) and [FINANCIAL-MODEL.md](FINANCIAL-MODEL.md). The model shows the current 1% / 0.5% fees do not cover the cost of serving an operator; subscription pricing remains an unvalidated hypothesis. The original text below is preserved.
+
 Build global infrastructure for companies that finance and operate productive assets. Begin discovery with the solar operator company the founder can reach. The pilot is a practical starting point, not a Nigeria-only product or a claim of an agreed partnership.
 
 ## The job customers pay for

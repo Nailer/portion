@@ -2,7 +2,7 @@
 
 Planning baseline: **24 October 2026**; status updated **25 October 2026**. This is the task-creation baseline, not a claim that the work below is complete. GitHub issues are the authoritative live status; this document and JSON are snapshots.
 
-**56 individual tasks: 25 completed, 31 remaining (12 in progress, 19 open)** cover the product, wallet, transaction reliability, operator tools, security/operations, business, design and hackathon gaps. Each has a priority, proposed lead role, dependencies and completion evidence. Lead roles do not assign people or imply someone has accepted the work.
+**56 individual tasks: 25 completed, 31 remaining (15 in progress, 16 open)** cover the product, wallet, transaction reliability, operator tools, security/operations, business, design and hackathon gaps. Each has a priority, proposed lead role, dependencies and completion evidence. Lead roles do not assign people or imply someone has accepted the work.
 
 Follow [Task progress](TASK-PROGRESS.md) for completed work and the active next step. Read [Decisions and answers](DECISIONS-AND-ANSWERS.md) for the plain-language reasoning. Evidence baseline: [live Core release](../LIVE-CORE-RELEASE.md), [finalized live test](../LIVE-TEST-RESULTS.md), [engineering review](../TECHNICAL-REVIEW.md), [business direction](../BUSINESS.md), and current source. Historical review items were reconciled rather than blindly reopened as deployment blockers.
 
@@ -289,7 +289,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-O07 — Make discovery honest and useful
 
 - **GitHub:** [P1 · issue #29](https://github.com/Nailer/portion/issues/29)
-- **Status:** open at creation. **Lead role:** Engineering.
+- **Status:** in progress (27 Oct 2026; honest record states delivered, filter/search deferred while one listing exists; see [review](REVIEW-2026-10-27.md)). **Lead role:** Engineering.
 - **Dependencies:** [POR-W04](https://github.com/Nailer/portion/issues/11), [POR-O01](https://github.com/Nailer/portion/issues/23).
 - **Work:** Filter/search actual catalog entries; visibly label the authorized test listing and completed offer; show unavailable data correctly; avoid mixing illustrative graphics with asset evidence.
 - **Done when:** No generated business listings, invented totals or automatic opening balances appear; test records cannot be mistaken for genuine financed equipment.
@@ -421,7 +421,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-B05 — Calculate viable cost per operator and offering
 
 - **GitHub:** [P1 · issue #45](https://github.com/Nailer/portion/issues/45)
-- **Status:** open at creation. **Lead role:** Founder + engineering.
+- **Status:** in progress (27 Oct 2026; labelled model in [FINANCIAL-MODEL.md](../FINANCIAL-MODEL.md), missing acquisition/legal/payment-provider costs and real inputs; see [review](REVIEW-2026-10-27.md)). **Lead role:** Founder + engineering.
 - **Dependencies:** [POR-B03](https://github.com/Nailer/portion/issues/43), [POR-B04](https://github.com/Nailer/portion/issues/44), [POR-F01](https://github.com/Nailer/portion/issues/54).
 - **Work:** Include support, acquisition, verification, legal/payment providers, storage, hosting, collections and failed transactions; separate refundable locks, user funds and company income.
 - **Done when:** A scenario model with labelled assumptions shows contribution at realistic volumes and identifies a viable fee/minimum deal size or a reason the model fails.
@@ -479,7 +479,7 @@ The founder supplies team facts, confirms registration, submits materials and au
 #### POR-D04 — Prepare evidence-based marketing and judge journeys
 
 - **GitHub:** [P1 · issue #52](https://github.com/Nailer/portion/issues/52)
-- **Status:** open at creation. **Lead role:** Founder + engineering.
+- **Status:** in progress (27 Oct 2026; evidence page, role guide and walkthrough delivered, nothing sent or posted; see [review](REVIEW-2026-10-27.md)). **Lead role:** Founder + engineering.
 - **Dependencies:** [POR-S01](https://github.com/Nailer/portion/issues/1), [POR-S05](https://github.com/Nailer/portion/issues/5), [POR-B01](https://github.com/Nailer/portion/issues/41).
 - **Work:** Lead with the paid problem and working testnet flow; provide short role-specific guidance and a verifiable evidence trail; distinguish self-funded test activity from customers.
 - **Done when:** Every capability/traction claim is supported or labelled planned; founder approves external messages and destinations before anything is sent or posted.

@@ -43,3 +43,7 @@ Work one task at a time; explain its purpose, changes, acceptance evidence and r
 ## Engineering batch — 25 October 2026
 
 Google Cloud work is paused. [Detailed acceptance evidence](EXECUTION-2026-10-25.md) records wallet guards, recovery, receipts, exact accounting, image verification, durable faucet coordination and public-document restoration. Eighteen additional engineering tasks meet their scoped acceptance checks: **25 complete;31 remaining**. Twelve remaining tasks have partial implementation/evidence and retain their full acceptance gates. Customer evidence, independent reviews, real browser signing and final hackathon materials are not fabricated or marked complete. No chain writes or faucet expenditure occurred.
+
+## Principal review — 27 October 2026
+
+A fresh review carried through to implementation: [REVIEW-2026-10-27.md](REVIEW-2026-10-27.md). It narrows the first product to operator revenue-sharing administration, redesigns the public interface and adds an evidence page, publishes the investment assessment, competitor notes, hackathon evidence map and a reproducible cost model, and adds a tested **local-only** controlled-funding contract candidate. **Still 25 complete; 31 remaining (15 in progress, 16 open).** Three tasks moved from open to in progress (B05, D04, O07) and nine in-progress or completed tasks gained evidence notes; none was marked complete without meeting its acceptance text. No chain write, spend, deployment, outside message or Google Cloud work occurred.

@@ -1,37 +1,56 @@
-# Current user and judge walkthrough — 24 October 2026
+# User and judge walkthrough — updated 27 October 2026
 
-The website uses real testnet data. It creates no visitor wallet or opening balance. The only public development listing was explicitly authorized and clearly labels its purpose; it is not verified physical equipment or a real investment.
+The website reads the real Portaldot V3 test network. It creates no visitor wallet and no opening balance. The only published asset, **Portion Development — TEST ONLY**, was explicitly authorised as a protocol test; it represents no equipment, ownership, investment or revenue. All tokens are test tokens with no value.
 
-## Inspect Portion without spending anything
+Live app: https://portion-one.vercel.app. The public test endpoint often takes 10 seconds or more to answer; pages that need the chain say so while they wait.
 
-1. Open https://portion-one.vercel.app. The infrastructure illustration explains the idea; it is not asset evidence.
-2. Open [Portion Development — TEST ONLY](https://portion-one.vercel.app/listing/585886). Read its test-only summary, hashed terms, native-backing checks, bond, paid amounts and actual activity.
-3. The primary offer is sold out because the live test purchased all 100 test shares. This is a completed test, not an open investment or broken purchase button.
-4. Open Tools → Network console for observed finalized block/hash, RPC source and separate readiness states. The observation time matters; failed reads are unavailable.
-5. Read [funding and protection](FUNDING-PROTECTION.md): current purchase money goes directly to the operator less the sale fee. There is no purchase-money escrow, spending approval or guaranteed return.
+## A. Judge: five minutes, no wallet, no cost
 
-## Connect and prepare your own action
+| # | Start at | Do | Expect |
+| --- | --- | --- | --- |
+| 1 | `/` | Read the headline, the illustration and the five steps | A plain explanation of the product, labelled "Illustration · not a live record", and who controls the money at each step |
+| 2 | `/evidence` | Compare the contract address, block 160,455 and each transaction hash with the explorer | Values match the repository's deployment files (a test enforces this) |
+| 3 | `/evidence` → "Live check now" | Wait for the connection | "Contract found on the connected testnet" and the fees read from the contract: 1% on sales, 0.5% on deposits |
+| 4 | `/listing/585886` | Read the terms, native-backing checks, bond and activity | Sold out (100 of 100 shares). A panel explains why and what to do next. The 40×40 image is the original recorded bytes, not enlarged or replaced |
+| 5 | `/evidence` → criteria table | Read each criterion's evidence and its biggest gap | The weaknesses are stated, not hidden: one account in both roles, no separate-user browser proof, no customer evidence |
+| 6 | `/business` | Read the direction and why current fees do not cover service cost | The cost-model reasoning, with assumptions labelled |
 
-1. Select Connect wallet. Portaldot Wallet is the primary presented choice. Use an actual compatible injected native account and approve sharing in the extension; no recovery phrase is requested.
-2. Review the selected account and actual native tPOT/test-pUSD balances. Missing or unavailable is not zero. Ordinary MetaMask EVM signing alone cannot sign this native flow.
-3. Native funds pay fees and storage; test pUSD is used for purchase/bond/deposit amounts. The hosted test-credit request is explicit and limited; native allocation is through the official organiser process. No tokens are fabricated or automatically assigned.
-4. Review the actual action and signing requests. Real separate-user browser approval has not yet been fully demonstrated in our QA; the existing finalized lifecycle used a development script.
+Then read, in the repository: [INVESTMENT-ASSESSMENT.md](INVESTMENT-ASSESSMENT.md), [HACKATHON-EVIDENCE-MAP.md](HACKATHON-EVIDENCE-MAP.md), [MARKET-AND-COMPETITORS.md](MARKET-AND-COMPETITORS.md), [FINANCIAL-MODEL.md](FINANCIAL-MODEL.md), [MONEY-AND-TRUST-LIFECYCLE.md](MONEY-AND-TRUST-LIFECYCLE.md) and [CONTROLLED-FUNDING-CANDIDATE.md](CONTROLLED-FUNDING-CANDIDATE.md).
 
-## Operator and participant journey
+## B. First-time visitor
 
-| Step | What to do | What it achieves and does not prove |
-| --- | --- | --- |
-| Prepare an asset | Enter permitted genuine details, photo, terms, shares, price, schedule and bond | Produces an unsigned offer draft; it is not independent asset verification |
-| Publish | Review and approve separate document stores and the atomic deed/share/approval/Core batch | Creates on-chain terms and a test funding offer; preserve partial receipts if later steps fail |
-| Inspect and purchase | Review actual terms, evidence, costs, available inventory and risks; approve in the wallet | Buys/stakes shares and pays the operator immediately less 1%; does not restrict operator spending |
-| Deposit | Operator approves payment into the contract | Allocates only deposited test pUSD after the 0.5% fee; business income is not independently collected |
-| Claim | Holder reviews pending allocation and approves claim | Transfers allocated deposited funds to the wallet; not automatic bank profit or repayment of principal |
-| Unstake or exit | Review stake/ownership and available market options | Unstaking returns shares, not purchase money; resale requires real liquidity/buyer |
+1. Open `/`. Within a few seconds the page says who Portion is for (operators of equipment such as solar installations, and the people who take part), the outcome (revenue shared by recorded deposit), what works today, and that the app uses test tokens.
+2. Choose "Walk through a payout" or a role card. Each step lists who acts, where the money is and what is not guaranteed.
 
-The native batch has six main calls: mint, set terms hash, fractionalize, approve shares, approve bond, Core create. Account mapping may add a call when required. Document stores are separate top-level transactions. The complete onboarding journey is not one signature.
+## C. Operator — draft without a wallet
 
-## Judge evidence
+| Step | Do | Cost / signature | Expect |
+| --- | --- | --- | --- |
+| 1 | Open `/create` | None | A four-step form (asset, funding, payments, review) |
+| 2 | Fill in a **clearly fictional or test-labelled** asset, add a photo | None | A live preview; the draft stays only in this browser |
+| 3 | Press "Save draft", refresh the page, then "Restore draft" | None | Fields return. No wallet data is stored |
+| 4 | Continue to Review | None | Terms are hashed locally and the on-chain steps are listed |
 
-Inspect the public repository, `deployments/portaldot-testnet.json`, `deployments/portion-test-listing.json`, [live test results](LIVE-TEST-RESULTS.md), SDK/native proof tests and source. The actual test bought 100 shares, deposited 1 test pUSD, claimed 0.995 and unstaked; one development account acted as both operator and buyer. Current history covers verified published app receipts, not every external transaction. No customer demand or independent investment is inferred.
+**Publishing** needs a Portaldot wallet with native tPOT for fees and storage deposits and test pUSD for the bond (at least 5% of the offered value). It involves up to three wallet approvals (terms, image, create batch). Do not publish an asset that does not exist.
 
-Next gates: real extension/separate-user proof, clear cost/readiness and interruption recovery, operator/customer validation, stronger controlled-funding design and qualified review before any real-money offering. Follow the [task sequence](planning/MASTER-BACKLOG.md).
+## D. Participant
+
+- **Today:** no offer is open, so a purchase cannot be demonstrated from the existing asset. Reading `/listing/585886` and `/portfolio` (needs a connected wallet to read, signs nothing) is the honest path.
+- **To test a purchase** a new test offer must be published from one funded wallet and bought from a second funded wallet in the browser. The first test run reduced the deployment account's free balance by 47.56 tPOT (including storage deposits and fees); the optimised hash storage saves about 2.52 tPOT. Spare balance above the 40 tPOT reserve was 4.83 tPOT when last measured (24 October), so this needs more tPOT from the organisers first. **It is not authorised or funded.**
+
+## E. Wallet
+
+Use **Portaldot Wallet** (or another native injected wallet that appears in the dialog). Ordinary MetaMask EVM signing cannot sign the native flow, and the app does not claim otherwise. The app never asks for a recovery phrase, never creates a wallet and never uses the developer wallet for a visitor. If no compatible wallet is detected, the dialog says so and browsing continues to work. Real extension approval has been founder-reported only, not witnessed.
+
+## F. Three-minute demo video: suggested shot list
+
+The organisers require a public demo video of at most three minutes that shows a real product, core functions and Portaldot use. **It has not been recorded.** Suggested order, narrated by the founder:
+
+1. 0:00 — Homepage: the problem, the five steps, the test-tokens notice (20 s).
+2. 0:20 — `/evidence`: contract address and a transaction hash opened in the explorer (40 s).
+3. 1:00 — `/listing/585886`: terms, native-backing checks, the deposit and the claim in the activity list; say plainly it was one account (50 s).
+4. 1:50 — Wallet dialog and `/create` draft: no recovery phrase, draft saved and restored (30 s).
+5. 2:20 — The limits slide on the homepage and the investment assessment: what is not protected, and what evidence would change the recommendation (30 s).
+6. 2:50 — One-sentence close.
+
+If a funded second wallet becomes available, replace step 4 with a real browser-signed purchase and show its receipt. Do not simulate one.

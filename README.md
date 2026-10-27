@@ -1,7 +1,8 @@
 # Portion
 
-**Own a portion of things that earn.** Portion is being built for operators to offer shares in productive equipment and distribute revenue they deposit. The Core contract is live on the Portaldot V3 testnet. Publishing and funding use real testnet transactions and test tokens.
-If the operator defaults, a submitted slashing transaction can allocate the limited bond under the contract rules. This is not automatic principal insurance. Purchase proceeds currently go directly to the operator; [funding and protection boundaries](docs/FUNDING-PROTECTION.md) explain the gap.
+**Share what an asset earns, with a record everyone can check.** Portion lets an operator of productive equipment deposit revenue, split it among participants by their shares, and let each participant claim their part. The Core contract is live on the Portaldot V3 testnet; publishing, deposits and claims are real testnet transactions in test tokens that have no value.
+
+Portion's first product is **revenue-sharing administration for operators**: terms, deposits, allocations, claims and receipts. Raising money through Portion is a secondary, test-only module. **Purchase proceeds currently go directly to the operator**, nothing verifies that equipment exists or that revenue is complete, and the operator bond is limited recovery, not principal insurance. See [funding and protection boundaries](docs/FUNDING-PROTECTION.md), the [money and trust lifecycle](docs/MONEY-AND-TRUST-LIFECYCLE.md) and the [investment assessment](docs/INVESTMENT-ASSESSMENT.md).
 
 Built for the **Portaldot Hacker House 2026**, with **Ecosystem DApps** as the primary fit. Track eligibility and any additional award submission remain separate decisions.
 
@@ -11,6 +12,7 @@ Built for the **Portaldot Hacker House 2026**, with **Ecosystem DApps** as the p
 | SDK, documents and receipts | Versioned adapter, verified public copies and app-published finalized receipts; partial outside-transaction coverage |
 | Wallet onboarding | Existing native injected-wallet signing design; full separate-user browser proof remains outstanding |
 | Native tools | Direct network readings and optional native tools; verify each action before a demonstration |
+| Controlled-funding escrow | `contracts/src/candidates/ControlledFunding.sol`: 23 local tests; **not deployed, not in the app** ([candidate notes](docs/CONTROLLED-FUNDING-CANDIDATE.md)) |
 | Bridge, automatic keepers, full archive | Legacy source/roadmap; not deployed ongoing services in this release |
 
 Current deployment and validation: [live Core release](docs/LIVE-CORE-RELEASE.md) and [finalized protocol test](docs/LIVE-TEST-RESULTS.md). Hosted features use verified receipts and durable document copies; legacy keepers and the cross-chain bridge are not deployed.
@@ -21,7 +23,7 @@ The [execution log](docs/planning/TASK-PROGRESS.md) records completed work. The 
 
 ## Business direction
 
-Portion aims to become global infrastructure for companies managing funding and payouts for productive assets. The deployed Core contract charges a 1% sale fee and 0.5% revenue fee in test pUSD. Company management plans are a pricing hypothesis, not a feature currently charging customers. The [business plan](docs/BUSINESS.md) records costs, pilot criteria and limits; the app’s Revenue model page explains what still needs commercial validation.
+Portion aims to become infrastructure for operators who share revenue from productive assets. The reviewed direction is to narrow to operator revenue-sharing administration and keep funding as an optional test module ([why](docs/INVESTMENT-ASSESSMENT.md); [competitors](docs/MARKET-AND-COMPETITORS.md); [cost model](docs/FINANCIAL-MODEL.md), reproduced by `node scripts/financial-model.mjs`; [hackathon evidence map](docs/HACKATHON-EVIDENCE-MAP.md)). No customer, pilot or willingness to pay exists yet. The deployed Core contract charges a 1% sale fee and 0.5% revenue fee in test pUSD. Operator subscription pricing is a hypothesis, not a feature currently charging customers, and the cost model shows the current fixed fees do not cover the cost of serving an operator. The [business plan](docs/BUSINESS.md) records costs, pilot criteria and limits; the app’s Business model page explains what still needs commercial validation.
 
 ## The idea in one picture
 
@@ -40,7 +42,7 @@ All or nothing. Shares and the pUSD test-credit asset are *native assets* that S
 See [docs/research.md](docs/research.md) for the ecosystem research and why this idea, [docs/architecture.md](docs/architecture.md) for the design,
 and [docs/TESTING.md](docs/TESTING.md) for how to check every claim.
 
-New here? Open the [public preview](https://portion-one.vercel.app) and follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). Source: [Nailer/portion](https://github.com/Nailer/portion). The public preview reads the real testnet; the Core contract is deployed and its runtime bytecode is verified before actions are enabled. No simulation or fabricated opening balances are available. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
+New here? Open the [public preview](https://portion-one.vercel.app), read its [evidence page](https://portion-one.vercel.app/evidence) and follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). Source: [Nailer/portion](https://github.com/Nailer/portion). The public preview reads the real testnet; the Core contract is deployed and its runtime bytecode is verified before actions are enabled. No simulation or fabricated opening balances are available. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
 
 Account connection never asks for a recovery phrase. Approve a compatible browser-wallet connection for native testnet tools. Keys remain in the extension. No wallet is created by the app. See [account connection and legacy-data handling](docs/ACCOUNT-CONNECTION.md).
 
@@ -86,12 +88,12 @@ npx tsx scripts/deploy-live-core.ts --execute # only for a new deployment after 
 ## Repository layout
 
 ```
-contracts/       Solidity (Foundry): Portion.sol, Teleport.sol, WrappedToken.sol + tests
+contracts/       Solidity (Foundry): PortionCore.sol (deployed), src/candidates/ControlledFunding.sol (local only), legacy Portion/Teleport/WrappedToken + tests
 packages/sdk/    @portion/sdk: addresses, passports, revive, batches, documents, DEX
 packages/server/ indexer, document gateway, faucet, keepers, network analysis, relayer
 apps/web/        React app (Vite), real chain reads and deployment-gated asset actions
 scripts/         keygen, deploy, e2e, local Teleport test
-docs/            research, architecture, testing, submission pack
+docs/            research, architecture, testing, investment assessment, market, cost model, submission pack
 deployments/     addresses and evidence written by the scripts
 ```
 
@@ -100,6 +102,8 @@ See [hackathon readiness](docs/HACKATHON-READINESS.md) for verified requirements
 ## Honest limits
 
 - Operator revenue is self-reported. Bond + cadence make non-payment visible and expensive; they do not prove revenue. A production version would add payment-rail attestations.
+- No admission, verification or escrow: `create` is permissionless and purchase money is not held for approved spending.
+- The recorded lifecycle used one development account as operator and buyer, signed by a script. Separate-user browser signing is not yet witnessed.
 - Legacy Teleport source assumes a relayer committee; no live bridge or light-client migration is claimed here.
 - `pallet-nfts` lets an item's owner burn it; the proof panel will show "the deed no longer exists".
 - Public document copies use verified finalized pins. App receipt history is partial; old/pruned outside transactions require their own recovery/archive path.
@@ -108,4 +112,4 @@ See [hackathon readiness](docs/HACKATHON-READINESS.md) for verified requirements
 ## Credits and disclosures
 
 Built from scratch during the hackathon window (14 Oct – 6 Nov 2026). Third-party code used as dependencies: Polkadot-JS, ethers, React, Vite, Hono, Foundry's forge-std (MIT), vitest.
-Research notes cite public repositories from other hackathon teams only to describe the landscape; no code was copied. Licensed MIT.
+Research notes cite public repositories from other hackathon teams only to describe the landscape; no code was copied. Licensed MIT (see [LICENSE](LICENSE)).
