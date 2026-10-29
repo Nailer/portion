@@ -13,7 +13,7 @@ Built for the **Portaldot Hacker House 2026**, with **Ecosystem DApps** as the p
 | Wallet onboarding | Existing native injected-wallet signing design; full separate-user browser proof remains outstanding |
 | Native tools | Direct network readings and optional native tools; verify each action before a demonstration |
 | Controlled-funding escrow | `contracts/src/candidates/ControlledFunding.sol`: 23 local tests; **not deployed, not in the app** ([candidate notes](docs/CONTROLLED-FUNDING-CANDIDATE.md)) |
-| Core v2 loophole fixes | `contracts/src/candidates/PortionCoreV2.sol`: closes or narrows review findings C1–C4 and C7; 26 local tests incl. v1 exploit demonstrations; **not deployed, not in the app** ([candidate notes](docs/CORE-V2-CANDIDATE.md)) |
+| Core v2 (escrow, reviewers, pause) | `contracts/src/candidates/PortionCoreV2.sol`: closes or narrows review findings C1–C9, including purchase escrow with reviewer-approved release and refunds; supported by the SDK, API and app when a deployment names `core-v2`; **not deployed** (needs about 800–1,110 tPOT of storage deposit) ([candidate notes](docs/CORE-V2-CANDIDATE.md)) |
 | Bridge, automatic keepers, full archive | Legacy source/roadmap; not deployed ongoing services in this release |
 
 Current deployment and validation: [live Core release](docs/LIVE-CORE-RELEASE.md) and [finalized protocol test](docs/LIVE-TEST-RESULTS.md). Hosted features use verified receipts and durable document copies; legacy keepers and the cross-chain bridge are not deployed.

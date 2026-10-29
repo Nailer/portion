@@ -1,7 +1,7 @@
 import type { ApiPromise } from '@polkadot/api';
 import {
   createPoolAndSeed, quoteExactIn, reserves, swapExactIn, withId, FALLBACK_LIMITS,
-  PortionClient, CoreClient, mappedCorePlan, assetBalance, contentHash, nativeFree, parseUnits, storeTx, submit, MAX_DOC_BYTES,
+  PortionClient, CoreClient, isCore, mappedCorePlan, assetBalance, contentHash, nativeFree, parseUnits, storeTx, submit, MAX_DOC_BYTES,
   TESTNET, UnconfirmedTransactionError, testCreditMessage, type Deployment, type ListingView, type Passport, type Plan, type PlanStep, type TxStage,
 } from '@portion/sdk';
 import {
@@ -29,7 +29,7 @@ export class LiveBackend implements Backend {
     readonly chain: ApiPromise,
     readonly deployment?: Deployment,
   ) {
-    if (deployment?.portion && Number.isSafeInteger(deployment.pusdAssetId) && deployment.deedsCollection !== undefined) this.client = deployment.contractVersion === 'core-v1' ? new CoreClient(chain, deployment, { catalog: () => http('/api/catalog'), document: hash => this.docJson(hash) }) : new PortionClient(chain, deployment);
+    if (deployment?.portion && Number.isSafeInteger(deployment.pusdAssetId) && deployment.deedsCollection !== undefined) this.client = isCore(deployment) ? new CoreClient(chain, deployment, { catalog: () => http('/api/catalog'), document: hash => this.docJson(hash) }) : new PortionClient(chain, deployment);
   }
 
   get deployed() {
@@ -161,7 +161,7 @@ export class LiveBackend implements Backend {
           let warning: string | undefined;
           try { settleLocalReceipt(localStorage,receiptId,{ok:out.ok,txHash:out.txHash,blockNumber:out.blockNumber}); }
           catch { warning = 'The local submission receipt could not be updated. Keep the finalized hash and reconcile it before repeating this action.'; }
-          if (out.ok && coreReceipt && this.deployment?.contractVersion === 'core-v1') {
+          if (out.ok && coreReceipt && isCore(this.deployment)) {
             try { await http('/api/receipts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: out.blockNumber, txHash: out.txHash }) }); }
             catch { warning = [warning,'Transaction finalized, but its history receipt could not be published. Keep the transaction hash.'].filter(Boolean).join(' '); }
           }
@@ -188,7 +188,10 @@ export class LiveBackend implements Backend {
         if (intent.shares < 1 || intent.shares > l.vault.forSale) throw new UserError(`Only ${l.vault.forSale} shares are available.`);
         const cost = BigInt(intent.shares) * l.vault.salePrice;
         await this.ensurePusd(who, cost);
-        const prepared = await this.wrap(`Buy ${intent.shares} share${intent.shares === 1 ? '' : 's'} of ${l.name}`, c.planBuy(l, intent.shares), who, `You pay ${usdLabel(cost)}. This includes the sale fee; the remainder goes directly to the operator, without spending controls.`);
+        const note = l.escrow
+          ? `You pay ${usdLabel(cost)}. The contract holds it and releases it to the operator only in reviewer-approved tranches; if the raise misses its target you can take it all back.`
+          : `You pay ${usdLabel(cost)}. This includes the sale fee; the remainder goes directly to the operator, without spending controls.`;
+        const prepared = await this.wrap(`Buy ${intent.shares} share${intent.shares === 1 ? '' : 's'} of ${l.name}`, c.planBuy(l, intent.shares), who, note);
         const run = prepared.run;
         return { ...prepared, run: async stage => {
           const latest = await c.listing(intent.id);
@@ -223,6 +226,17 @@ export class LiveBackend implements Backend {
         const l = await c.listing(intent.id);
         await this.ensurePusd(who, intent.amount);
         return this.wrap('Top up the bond', c.planTopUpBond(l, intent.amount), who);
+      }
+      case 'escrow': {
+        if (!(c instanceof CoreClient) || !c.v2) throw new UserError('This action needs the Core v2 contract.');
+        const id = intent.id, ev = intent.evidence ?? '';
+        const plans = {
+          attest: () => c.planAttest(id, ev), finalize: () => c.planFinalize(id), refund: () => c.planRefund(id), cancel: () => c.planCancel(id),
+          propose: () => c.planPropose(id, ev), approve: () => c.planApprove(id), challenge: () => c.planChallenge(id),
+          release: () => c.planRelease(id), lapse: () => c.planLapse(id), noticeWindDown: () => c.planNoticeWindDown(id),
+        } as const;
+        const plan = plans[intent.fn]();
+        return this.wrap(plan.steps[0].title, plan, who);
       }
       case 'operator':
         return this.wrap({ closeSale: 'Close the sale', windDown: 'Wind the listing down', withdrawBond: 'Withdraw the bond' }[intent.fn], c.planOperator(intent.fn, intent.id), who);
@@ -273,7 +287,8 @@ export class LiveBackend implements Backend {
 
   private async prepareTokenize(f: TokenizeForm, who: Passport): Promise<Prepared> {
     const c = this.need();
-    if (!(c instanceof CoreClient)) throw new UserError('The recoverable creation flow requires Core v1.');
+    if (!(c instanceof CoreClient)) throw new UserError('The recoverable creation flow requires a Core contract.');
+    if (c.v2 && !f.controls) throw new UserError('Name the reviewer, the funding target, the deadline and the release schedule.');
     const rules = await this.rules();
     const price = parseUnits(f.pricePusd, 6), bond = parseUnits(f.bondPusd, 6), minPer = parseUnits(f.minPerPeriodPusd, 6);
     const needBond = BigInt(f.sharesForSale) * price * BigInt(rules.minBondBps) / 10000n;
@@ -284,7 +299,8 @@ export class LiveBackend implements Backend {
     const coverHash = contentHash(cover);
     const fingerprint = contentHash(enc.encode(JSON.stringify({ owner: who.address, contract: this.deployment!.portion,
       name: f.name, summary: f.summary, category: f.category, terms: f.terms, totalShares: f.totalShares,
-      sharesForSale: f.sharesForSale, price: price.toString(), cadence: f.cadenceSeconds, minimum: minPer.toString(), bond: bond.toString(), coverHash })));
+      sharesForSale: f.sharesForSale, price: price.toString(), cadence: f.cadenceSeconds, minimum: minPer.toString(), bond: bond.toString(), coverHash,
+      ...(f.controls ? { controls: f.controls } : {}) })));
     let checkpoint = loadUpload(localStorage, fingerprint);
     if (!checkpoint) {
       checkpoint = { v: 1, fingerprint, owner: who.address, contract: this.deployment!.portion,
@@ -313,7 +329,9 @@ export class LiveBackend implements Backend {
     if (saved.creation) return { title: `Publish existing ${f.name} receipt`, steps: [], cost: 'This reuses the finalized creation transaction. No new chain transaction is needed.', run: publishCreation };
     await this.ensureGas(who, 6n * 10n ** 14n); await this.ensurePusd(who, bond);
     const input = { ...identifiers, name: f.name, summary: f.summary, category: f.category, totalShares: f.totalShares,
-      sharesForSale: f.sharesForSale, salePrice: price, cadence: f.cadenceSeconds, minPerPeriod: minPer, bond, docHash, coverHash };
+      sharesForSale: f.sharesForSale, salePrice: price, cadence: f.cadenceSeconds, minPerPeriod: minPer, bond, docHash, coverHash,
+      ...(c.v2 && f.controls ? { controls: { reviewer: f.controls.reviewer, recovery: f.controls.recovery || undefined, minSold: f.controls.minSold,
+        deadline: Math.floor(Date.now() / 1000) + f.controls.deadlineDays * 86_400, tranches: f.controls.tranches } } : {}) };
     const original = await c.planTokenize(who,input);
     const plan = await mappedCorePlan(this.chain, original, who);
     const documentTxs = { Terms: storeTx(this.chain,terms), Photo: storeTx(this.chain,cover) };

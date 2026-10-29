@@ -1,7 +1,7 @@
 import { serve } from '@hono/node-server';
 import { Keyring } from '@polkadot/keyring';
 import { cryptoWaitReady } from '@polkadot/util-crypto';
-import { connect } from '@portion/sdk';
+import { connect, isCore } from '@portion/sdk';
 import { config, loadDeployment } from './config.js';
 import { openDb } from './db.js';
 import { Indexer } from './indexer.js';
@@ -39,10 +39,10 @@ if (config.relayer.enabled && deployment?.teleport && deployment.bnb && config.e
   console.log('[portion] Teleport relayer running');
 }
 const indexer = new Indexer(api, db, deployment);
-const app = deployment?.contractVersion === 'core-v1' ? publicApi(deployment) : buildApp({ api, db, deployment, faucet, startedAt: Date.now(), relayerRunning: !!relayer, indexerStatus: () => indexer.status() });
+const app = isCore(deployment) ? publicApi(deployment) : buildApp({ api, db, deployment, faucet, startedAt: Date.now(), relayerRunning: !!relayer, indexerStatus: () => indexer.status() });
 
-if (deployment?.contractVersion !== 'core-v1') indexer.start().catch((e) => console.error('[indexer] failed to start', e));
-if (deployment?.contractVersion !== 'core-v1' && config.keepers.enabled && config.keeperMnemonic) {
+if (!isCore(deployment)) indexer.start().catch((e) => console.error('[indexer] failed to start', e));
+if (!isCore(deployment) && config.keepers.enabled && config.keeperMnemonic) {
   new Keepers(api, db, keyring.addFromUri(config.keeperMnemonic), deployment, config.keepers.intervalMs).start();
 }
 

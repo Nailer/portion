@@ -323,3 +323,13 @@ footer.foot .wrap { display: grid; grid-template-columns: minmax(0, 1.2fr) minma
   .top .wrap { gap: 10px; }
   .brand { font-size: 21px; }
 }
+
+/* Core v2 escrow panel */
+.escrow .tranches { list-style: none; padding: 0; margin: 8px 0 12px; display: grid; gap: 6px; }
+.escrow .tranches li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; }
+.escrow .tranches li b { font-weight: 600; color: var(--ink-2); text-align: right; }
+.escrow .tranches li[data-state="released"] { background: var(--raised); }
+.escrow .tranches li[data-state="released"] b { color: var(--ink); }
+.escrow .tranches li[data-state="open"] { border-color: var(--accent); }
+.escrow h3 { font-size: 16px; margin-top: 12px; }
+.escrow code { font-size: 13px; overflow-wrap: anywhere; }

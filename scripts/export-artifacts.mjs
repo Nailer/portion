@@ -2,7 +2,7 @@
 // never need Foundry installed. Run via `npm run contracts:build`.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
-const names = ['Portion', 'PortionCore', 'Teleport', 'WrappedToken'];
+const names = ['Portion', 'PortionCore', 'PortionCoreV2', 'Teleport', 'WrappedToken'];
 const outDir = new URL('../packages/sdk/src/artifacts/', import.meta.url);
 mkdirSync(outDir, { recursive: true });
 for (const n of names) {

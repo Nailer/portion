@@ -31,6 +31,13 @@ export function Create() {
   const [minPer, setMinPer] = useState('');
   const [bond, setBond] = useState('');
   const [photo, setPhoto] = useState<Photo | null>(null);
+  // Core v2 funding controls. Not saved in the browser draft: they name other people's addresses.
+  const v2 = (backend as { deployment?: { contractVersion?: string } } | undefined)?.deployment?.contractVersion === 'core-v2';
+  const [reviewer, setReviewer] = useState('');
+  const [recovery, setRecovery] = useState('');
+  const [targetPct, setTargetPct] = useState(50);
+  const [deadlineDays, setDeadlineDays] = useState(30);
+  const [trancheCount, setTrancheCount] = useState(2);
   const [photoErr, setPhotoErr] = useState<string>();
   const [photoBusy,setPhotoBusy] = useState(false);
   const photoRequest = useRef(0);
@@ -77,8 +84,21 @@ export function Create() {
   if (forSale < 1 || forSale > totalShares) errors.shares = 'Choose at least one share to offer for funding.';
   if (!Number.isSafeInteger(totalShares) || totalShares < 10 || totalShares > 1000000) errors.shares = 'Use a whole number between 10 and 1,000,000.';
   if (!photo) errors.photo = 'Upload a real asset photo.';
+  const H160 = /^0x[0-9a-fA-F]{40}$/;
+  const minSold = Math.max(1, Math.ceil(forSale * targetPct / 100));
+  const tranches = Array.from({ length: trancheCount }, (_, i) => i < trancheCount - 1 ? Math.floor(10_000 / trancheCount) : 10_000 - Math.floor(10_000 / trancheCount) * (trancheCount - 1));
+  if (v2) {
+    if (!H160.test(reviewer)) errors.reviewer = 'Enter the reviewer’s contract address (0x followed by 40 hex characters).';
+    else if (passport && reviewer.toLowerCase() === passport.h160.toLowerCase()) errors.reviewer = 'The reviewer must be someone other than you.';
+    if (recovery && (!H160.test(recovery) || recovery.toLowerCase() === reviewer.toLowerCase() || (passport && recovery.toLowerCase() === passport.h160.toLowerCase()))) errors.recovery = 'Use a different valid address from yours and the reviewer’s, or leave it empty.';
+    if (!Number.isInteger(targetPct) || targetPct < 1 || targetPct > 100) errors.target = 'Choose a target between 1% and 100% of the offered shares.';
+    if (!Number.isInteger(deadlineDays) || deadlineDays < 1 || deadlineDays > 180) errors.deadline = 'Choose a deadline between 1 and 180 days.';
+    if (!Number.isInteger(trancheCount) || trancheCount < 1 || trancheCount > 12) errors.tranches = 'Choose between 1 and 12 tranches.';
+    // Mirrors the contract: the stated minimum must add up to at least 2% of the offered value per year.
+    if (!errors.minPer && safeUnits(minPer) * 365n * 86_400n * 10_000n < BigInt(cadence) * BigInt(forSale) * safeUnits(price) * 200n) errors.minPer = 'The minimum deposit must add up to at least 2% of the offered value each year.';
+  }
   const valid = !!rules && !photoBusy && Object.keys(errors).length === 0;
-  const groups = [['name','summary','terms','photo'],['shares','price'],['cadence','minPer','bond']];
+  const groups = [['name','summary','terms','photo'],['shares','price'],['cadence','minPer','bond','reviewer','recovery','target','deadline','tranches']];
   const next = () => { setTouched(true); if (!(groups[step] ?? []).some(k => errors[k])) {setStep(Math.min(3,step+1));setTouched(false);} };
 
   const onPhoto = async (file?: File | null) => {
@@ -101,6 +121,7 @@ export function Create() {
       name: name.trim(), summary: summary.trim(), category, totalShares, sharesForSale: forSale, pricePusd: price,
       cadenceSeconds: cadence, minPerPeriodPusd: minPer, bondPusd: bond, terms: terms.trim(),
       image: photo ? { bytes: photo.bytes, mime: photo.mime } : null,
+      ...(v2 ? { controls: { reviewer, recovery: recovery || undefined, minSold, deadlineDays, tranches } } : {}),
     } });
   };
   const show = (k: string) => (touched ? errors[k] : undefined);
@@ -188,11 +209,42 @@ export function Create() {
             <div className="field">
               <label htmlFor="bond">Bond you lock</label>
               <div className="input-affix"><input id="bond" type="number" min="0" step="any" value={bond} onChange={(e) => setBond(e.target.value)} /><span>pUSD</span></div>
-              {show('bond') ? <p className="err">{show('bond')}</p> : <p className="hint">After two missed periods, someone can slash the bond. The caller takes the disclosed tip; the rest goes to current stakers, or treasury if none remain. Minimum {usd(minBond)}. This is not principal insurance.</p>}
+              {show('bond') ? <p className="err">{show('bond')}</p> : <p className="hint">{v2
+                ? <>Three periods after your last qualifying deposit, someone can slash the bond. The caller takes the disclosed tip; the rest goes to holders, never to Portion, and any money still in escrow becomes refundable. Minimum {usd(minBond)}. This is not principal insurance.</>
+                : <>After two missed periods, someone can slash the bond. The caller takes the disclosed tip; the rest goes to current stakers, or treasury if none remain. Minimum {usd(minBond)}. This is not principal insurance.</>}</p>}
             </div>
+            {v2 && <>
+              <div className="field">
+                <label htmlFor="reviewer">Independent reviewer’s address</label>
+                <input id="reviewer" value={reviewer} placeholder="0x…" onChange={e => setReviewer(e.target.value.trim())} />
+                {show('reviewer') ? <p className="err">{show('reviewer')}</p> : <p className="hint">No one can buy until this person records a review on-chain. They also approve each release of escrow. Choose someone who will check the asset and is not you.</p>}
+              </div>
+              <div className="field">
+                <label htmlFor="recovery">Recovery address (optional)</label>
+                <input id="recovery" value={recovery} placeholder="0x…" onChange={e => setRecovery(e.target.value.trim())} />
+                {show('recovery') ? <p className="err">{show('recovery')}</p> : <p className="hint">Can hand the listing to a new operator key, with one period’s notice, if yours is lost. Leave empty for none.</p>}
+              </div>
+              <div className="two">
+                <div className="field">
+                  <label htmlFor="target">Funding target (% of offered shares)</label>
+                  <input id="target" type="number" min={1} max={100} value={targetPct} onChange={e => setTargetPct(Math.floor(Number(e.target.value)))} />
+                  {show('target') ? <p className="err">{show('target')}</p> : <p className="hint">{minSold.toLocaleString()} shares. Missing it refunds every buyer in full.</p>}
+                </div>
+                <div className="field">
+                  <label htmlFor="deadline">Days to reach it</label>
+                  <input id="deadline" type="number" min={1} max={180} value={deadlineDays} onChange={e => setDeadlineDays(Math.floor(Number(e.target.value)))} />
+                  {show('deadline') && <p className="err">{show('deadline')}</p>}
+                </div>
+              </div>
+              <div className="field">
+                <label htmlFor="tranches">Release the money in</label>
+                <select id="tranches" value={trancheCount} onChange={e => setTrancheCount(Number(e.target.value))}>{Array.from({ length: 12 }, (_, i) => <option key={i} value={i + 1}>{i + 1} equal tranche{i ? 's' : ''}</option>)}</select>
+                {show('tranches') ? <p className="err">{show('tranches')}</p> : <p className="hint">Each release needs evidence, the reviewer’s approval and one period in which holders can challenge it. The 1% Portion fee is taken from each release.</p>}
+              </div>
+            </>}
           </fieldset>
 
-          {step === 3 && <section className="create-review"><span className="eyebrow">THE LAST LOOK</span><h2>Here’s what you’re publishing.</h2><dl><dt>Asset</dt><dd>{name}</dd><dt>Offered shares</dt><dd>{forSale.toLocaleString()} of {totalShares.toLocaleString()}</dd><dt>Price per share</dt><dd>{usd(safeUnits(price))}</dd><dt>Maximum raise before fees</dt><dd>{usd(safeUnits(price)*BigInt(forSale))}</dd><dt>Estimated proceeds if sold out</dt><dd>{usd(netRaise)}</dd><dt>Deposit schedule</dt><dd>{usd(safeUnits(minPer))} {cadenceLabel(cadence)}</dd><dt>Bond locked separately</dt><dd>{usd(safeUnits(bond))}</dd></dl><p className="notice">The bond uses your existing funds. Customer income is reported by you. Publishing does not verify physical equipment or establish funders’ legal rights. Define those rights in an enforceable agreement before accepting real money.</p><p className="terms">{terms}</p></section>}
+          {step === 3 && <section className="create-review"><span className="eyebrow">THE LAST LOOK</span><h2>Here’s what you’re publishing.</h2><dl><dt>Asset</dt><dd>{name}</dd><dt>Offered shares</dt><dd>{forSale.toLocaleString()} of {totalShares.toLocaleString()}</dd><dt>Price per share</dt><dd>{usd(safeUnits(price))}</dd><dt>Maximum raise before fees</dt><dd>{usd(safeUnits(price)*BigInt(forSale))}</dd><dt>Estimated proceeds if sold out</dt><dd>{usd(netRaise)}</dd><dt>Deposit schedule</dt><dd>{usd(safeUnits(minPer))} {cadenceLabel(cadence)}</dd><dt>Bond locked separately</dt><dd>{usd(safeUnits(bond))}</dd>{v2 && <><dt>Independent reviewer</dt><dd><code>{reviewer}</code></dd><dt>Funding target</dt><dd>{minSold.toLocaleString()} shares within {deadlineDays} days, or full refunds</dd><dt>Escrow release</dt><dd>{tranches.map(t => `${t / 100}%`).join(' · ')}</dd></>}</dl><p className="notice">The bond uses your existing funds. Customer income is reported by you. Publishing does not verify physical equipment or establish funders’ legal rights. Define those rights in an enforceable agreement before accepting real money.</p><p className="terms">{terms}</p></section>}
           <div className="create-controls">
             {step>0 && <button className="btn ghost" type="button" onClick={()=>{setStep(step-1);setTouched(false);}}>← Back</button>}
             <button className="btn primary" type="submit">{step<3 ? 'Continue →' : passport ? 'Review and publish ↗' : 'Connect wallet to publish'}</button>

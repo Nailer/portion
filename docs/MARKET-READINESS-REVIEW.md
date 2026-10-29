@@ -2,7 +2,7 @@
 
 Perspective: a senior developer and a prospective investor asking what must change before Portion is fit for real operators and real money. Sources: `contracts/src/PortionCore.sol` as deployed (Core v1, read at commit `648e87a`), the web app, and the existing reviews linked below. This is an engineering and investment review, **not an audit or legal opinion**. No chain write, spend, deployment or outside contact occurred.
 
-**Evidence level.** C1, C2, C3, C4 and C7 are demonstrated against the deployed v1 code by `contracts/test/CoreV2Loopholes.t.sol` (`CoreV1LoopholeTest`), and fixed or narrowed in a **local, undeployed** [Core v2 candidate](CORE-V2-CANDIDATE.md). C5, C6, C8 and C9 are reasoned from source and earlier reviews.
+**Evidence level.** C1, C2, C3, C4 and C7 are demonstrated against the deployed v1 code by `contracts/test/CoreV2Loopholes.t.sol` (`CoreV1LoopholeTest`). C5, C6, C8 and C9 are reasoned from source and earlier reviews. **Update, 29 October 2026:** all nine are closed or narrowed in the [Core v2 candidate](CORE-V2-CANDIDATE.md), which the SDK, server and web app now support. It is **not deployed**: it needs about 800 to 1,110 tPOT of storage deposit, and the deployer holds 44.83.
 
 ## Verdict
 
@@ -40,9 +40,9 @@ Perspective: a senior developer and a prospective investor asking what must chan
 
 ## 3. Order of work before investment
 
-1. **Before any outside testing:** fix C1–C4 and C7, and stop slashed bonds going to the treasury. *Done locally:* the [Core v2 candidate](CORE-V2-CANDIDATE.md) refuses each demonstrated attack, and nine injected bugs were all caught by its tests. Remaining for this step: a second engineer's review of v2, and the SDK and web changes to use it.
-2. **Before a first pilot:** combine the fixes with the escrow candidate (C5); run the two-wallet session (M9); sign one operator to a priced pilot (M1, M2).
-3. **Before real money:** legal opinion and transfer controls (M3), an independent verifier (M4), a conversion partner (M5), an external audit (M8), and a pause and migration plan (C8).
+1. **Before any outside testing:** fix C1–C4 and C7, and stop slashed bonds going to the treasury. *Done in code:* the [Core v2 candidate](CORE-V2-CANDIDATE.md) refuses each demonstrated attack, and the SDK, server and web app support it. Remaining: a second engineer's review, and the testnet deployment once tokens arrive.
+2. **Before a first pilot:** combine the fixes with escrow (C5). *Done in code:* escrow, target, refunds and reviewer-approved tranches are part of v2. Remaining: run the two-wallet session on a deployed v2 (M9), and sign one operator to a priced pilot (M1, M2).
+3. **Before real money:** legal opinion and transfer controls (M3), an independent verifier (M4), a conversion partner (M5) and an external audit (M8). The pause and migration plan (C8) are now in v2 and its notes.
 4. **To grow:** a tested subscription price, meter or bank-data reconciliation, and an exit route for holders (M6).
 
 ## What would change the verdict

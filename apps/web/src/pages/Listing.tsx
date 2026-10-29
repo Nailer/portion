@@ -14,6 +14,7 @@ import { receiptCsv, downloadCsv } from '../lib/receipt-export';
 import { LiveBackend } from '../lib/live';
 import { shareAllocation } from '../lib/share-allocation';
 import { VerifiedPhoto } from '../components/VerifiedPhoto';
+import { EscrowPanel } from '../components/EscrowPanel';
 
 const safeAmount = (value: string) => { try { const n = parseUnits(value,6); return n > 0n ? n : 0n; } catch { return 0n; } };
 
@@ -58,6 +59,12 @@ function describe(a: ActivityRow): string {
 
 function ClosedOffer({ l, soldOut, onMine }: { l: ListingView; soldOut: boolean; onMine: () => void }) {
   const wound = l.health === 'WoundDown', defaulted = l.health === 'Defaulted';
+  const phase = l.escrow?.phase;
+  if (phase === 'Pending' || phase === 'Refunding' || phase === 'Funding') return <div className="closed-offer" role="status">
+    <h3>{phase === 'Pending' ? 'Not open yet: waiting for independent review' : phase === 'Refunding' ? 'This raise is refunding' : 'The funding deadline has passed'}</h3>
+    <p>{phase === 'Pending' ? 'The named reviewer must attest before anyone can buy.' : phase === 'Refunding' ? 'Buyers can take back their share of the money the operator never received.' : 'Anyone can now settle the raise: it either activates or opens full refunds.'}</p>
+    <ul><li><button type="button" className="link-btn" onClick={onMine}>Check your own shares, claims and refunds</button></li></ul>
+  </div>;
   const title = wound ? 'This listing has been wound down' : defaulted ? 'New funding is blocked: the operator is in default' : soldOut ? `Sold out: all ${l.totalShares.toLocaleString()} shares were bought` : 'The primary sale is closed';
   const why = wound ? 'The operator closed it. Allocations already earned stay claimable by their holders.' : defaulted ? 'Two payment periods passed without a qualifying deposit. Holders can still claim, and anyone may submit a bond recovery.' : soldOut ? 'This offer cannot take another purchase. Nothing is broken; the purchase button only exists while shares remain.' : 'The operator closed the sale before every share was bought.';
   return <div className="closed-offer" role="status">
@@ -145,6 +152,8 @@ export function ListingPage() {
             <div className="fact"><small>Operator bond</small><b>{usd(l.vault.bond)}</b></div>
           </div>
 
+          {l.escrow && <EscrowPanel l={{ ...l, escrow: l.escrow }} me={passport?.h160.toLowerCase() ?? null} now={nowSec} act={act} refundable={me?.refundable ?? 0n} stake={staked} />}
+
           <section className="block">
             <h2>Is the operator depositing?</h2>
             <div style={{ maxWidth: 520 }}><Health l={l} /></div>
@@ -227,8 +236,10 @@ export function ListingPage() {
               </div>
               <p className="notice" style={{ margin: '16px 0' }}>Closing is blocked while any earning shares remain staked. An overdue bond must be settled first. Unstaking returns shares, not the money paid to buy them.</p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {l.saleOpen && <button className="btn ghost sm" onClick={() => act({ kind: 'operator', fn: 'closeSale', id })}>Close the sale</button>}
-                {l.health !== 'WoundDown' && <button className="btn ghost sm" disabled={l.vault.totalStaked > 0n || (l.health === 'Defaulted' && l.vault.bond > 0n)} onClick={() => act({ kind: 'operator', fn: 'windDown', id })}>Wind the listing down</button>}
+                {l.saleOpen && !l.escrow && <button className="btn ghost sm" onClick={() => act({ kind: 'operator', fn: 'closeSale', id })}>Close the sale</button>}
+                {l.escrow?.activated && !l.escrow.windDownAfter && l.health !== 'WoundDown' && <button className="btn ghost sm" onClick={() => act({ kind: 'escrow', fn: 'noticeWindDown', id })}>Give two periods’ notice of wind-down</button>}
+                {l.escrow && l.escrow.windDownAfter > 0 && l.health !== 'WoundDown' && <p className="note">Wind-down possible {nowSec < l.escrow.windDownAfter ? `in ${span(l.escrow.windDownAfter - nowSec)}` : 'now'}, if no shares are staked and no money is held for holders.</p>}
+                {l.health !== 'WoundDown' && (!l.escrow || l.escrow.windDownAfter > 0) && <button className="btn ghost sm" disabled={l.vault.totalStaked > 0n || (l.health === 'Defaulted' && l.vault.bond > 0n) || (!!l.escrow && (nowSec < l.escrow.windDownAfter || l.escrow.reserve > 0n))} onClick={() => act({ kind: 'operator', fn: 'windDown', id })}>Wind the listing down</button>}
                 {l.health === 'WoundDown' && l.vault.bond > 0n && <><p className="note">Bond withdrawal opens {span(2*l.cadence)} after winding down. {nowSec < l.closedAt + 2*l.cadence ? `${span(l.closedAt + 2*l.cadence-nowSec)} remains.` : 'The waiting period has elapsed.'}</p><button className="btn ghost sm" disabled={nowSec < l.closedAt + 2*l.cadence} onClick={() => act({ kind: 'operator', fn: 'withdrawBond', id })}>Review bond withdrawal</button></>}
               </div>
             </section>
@@ -261,9 +272,11 @@ export function ListingPage() {
                 <button aria-label="More shares" onClick={() => setShares((s) => Math.min(l.vault.forSale, s + 1))}>+</button>
               </div>
               <div className="sum-line"><span>If all shares are staked</span><b>{usd(l.minPerPeriod * BigInt(10000 - (rules.revenueFeeBps)) / 10000n * BigInt(shares) / BigInt(l.totalShares))} {cadenceLabel(l.cadence)}</b></div>
-              <div className="sum-line"><span>Included Portion fee ({(rules.saleFeeBps) / 100}%)</span><b>{usd(fee)}</b></div>
+              <div className="sum-line"><span>{l.escrow ? `Portion fee (${rules.saleFeeBps / 100}%), taken only from released tranches` : `Included Portion fee (${(rules.saleFeeBps) / 100}%)`}</span><b>{usd(fee)}</b></div>
               <div className="total"><span>You pay</span><b>{usd(cost)}</b></div><p className="hint" style={{fontSize:11,color:'var(--ink-3)',lineHeight:1.8}}>The payment illustration assumes the stated deposit and every share staked. Actual allocations use the shares staked when money arrives. Income and principal repayment are not guaranteed.</p>
-              <p className="notice">The sale payment goes directly to the operator after the fee. Portion does not currently hold it for approved spending. The bond provides limited recovery, not insurance of your purchase.</p>
+              {l.escrow
+                ? <p className="notice">Your payment is held by the contract. It reaches the operator only in tranches the named reviewer approves, after a challenge window. If fewer than {l.escrow.minSold.toLocaleString()} shares sell by the deadline, you can take it all back. Released money cannot be recovered, and the bond is limited recovery, not insurance.</p>
+                : <p className="notice">The sale payment goes directly to the operator after the fee. Portion does not currently hold it for approved spending. The bond provides limited recovery, not insurance of your purchase.</p>}
               {passport ? (
                 <>
                   <button className="btn primary" onClick={() => act({ kind: 'buy', id, shares })}>Buy {shares} share{shares === 1 ? '' : 's'}</button>

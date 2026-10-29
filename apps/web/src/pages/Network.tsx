@@ -11,7 +11,7 @@ export function Network() {
   const { backend, reconnect, tick, refresh } = useApp();
   const { passport } = usePassport();
   const { data: service, error: serviceError, loading: serviceLoading } = useAsync(() => api<{ ok: boolean; mode?: string; documents?: boolean; note?: string; indexer?: { ready: boolean; historyComplete: boolean; lastIndexed: number; error?: string } }>('/api/health', { signal: AbortSignal.timeout(5000) }), [backend, tick]);
-  const receiptsReady = !!service?.ok && service.mode === 'core-v1-public-receipts';
+  const receiptsReady = !!service?.ok && /^core-v[12]-public-receipts$/.test(String(service.mode));
   const [snapshot, setSnapshot] = useState<{ height: string; hash: string; genesis: string; chain: string; runtime: string; timestamp: string; observed: string }>();
   const [error, setError] = useState('');
   useEffect(() => {

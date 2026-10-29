@@ -54,7 +54,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // Public landing pages paint first; the heavy chain client loads once the browser is idle.
         if (attempt === 0 && PUBLIC_ENTRY.includes(window.location.pathname)) await afterFirstPaint();
         if (dead) return;
-        const [{ connect, TESTNET, PortionCoreArtifact }, { LiveBackend }] = await Promise.all([import('@portion/sdk'), import('../lib/live')]);
+        const [{ connect, TESTNET, coreArtifact, isCore }, { LiveBackend }] = await Promise.all([import('@portion/sdk'), import('../lib/live')]);
         if (dead) return;
         const connection = connect(TESTNET.ws);
         let expired = false;
@@ -70,10 +70,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (deployment) {
             const account = await api.query.revive.accountInfoOf(deployment.portion);
             if ((account as any).isNone) throw new Error('The configured Portion contract could not be verified on this chain.');
-            if (deployment.contractVersion === 'core-v1') {
+            if (isCore(deployment)) {
               const response = await fetch(TESTNET.evmRpc, { method: 'POST', headers: { 'content-type': 'application/json' }, signal: AbortSignal.timeout(6000), body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getCode', params: [deployment.portion, 'latest'] }) });
               const code = await response.json();
-              if (!code.result || keccak256(code.result) !== keccak256(PortionCoreArtifact.runtimeBytecode)) throw new Error('Core runtime bytecode could not be verified.');
+              if (!code.result || keccak256(code.result) !== keccak256(coreArtifact(deployment.contractVersion).runtimeBytecode)) throw new Error('Core runtime bytecode could not be verified.');
             }
             const candidate = new LiveBackend(api, deployment);
             await candidate.rules();

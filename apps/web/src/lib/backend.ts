@@ -51,7 +51,11 @@ export interface TokenizeForm {
   bondPusd: string;
   terms: string;
   image: { bytes: Uint8Array; mime: string } | null;
+  /** Core v2 only: who reviews, the funding target and how escrow is released. */
+  controls?: { reviewer: string; recovery?: string; minSold: number; deadlineDays: number; tranches: number[] };
 }
+
+export type EscrowAction = 'attest' | 'finalize' | 'refund' | 'cancel' | 'propose' | 'approve' | 'challenge' | 'release' | 'lapse' | 'noticeWindDown';
 
 export type Intent =
   | { kind: 'buy'; id: number; shares: number }
@@ -62,6 +66,8 @@ export type Intent =
   | { kind: 'slash'; id: number }
   | { kind: 'topUp'; id: number; amount: bigint }
   | { kind: 'operator'; fn: 'closeSale' | 'windDown' | 'withdrawBond'; id: number }
+  /** Core v2 escrow, review and wind-down actions. `evidence` is a 32-byte hash where the action needs one. */
+  | { kind: 'escrow'; fn: EscrowAction; id: number; evidence?: string }
   | { kind: 'dexBuy'; id: number; pusdIn: bigint }
   | { kind: 'dexSell'; id: number; sharesIn: number }
   | { kind: 'dexSeed'; id: number; shares: number; pusd: bigint }

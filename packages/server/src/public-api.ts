@@ -4,7 +4,7 @@ import { Interface } from 'ethers';
 import { Keyring } from '@polkadot/keyring';
 import { cryptoWaitReady, decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import {
-  connect, TESTNET, PortionCoreArtifact, ReviveContract, storedInBlock, contentHash, MAX_DOC_BYTES,
+  connect, TESTNET, coreArtifact, isCore, ReviveContract, storedInBlock, contentHash, MAX_DOC_BYTES,
   coreDocument, CoreClient, nativeFree, submit, ss58ToH160, decodeFailure, UnconfirmedTransactionError, testCreditMessage, type Deployment, type CoreRecord,
 } from '@portion/sdk';
 import type { ApiPromise } from '@polkadot/api';
@@ -22,7 +22,10 @@ const imageType = (data: Uint8Array) => data[0] === 0xff && data[1] === 0xd8 ? '
 /** Stateless Vercel routes with durable, content-addressed public copies of verified chain data. No deployment keys; test credits use a separate, limited issuer. */
 export function publicApi(deployment: Deployment | undefined, createConnection: () => Promise<ApiPromise> = () => connect(TESTNET.ws)) {
   const app = new Hono();
-  const prefix = `portion/core-v1/${deployment?.portion.toLowerCase() ?? 'undeployed'}/`;
+  // v1 keeps its original storage paths; a v2 deployment gets its own namespace.
+  const version = isCore(deployment) ? deployment.contractVersion : 'core-v1';
+  const coreAbi = coreArtifact(version).abi;
+  const prefix = `portion/${version}/${deployment?.portion.toLowerCase() ?? 'undeployed'}/`;
   const read = async (path: string): Promise<Uint8Array | null> => {
     const result = await list({ prefix: prefix + path, limit: 2 });
     const blob = result.blobs.find(blob => blob.pathname === prefix + path);
@@ -45,7 +48,7 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
   };
   app.use('*', async (c, next) => {
     c.header('X-Content-Type-Options', 'nosniff');
-    if (!deployment || deployment.contractVersion !== 'core-v1') return c.json({ error: 'Core contracts are not deployed.' }, 503);
+    if (!deployment || !isCore(deployment)) return c.json({ error: 'Core contracts are not deployed.' }, 503);
     if (!process.env.BLOB_READ_WRITE_TOKEN) return c.json({ error: 'Durable public document storage is not configured.' }, 503);
     return next();
   });
@@ -57,7 +60,7 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
     } finally { await api.disconnect(); }
   };
   app.get('/api/deployment', c => c.json(deployment));
-  app.get('/api/health', async c => { await list({ prefix, limit: 1 }); return c.json({ ok: true, deployed: true, mode: 'core-v1-public-receipts', indexedHistoryComplete: false,
+  app.get('/api/health', async c => { await list({ prefix, limit: 1 }); return c.json({ ok: true, deployed: true, mode: `${version}-public-receipts`, indexedHistoryComplete: false,
     documents: true, note: 'Receipts submitted by the app are verified and retained; this is not a complete archive of outside transactions.' }); });
   app.get('/api/catalog', async c => {
     c.header('Cache-Control', 'private, no-store'); return c.json(await catalog());
@@ -110,7 +113,7 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
       const records: any = await at.query.system.events();
       const own = [...records].filter((record: any) => record.phase.isApplyExtrinsic && record.phase.asApplyExtrinsic.toNumber() === index);
       if (own.some((record: any) => api.events.system.ExtrinsicFailed.is(record.event))) return c.json({ error: 'Transaction failed.' }, 400);
-      const iface = new Interface(PortionCoreArtifact.abi);
+      const iface = new Interface(coreAbi);
       const ts = Math.floor(Number((await at.query.timestamp.now()).toString()) / 1000);
       const rows: Receipt['rows'] = [];
       for (const record of own) {
@@ -125,7 +128,7 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
         rows.push({ kind: aliases[event.name] ?? event.name, listingId: Number(args.asset), actor: actor ? String(actor).toLowerCase() : null,
           data: { ...args, ...(args.holders !== undefined ? { toHolders: args.holders } : {}) } });
         if (event.name === 'Listed') {
-          const l = await new ReviveContract(api, deployment!.portion, PortionCoreArtifact.abi).read('listing', [args.asset]);
+          const l = await new ReviveContract(api, deployment!.portion, coreAbi).read('listing', [args.asset]);
           if (String(l.docHash).toLowerCase() !== String(args.docHash).toLowerCase()) throw new Error('Listing hash differs from event.');
           coreDocument(JSON.parse(new TextDecoder().decode(await readDoc(String(l.docHash)))), Number(args.asset), deployment!.deedsCollection);
           const entry: CoreRecord = { assetId: Number(args.asset), docHash: String(l.docHash), createdAt: ts, block: input.block, txHash: input.txHash };
@@ -176,7 +179,7 @@ export function publicApi(deployment: Deployment | undefined, createConnection: 
       const hash = await api.rpc.chain.getFinalizedHead();
       const header = await api.rpc.chain.getHeader(hash);
       const at = await api.at(hash);
-      const listing = await new ReviveContract(at as unknown as ApiPromise, deployment!.portion, PortionCoreArtifact.abi).read('listing', [id]);
+      const listing = await new ReviveContract(at as unknown as ApiPromise, deployment!.portion, coreAbi).read('listing', [id]);
       return c.json({ ...revenueCoverage(await receiptList(), id, BigInt(listing.revenue), header.number.toNumber()), finalizedHash: hash.toHex() });
     });
   });

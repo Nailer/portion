@@ -82,3 +82,79 @@ describe('Core deed creation safety', () => {
     expect(api.tx.nfts.lockItemTransfer).not.toHaveBeenCalled();
   });
 });
+
+describe('Core v2 adapter', async () => {
+  const { escrowView, validateControls } = await import('../src/core');
+  const guardian = '0x' + '66'.repeat(20);
+  const reviewer = '0x' + '2e'.repeat(20);
+  const v2deployment = { ...deployment, contractVersion: 'core-v2', guardian } as Deployment;
+  const now = Math.floor(Date.now() / 1000);
+  const v2row = { ...row, saleOpen: undefined, phase: 2n, activated: true, reviewer, recovery: '0x' + '00'.repeat(20), pendingOperator: '0x' + '00'.repeat(20),
+    pendingAfter: 0n, deadline: BigInt(now + 86_400), minSold: 50n, raised: 1_000n, released: 500n, refundPool: 0n, refunded: 0n,
+    nextTranche: 1n, lapses: 0n, proposalOpen: false, evidence: '0x' + '00'.repeat(32), proposedAt: 0n, approvedAt: 0n, challenged: false,
+    otherDeposits: 7n, reserve: 0n, windDownAfter: 0n };
+  function v2fixture(overrides: Record<string, unknown> = {}, extra: Record<string, unknown> = {}) {
+    const source = { catalog: async () => [{ assetId: 777, docHash: hash, createdAt: 50, block: 10, txHash: hash }], document: async () => doc };
+    const call = vi.fn(() => ({ method: {} }));
+    const client = new CoreClient({ tx: { revive: { call }, utility: { batchAll: vi.fn((calls: unknown[]) => ({ calls })) }, assets: { approveTransfer: vi.fn(() => 'approve') } } } as any, v2deployment, source);
+    const values: Record<string, unknown> = { listing: { ...v2row, ...overrides }, tranches: [5000n, 5000n], health: 0n, paymentToken: assetErc20Address(4217),
+      shareToken: assetErc20Address(4217), treasury: ss58ToH160(deployment.treasury), guardian, stakes: { amount: 0n }, pending: 0n, paid: 600n, refundTaken: false, ...extra };
+    const read = vi.spyOn(client.contract, 'read').mockImplementation(async method => values[method]);
+    return { client, read, call };
+  }
+  it('reads escrow, release schedule and separately counted outside deposits', async () => {
+    const { client } = v2fixture(); const listing = await client.listing(777);
+    expect(listing.escrow).toMatchObject({ phase: 'Active', activated: true, reviewer, recovery: null, escrowed: 500n, tranches: [5000, 5000], nextTranche: 1, proposal: null, otherDeposits: 7n });
+    expect(listing.saleOpen).toBe(false);
+  });
+  it('treats a sale as open only while funding, before the deadline, with shares left', async () => {
+    expect((await v2fixture({ phase: 1n, activated: false, forSale: 10n }).client.listing(777)).saleOpen).toBe(true);
+    expect((await v2fixture({ phase: 1n, activated: false, forSale: 10n, deadline: BigInt(now - 1) }).client.listing(777)).saleOpen).toBe(false);
+    expect((await v2fixture({ phase: 0n, activated: false, forSale: 10n }).client.listing(777)).saleOpen).toBe(false);
+  });
+  it('shows an open tranche proposal and rejects unknown phases', () => {
+    expect(escrowView({ ...v2row, proposalOpen: true, proposedAt: 5n, approvedAt: 9n, challenged: true }, [10_000n]).proposal).toEqual({ evidence: v2row.evidence, proposedAt: 5, approvedAt: 9, challenged: true });
+    expect(() => escrowView({ ...v2row, phase: 4n }, [])).toThrow('phase');
+  });
+  it('lists a refund the account has not yet taken, pro rata to what it paid', async () => {
+    const { client } = v2fixture({ phase: 3n, refundPool: 500n });
+    expect(await client.positions(deployment.treasury)).toEqual([{ id: 777, staked: 0, pending: 0n, refundable: 300n }]);
+    const taken = v2fixture({ phase: 3n, refundPool: 500n }, { refundTaken: true });
+    expect(await taken.client.positions(deployment.treasury)).toEqual([]);
+  });
+  it('refuses a deployment whose guardian differs from the disclosed configuration', async () => {
+    expect((await v2fixture().client.rules()).saleFeeBps).toBe(100);
+    await expect(v2fixture({}, { guardian: '0x' + '99'.repeat(20) }).client.rules()).rejects.toThrow('guardian');
+  });
+  it('builds v2 actions and refuses them on a v1 deployment', async () => {
+    const { client, call } = v2fixture();
+    client.planRelease(777); client.planAttest(777, hash);
+    expect(call).toHaveBeenCalledTimes(2);
+    expect(() => client.planAttest(777, '0x1234')).toThrow('hash');
+    expect(() => client.planOperator('closeSale', 777)).toThrow('finalize');
+    const v1 = fixture().client;
+    expect(() => v1.planRefund(777)).toThrow('Core v2');
+  });
+  describe('funding controls', () => {
+    const operator = '0x' + 'aa'.repeat(20);
+    const input: any = { sharesForSale: 100, salePrice: 10_000_000n, cadence: 604_800, minPerPeriod: 20_000_000n,
+      controls: { reviewer, minSold: 50, deadline: now + 86_400, tranches: [5000, 5000] } };
+    it('accepts independent roles, a reachable target and a whole release schedule', () => {
+      expect(validateControls(input, operator, now)).toEqual({ reviewer, recovery: '0x' + '00'.repeat(20) });
+    });
+    it.each([
+      ['reviewer is the operator', { reviewer: operator }, 'independent'],
+      ['recovery is the reviewer', { recovery: reviewer }, 'recovery'],
+      ['target above the offer', { minSold: 101 }, 'target'],
+      ['deadline passed', { deadline: now }, 'deadline'],
+      ['schedule short of 100%', { tranches: [5000, 4999] }, 'tranches'],
+    ])('rejects a %s', (_, change, message) => {
+      expect(() => validateControls({ ...input, controls: { ...input.controls, ...change } }, operator, now)).toThrow(new RegExp(message, 'i'));
+    });
+    it('mirrors the on-chain minimum-deposit floor', () => {
+      expect(() => validateControls({ ...input, minPerPeriod: 383_561n }, operator, now)).toThrow('2%');
+      expect(() => validateControls({ ...input, minPerPeriod: 383_562n }, operator, now)).not.toThrow();
+    });
+    it('requires the controls on v2', () => { expect(() => validateControls({ ...input, controls: undefined }, operator, now)).toThrow('reviewer'); });
+  });
+});

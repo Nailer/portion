@@ -2,15 +2,21 @@ import type { ApiPromise } from '@polkadot/api';
 import type { SubmittableExtrinsic } from '@polkadot/api/types';
 import { stringToHex } from '@polkadot/util';
 import { encodeBytes32String } from 'ethers';
-import { PortionArtifact, PortionCoreArtifact } from './abi';
+import { PortionArtifact, coreArtifact } from './abi';
 import { ASSET_PRECOMPILE_PREFIX, PUSD_DECIMALS } from './constants';
 import { assetErc20Address, h160ToFallbackSs58, ss58ToH160 } from './addresses';
 import { assetBalance, assetExists } from './chain';
 import { FALLBACK_LIMITS, ReviveContract } from './revive';
 import type { Passport } from './passport';
 
+export type CoreVersion = 'core-v1' | 'core-v2';
+export const isCore = (d?: { contractVersion?: string } | null): d is { contractVersion: CoreVersion } =>
+  d?.contractVersion === 'core-v1' || d?.contractVersion === 'core-v2';
+
 export interface Deployment {
-  contractVersion?: 'core-v1';
+  contractVersion?: CoreVersion;
+  /** Core v2 only: the address allowed to pause new money for at most seven days. */
+  guardian?: string;
   runtimeCodeHash?: string;
   network: string;
   chainId: number;
@@ -40,6 +46,33 @@ export interface VaultView {
   salePrice: bigint;
 }
 
+export const ESCROW_PHASES = ['Pending', 'Funding', 'Active', 'Refunding'] as const;
+export type EscrowPhase = (typeof ESCROW_PHASES)[number];
+
+/** Core v2: purchase money held by the contract and released in reviewer-approved tranches. */
+export interface EscrowView {
+  phase: EscrowPhase;
+  activated: boolean;
+  reviewer: string;
+  recovery: string | null;
+  pendingOperator: string | null;
+  pendingAfter: number;
+  deadline: number;
+  minSold: number;
+  raised: bigint;
+  released: bigint;
+  refundPool: bigint;
+  refunded: bigint;
+  escrowed: bigint;
+  tranches: number[]; // basis points, summing to 10,000
+  nextTranche: number;
+  lapses: number;
+  proposal: { evidence: string; proposedAt: number; approvedAt: number; challenged: boolean } | null;
+  otherDeposits: bigint;
+  reserve: bigint;
+  windDownAfter: number;
+}
+
 export interface ListingView {
   id: number;
   operator: string; // H160
@@ -63,12 +96,15 @@ export interface ListingView {
   vault: VaultView;
   health: HealthName;
   shareToken: string;
+  escrow?: EscrowView;
 }
 
 export interface PositionView {
   id: number;
   staked: number;
   pending: bigint;
+  /** Core v2: purchase money this account can take back from a refunding listing. */
+  refundable?: bigint;
 }
 
 /** One line of the "Under the hood" panel: what the batch does, in which module. */
@@ -100,6 +136,16 @@ export interface TokenizeInput {
   bond: bigint;
   docHash: string;
   coverHash: string;
+  /** Core v2 only: required there, ignored by v1. */
+  controls?: FundingControls;
+}
+
+export interface FundingControls {
+  reviewer: string; // H160 of the independent reviewer who must attest before any sale
+  recovery?: string; // H160 allowed to propose a replacement operator
+  minSold: number; // funding target in shares
+  deadline: number; // unix seconds
+  tranches: number[]; // basis points per release, summing to 10,000
 }
 
 const n = (x: any) => Number(x);
@@ -150,7 +196,7 @@ export class PortionClient {
     readonly api: ApiPromise,
     readonly deployment: Deployment,
   ) {
-    this.contract = new ReviveContract(api, deployment.portion, deployment.contractVersion === 'core-v1' ? PortionCoreArtifact.abi : PortionArtifact.abi);
+    this.contract = new ReviveContract(api, deployment.portion, isCore(deployment) ? coreArtifact(deployment.contractVersion).abi : PortionArtifact.abi);
     this.contractAccount = h160ToFallbackSs58(deployment.portion);
     this.pusdToken = assetErc20Address(deployment.pusdAssetId, ASSET_PRECOMPILE_PREFIX);
   }

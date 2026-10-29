@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-29T12:39:44.126Z",
+  "kind": "bounded-core-v2-candidate-deployment",
+  "account": "5Eh9NqMbHhbkUxZKyP8iAfL5LvnqPTEyPb8YvrY3iMoNaFT4",
+  "guardian": "0x0000000000000000000000000000000000000000",
+  "runtimeBytes": 13308,
+  "dryRun": "refused by the runtime: StorageDepositNotEnoughFunds",
+  "depositPerByteTPOT": "0.06",
+  "estimatedStorageDepositTPOT": {
+    "low": "798.48",
+    "high": "1105.8948"
+  },
+  "operatingFloorTPOT": "40",
+  "spendableTPOT": "44.82920824",
+  "shortfallTPOT": {
+    "low": "793.65079175",
+    "high": "1101.06559175"
+  },
+  "funded": false,
+  "note": "Estimate only: the chain refuses a constructor dry run the caller cannot pay for. Re-run once funded to measure the exact deposit."
+}

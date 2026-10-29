@@ -28,6 +28,7 @@
     "deploy:core": "tsx scripts/deploy.ts --core",
     "deploy:check:core": "tsx scripts/deploy.ts --check --core",
     "deploy:check:candidate": "tsx scripts/check-core-candidate.ts",
+    "deploy:check:core-v2": "tsx scripts/deploy-core-v2.ts",
     "build": "node scripts/build-api.mjs && npm run build -w @portion/web",
     "budget:status": "tsx scripts/budget-status.ts",
     "backup:documents": "tsx scripts/backup-public-documents.ts",
