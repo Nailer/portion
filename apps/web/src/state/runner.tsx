@@ -34,6 +34,8 @@ const STAGE_COPY: Record<StageName, string> = {
 
 export function RunnerProvider({ children }: { children: ReactNode }) {
   const { backend, refresh } = useApp();
+  // Sandbox actions are simulated: they never enter the real receipt journal or link to the Portaldot explorer.
+  const simulated = backend?.mode === 'sandbox';
   const { passport, reloadBalances } = usePassport();
   const nav = useNavigate();
   const [phase, setPhase] = useState<Phase | null>(null);
@@ -64,8 +66,8 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
     try {
       const next = await prepare();
       if (request !== preparation.current) return;
-      if (readReceipts(localStorage).filter(row => row.status === 'unconfirmed').length >= 190) throw new Error('Reconcile your unresolved receipts before preparing another action.');
-      if (!next.recoveryKey && readReceipts(localStorage).some(row => row.owner === passport.address && row.title === next.title && row.status === 'unconfirmed')) {
+      if (!simulated && readReceipts(localStorage).filter(row => row.status === 'unconfirmed').length >= 190) throw new Error('Reconcile your unresolved receipts before preparing another action.');
+      if (!simulated && !next.recoveryKey && readReceipts(localStorage).some(row => row.owner === passport.address && row.title === next.title && row.status === 'unconfirmed')) {
         throw new Error('A previous attempt has an unknown outcome. Open the receipt centre and reconcile it before preparing this action again.');
       }
       setPrepared(next);
@@ -75,7 +77,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
       setError({ message: (e as Error).message, fix: e instanceof UserError ? e.fix : undefined });
       setPhase('error');
     }
-  }, [backend, passport]);
+  }, [backend, passport, simulated]);
 
   const act = useCallback((intent: Intent, opts?: { onDone?: (r: ActionResult) => void }) => {
     if (!backend || !passport) { setPassportOpen(true); return; }
@@ -103,7 +105,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
     try { r = await prepared.run((s, d) => { setStage(s); setDetail(d); }); }
     catch (e) { r = { ok: false, error: (e as Error).message || 'The transaction could not be completed.' }; }
     submitting.current = false;
-    try { if (!r.receiptId) rememberReceipt(localStorage, reviewedIdentity.current.passport!.address, prepared.title, r); }
+    try { if (!r.receiptId && !simulated) rememberReceipt(localStorage, reviewedIdentity.current.passport!.address, prepared.title, r); }
     catch { r.warning = [r.warning, 'Local receipt history could not be saved. Copy your hashes before closing.'].filter(Boolean).join(' '); }
     setResult(r);
     setPhase(r.ok ? 'result' : 'error');
@@ -129,7 +131,7 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
               <>
                 <h2 id="sheet-title">{prepared.title}</h2>
                 <p className="sheet-sub">
-                  {!prepared.steps.length ? 'This checks or publishes an already finalized record. No new wallet signature is requested.' : prepared.steps.some(s => s.lane === 'storage') ? 'Accepted documents are reused. Missing documents are stored first, then the listing is created in an atomic batch. Separate transactions require separate signatures.' : 'Review the transaction. Your wallet will ask you to approve it.'}
+                  {simulated ? 'Sandbox: confirming runs this on the Core v2 contract simulated in your browser. No wallet, no Portaldot, no real money.' : !prepared.steps.length ? 'This checks or publishes an already finalized record. No new wallet signature is requested.' : prepared.steps.some(s => s.lane === 'storage') ? 'Accepted documents are reused. Missing documents are stored first, then the listing is created in an atomic batch. Separate transactions require separate signatures.' : 'Review the transaction. Your wallet will ask you to approve it.'}
                 </p>
                 <details className="transaction-details"><summary>See what happens in this transaction ({prepared.steps.length} {prepared.steps.length === 1 ? 'step' : 'steps'})</summary><StepList steps={prepared.steps} state={phase === 'running' ? 'running' : 'idle'} /></details>
                 {prepared.cost && <p className="sheet-cost">{prepared.cost}</p>}
@@ -150,20 +152,20 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
             {phase === 'result' && prepared && result && (
               <>
                 <h2 id="sheet-title">Done</h2>
-                <p className="sheet-sub">{prepared.title} went through{result.blockNumber ? ` in block ${result.blockNumber.toLocaleString()}` : ''}.</p>
+                <p className="sheet-sub">{prepared.title} went through{result.blockNumber ? ` in ${simulated ? 'sandbox ' : ''}block ${result.blockNumber.toLocaleString()}` : ''}.{simulated ? ' This happened only in the sandbox.' : ''}</p>
                 {result.warning && <div className="notice" role="status"><p>{result.warning}</p><button className="btn ghost sm" disabled={publishing || !result.blockNumber} onClick={async () => { setPublishing(true); try { await api('/api/receipts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ block: result.blockNumber, txHash: result.txHash }) }); setResult({ ...result, warning: undefined }); refresh(); } catch { /* Preserve the receipt and warning for an explicit later retry. */ } finally { setPublishing(false); } }}>{publishing ? 'Publishing…' : 'Retry receipt publication'}</button></div>}
                 <details className="transaction-details"><summary>View completed steps</summary><StepList steps={prepared.steps} state="done" /></details>
                 <ul className="tx-links">
                   {(result.txs ?? (result.txHash ? [{ label: 'Transaction', hash: result.txHash, block: result.blockNumber }] : [])).map((t) => (
                     <li key={t.hash}>
                       <span>{t.label}</span>
-                      {t.block ? <a href={explorerBlock(t.block)} target="_blank" rel="noreferrer"><code>{t.hash.slice(0, 18)}…</code> view block</a> : <code>{t.hash}</code>}<CopyButton text={t.hash}/>
+                      {t.block && !simulated ? <a href={explorerBlock(t.block)} target="_blank" rel="noreferrer"><code>{t.hash.slice(0, 18)}…</code> view block</a> : <code>{t.hash}</code>}<CopyButton text={t.hash}/>
                     </li>
                   ))}
                 </ul>
                 <div className="sheet-actions">
                   {result.listingId !== undefined && <button className="btn primary" onClick={() => { close(); nav(`/listing/${result.listingId}`); }}>Open the listing</button>}
-                  <button className="btn ghost" onClick={() => { close(); nav('/receipts'); }}>Open receipt centre</button>
+                  {!simulated && <button className="btn ghost" onClick={() => { close(); nav('/receipts'); }}>Open receipt centre</button>}
                   <button className={`btn ${result.listingId !== undefined ? 'ghost' : 'primary'}`} onClick={close}>Close</button>
                 </div>
               </>
@@ -171,15 +173,15 @@ export function RunnerProvider({ children }: { children: ReactNode }) {
 
             {phase === 'error' && error && (
               <>
-                <h2 id="sheet-title">{error.fix === 'faucet' ? 'You need a few tokens first' : result?.unconfirmed ? 'Outcome unknown — check before retrying' : /reject|denied|cancelled|canceled/i.test(error.message) ? 'Wallet request declined' : result?.blockNumber ? 'Transaction failed in a finalized block' : !result ? 'Review unavailable' : 'Action could not be completed'}</h2>
+                <h2 id="sheet-title">{error.fix === 'faucet' ? (simulated ? 'This role needs more sandbox pUSD' : 'You need a few tokens first') : result?.unconfirmed ? 'Outcome unknown — check before retrying' : /reject|denied|cancelled|canceled/i.test(error.message) ? 'Wallet request declined' : result?.blockNumber ? 'Transaction failed in a finalized block' : !result ? 'Review unavailable' : 'Action could not be completed'}</h2>
                 <p className="sheet-error">{error.message}</p>
                 {result?.unconfirmed && <p className="notice">The outcome is unknown. Do not submit the action again until its transaction has been reconciled against finalized chain records.</p>}
                 {result?.txHash && <p><code style={{overflowWrap:'anywhere'}}>{result.txHash}</code> <CopyButton text={result.txHash}/></p>}
                 {!!result?.txs?.length && <div className="notice"><p>Earlier steps were finalized. Keep these receipts before retrying.</p>{result.txs.map(tx => <p key={tx.hash}><b>{tx.label}</b> · <code>{tx.hash.slice(0, 18)}…</code> <CopyButton text={tx.hash}/>{tx.block && <a href={explorerBlock(tx.block)} target="_blank" rel="noreferrer"> View block</a>}</p>)}</div>}
                 <div className="sheet-actions">
                   <button className="btn ghost" onClick={close}>Close</button>
-                  <button className="btn ghost" onClick={() => { close(); nav('/receipts'); }}>Open receipt centre</button>
-                  {error.fix === 'faucet' && <button className="btn primary" onClick={() => { close(); nav('/faucet'); }}>Check faucet availability</button>}
+                  {!simulated && <button className="btn ghost" onClick={() => { close(); nav('/receipts'); }}>Open receipt centre</button>}
+                  {error.fix === 'faucet' && !simulated && <button className="btn primary" onClick={() => { close(); nav('/faucet'); }}>Check faucet availability</button>}
                 </div>
               </>
             )}

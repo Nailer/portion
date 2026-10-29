@@ -37,9 +37,9 @@ const FLOW = [
 ] as const;
 
 export function Home() {
-  const { backend, status, reconnect } = useApp();
+  const { backend, status, reconnect, sandbox, tick } = useApp();
   useReveal();
-  const { data, loading, error } = useAsync(() => backend?.deployed ? backend.listings() : Promise.resolve([] as ListingView[]), [backend]);
+  const { data, loading, error } = useAsync(() => backend?.deployed ? backend.listings() : Promise.resolve([] as ListingView[]), [backend, tick]);
   const { data: rules } = useAsync(async () => backend?.deployed ? backend.rules() : null, [backend]);
   const listings = data ?? [];
   const totalPaid = listings.reduce((sum, l) => sum + l.vault.totalRevenue, 0n);
@@ -123,7 +123,7 @@ export function Home() {
 
     <section id="market" className="pv-section" style={{ paddingTop: 0 }} aria-labelledby="record-title">
       <div className="pv-record-head" data-reveal>
-        <div><span className="pv-eyebrow">The live record</span><h2 id="record-title" className="pv-title">Published on the testnet.</h2></div>
+        <div><span className="pv-eyebrow">{sandbox ? 'The sandbox record' : 'The live record'}</span><h2 id="record-title" className="pv-title">{sandbox ? 'Simulated in your browser.' : 'Published on the testnet.'}</h2></div>
         <span className="pv-pill test" aria-live="polite">{status === 'connecting' ? 'CHECKING TESTNET' : status === 'offline' ? 'TESTNET UNAVAILABLE' : !backend?.deployed ? 'CONTRACT UNAVAILABLE' : `${listings.length} asset${listings.length === 1 ? '' : 's'} · ${open} open for purchase`}</span>
       </div>
       {status === 'connecting' && <div className="pv-state" role="status"><Spinner/><h3>Connecting to Portaldot</h3><p>Waiting for a real network response. The public test endpoint often takes 10 seconds or more, and nothing is shown until it answers.</p><Link className="btn ghost" to="/network">Network status</Link></div>}
@@ -131,9 +131,10 @@ export function Home() {
       {status === 'ready' && loading && !data?.length && <div className="pv-state"><Spinner label="Loading assets"/></div>}
       {error && <div className="pv-state" role="alert"><h3>We couldn’t load the record.</h3><p>{error.message}</p><Link className="btn ghost" to="/network">Network status</Link></div>}
       {!!listings.length && <div className="pv-assets">{listings.map(l => <ListingRow key={l.id} l={l}/>)}</div>}
-      {status === 'ready' && !!listings.length && open === 0 && <div className="pv-state" style={{ borderStyle: 'solid' }}><h3>No offer is open for purchase right now.</h3><p>The only published asset is a disclosed protocol test whose 100 shares were all bought during the recorded run. It still shows the whole lifecycle: terms, native backing checks, a deposit, a claim and the fee. A fresh purchase needs a new offer, which costs real test tokens to publish.</p><div className="pv-actions" style={{ marginTop: 0 }}><Link className="btn primary" to={`/listing/${listings[0].id}`}>Read the full record</Link><Link className="btn ghost" to="/evidence">How to test a purchase</Link></div></div>}
+      {status === 'ready' && !!listings.length && open === 0 && !sandbox && <div className="pv-state" style={{ borderStyle: 'solid' }}><h3>No offer is open for purchase right now.</h3><p>The only published asset is a disclosed protocol test whose 100 shares were all bought during the recorded run. It still shows the whole lifecycle: terms, native backing checks, a deposit, a claim and the fee. A fresh purchase needs a new offer, which costs real test tokens to publish.</p><div className="pv-actions" style={{ marginTop: 0 }}><Link className="btn primary" to={`/listing/${listings[0].id}`}>Read the full record</Link><Link className="btn ghost" to="/evidence">How to test a purchase</Link></div></div>}
       {status === 'ready' && !loading && !error && !listings.length && <div className="pv-state"><Icon name="layers" size={32}/><h3>{backend?.deployed ? 'No listings are published.' : 'Asset funding is not live for this connection.'}</h3><p>{backend?.deployed ? 'Published listings appear here after on-chain creation.' : 'A configured contract could not be verified. Inspect the network status before proceeding.'}</p>{backend?.deployed ? <Link className="btn primary" to="/create">Prepare an offer</Link> : <Link className="btn primary" to="/network">Network status</Link>}</div>}
-      {!!listings.length && <p className="pv-proof-foot">Read from the testnet. Cumulative test revenue allocated across listings: {usd(totalPaid)}. Test tokens have no monetary value.</p>}
+      {!!listings.length && sandbox && <p className="pv-proof-foot">Sandbox: fictional assets, pretend money, the real Core v2 contract code running in this browser. Nothing here is on Portaldot. <Link to="/sandbox">Demo guide</Link></p>}
+      {!!listings.length && !sandbox && <p className="pv-proof-foot">Read from the testnet. Cumulative test revenue allocated across listings: {usd(totalPaid)}. Test tokens have no monetary value.</p>}
     </section>
 
     <section className="pv-section" style={{ paddingTop: 0 }} data-reveal aria-labelledby="close-title">

@@ -71,7 +71,9 @@ export type Intent =
   | { kind: 'dexBuy'; id: number; pusdIn: bigint }
   | { kind: 'dexSell'; id: number; sharesIn: number }
   | { kind: 'dexSeed'; id: number; shares: number; pusd: bigint }
-  | { kind: 'tokenize'; form: TokenizeForm };
+  | { kind: 'tokenize'; form: TokenizeForm }
+  /** Core v2 guardian: stop new money for at most seven days, or lift the pause early. */
+  | { kind: 'guardian'; fn: 'pause' | 'unpause' };
 
 export interface PoolView {
   shares: bigint;
@@ -126,8 +128,29 @@ export interface DripResult {
   pusd: string;
 }
 
+/** A role a sandbox visitor can act as. Sandbox accounts hold pretend tokens and have no keys. */
+export interface SandboxPersona {
+  key: string;
+  label: string;
+  role: string;
+  passport: Passport;
+}
+
+/** Controls that exist only in the browser sandbox, where time and balances are simulated. */
+export interface SandboxControls {
+  personas: SandboxPersona[];
+  /** Moves the sandbox clock forward. Real time never advances it. */
+  skip(seconds: number): Promise<void>;
+  /** Mints 1,000 sandbox pUSD to an account. */
+  addFunds(h160: string): Promise<void>;
+  pausedUntil(): Promise<number>;
+  /** Sandbox clock at the start, in seconds. */
+  started: number;
+}
+
 export interface Backend {
-  mode: 'live';
+  mode: 'live' | 'sandbox';
+  sandbox?: SandboxControls;
   chainLabel: string;
   deployed: boolean;
   deployment?: Deployment;

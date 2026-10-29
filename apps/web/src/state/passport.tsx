@@ -26,7 +26,11 @@ export function PassportProvider({ children }: { children: ReactNode }) {
   const selectedWalletAddress = useRef<string | null>(null);
   const connectionRequest = useRef(0);
   const authorization = useRef(0);
-  const activePassport = passport;
+  // In the sandbox the visitor acts as labelled roles with pretend balances; no wallet is involved.
+  const [persona, setPersonaState] = useState(() => { try { return sessionStorage.getItem('portion.sandbox.role') ?? 'buyerA'; } catch { return 'buyerA'; } });
+  const setPersona = (key: string) => { setPersonaState(key); try { sessionStorage.setItem('portion.sandbox.role', key); } catch { /* storage blocked */ } };
+  const personas = backend?.sandbox?.personas;
+  const activePassport = personas ? personas.find(p => p.key === persona)?.passport ?? null : passport;
   const balanceRequest = useRef(0);
   const [balances, setBalances] = useState<Balances | null>(null);
 
@@ -69,6 +73,8 @@ export function PassportProvider({ children }: { children: ReactNode }) {
       walletUnsubscribe.current = unsubscribe;
     },
     selectAccount: address => {
+      const role = personas?.find(p => p.key === address || p.passport.address === address);
+      if (personas) { if (!role) throw new Error('Choose one of the sandbox roles.'); balanceRequest.current++; setBalances(null); setPersona(role.key); return; }
       const account = walletAccounts.find(account => account.address === address);
       if (!account || !wallet.current) throw new Error('Choose an account currently shared by your wallet.');
       const source = wallet.current;
@@ -90,6 +96,6 @@ export function PassportProvider({ children }: { children: ReactNode }) {
       balanceRequest.current++;
       setAccounts([]); setPassport(null); setBalances(null);
     },
-  }), [activePassport, backend, balances, reloadBalances, walletAccounts]);
+  }), [activePassport, backend, balances, reloadBalances, walletAccounts, personas]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

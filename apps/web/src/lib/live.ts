@@ -282,6 +282,8 @@ export class LiveBackend implements Backend {
       }
       case 'tokenize':
         return this.prepareTokenize(intent.form, who);
+      case 'guardian':
+        throw new UserError('Pausing needs the Core v2 guardian. The live deployment is Core v1.');
     }
   }
 

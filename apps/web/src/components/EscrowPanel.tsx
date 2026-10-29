@@ -24,17 +24,20 @@ export function escrowTiming(e: EscrowView, forSale: number, cadence: number, no
   };
 }
 
-function EvidenceInput({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) {
+function EvidenceInput({ id, value, onChange, sample }: { id: string; value: string; onChange: (v: string) => void; sample?: boolean }) {
   return <div className="field" style={{ marginBottom: 8 }}>
     <label htmlFor={id}>Evidence hash</label>
     <input id={id} value={value} placeholder="0x… (64 hex characters)" onChange={ev => onChange(ev.target.value.trim())} />
     <label className="hint" htmlFor={`${id}-file`}>Or choose the evidence file to hash it in your browser (the file is not uploaded):</label>
     <input id={`${id}-file`} type="file" onChange={async ev => { const f = ev.target.files?.[0]; if (f) onChange(contentHash(new Uint8Array(await f.arrayBuffer()))); }} />
+    {sample && <button type="button" className="link-btn" onClick={() => onChange(contentHash(new TextEncoder().encode(`Sandbox sample evidence for ${id}`)))}>Sandbox: use a sample evidence file</button>}
   </div>;
 }
 
-export function EscrowPanel({ l, me, now, act, refundable, stake }: {
+export function EscrowPanel({ l, me, now, act, refundable, stake, sample = false }: {
   l: ListingView & { escrow: EscrowView }; me: string | null; now: number; act: (intent: Intent) => void; refundable: bigint; stake: number;
+  /** Sandbox only: offers a ready-made evidence hash so a demo needs no file. */
+  sample?: boolean;
 }) {
   const e = l.escrow;
   const [evidence, setEvidence] = useState('');
@@ -81,13 +84,13 @@ export function EscrowPanel({ l, me, now, act, refundable, stake }: {
 
     {isReviewer && e.phase === 'Pending' && <div style={{ marginTop: 16 }}>
       <h3>Record your review</h3>
-      <EvidenceInput id="attest-ev" value={evidence} onChange={setEvidence} />
+      <EvidenceInput id="attest-ev" value={evidence} onChange={setEvidence} sample={sample} />
       <button className="btn primary sm" disabled={!HASH.test(evidence)} onClick={() => run('attest', true)}>Attest and open the sale</button>
       <p className="hint">Your address and this hash are recorded permanently. Attest only to what you checked.</p>
     </div>}
     {isOperator && e.phase === 'Active' && !e.proposal && e.nextTranche < e.tranches.length && <div style={{ marginTop: 16 }}>
       <h3>Request tranche {e.nextTranche + 1}</h3>
-      <EvidenceInput id="propose-ev" value={evidence} onChange={setEvidence} />
+      <EvidenceInput id="propose-ev" value={evidence} onChange={setEvidence} sample={sample} />
       <button className="btn primary sm" disabled={!HASH.test(evidence)} onClick={() => run('propose', true)}>Request the tranche</button>
       <p className="hint">Show what the money was or will be spent on. A defaulted listing receives no further tranches.</p>
     </div>}

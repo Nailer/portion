@@ -47,6 +47,32 @@ export function escrowView(l: any, tranches: unknown[]): EscrowView {
   };
 }
 
+/** Builds the app's listing view from Core contract reads. Shared by the live client and the browser sandbox. */
+export function coreListingView(input: { record: CoreRecord; l: any; doc: CoreDocument; health: unknown; tranches?: unknown[]; payToken: string; now: number }): ListingView {
+  const { record, l, doc, now } = input;
+  const health = number(input.health);
+  if (health > 3) throw new Error('Unknown listing health.');
+  const escrow = input.tranches ? escrowView(l, input.tranches) : undefined;
+  // v2 has no saleOpen flag: a sale is open while funding, before the deadline, with shares left.
+  const saleOpen = escrow ? escrow.phase === 'Funding' && number(l.forSale) > 0 && escrow.deadline >= now : Boolean(l.saleOpen);
+  return {
+    id: record.assetId, operator: String(l.operator).toLowerCase(), payToken: input.payToken, assetId: record.assetId,
+    nftCollection: doc.nftCollection, nftItem: doc.nftItem, category: doc.category, strikes: null,
+    totalShares: number(l.totalShares), cadence: number(l.cadence), createdAt: record.createdAt,
+    lastDepositAt: number(l.lastDepositAt), closedAt: number(l.closedAt), saleOpen,
+    docHash: String(l.docHash), coverHash: doc.coverHash, minPerPeriod: BigInt(l.minimum), name: doc.name, summary: doc.summary,
+    health: HEALTH[health], shareToken: assetErc20Address(record.assetId),
+    vault: { totalStaked: BigInt(l.staked), accPerShare: BigInt(l.acc), totalRevenue: BigInt(l.revenue), deposits: null,
+      bond: BigInt(l.bond), forSale: number(l.forSale), sold: number(l.sold), salePrice: BigInt(l.price) },
+    ...(escrow ? { escrow } : {}),
+  };
+}
+
+/** Core v2: purchase money an account can take back from a refunding listing, pro rata to what it paid. */
+export function refundableOf(l: any, paid: unknown, taken: unknown): bigint {
+  return number(l.phase) === 3 && !taken && BigInt(l.raised) > 0n ? BigInt(l.refundPool) * BigInt(paid as any) / BigInt(l.raised) : 0n;
+}
+
 /** Checks Core v2 funding controls before anything is signed. The contract repeats every check. */
 export function validateControls(input: TokenizeInput, operatorH160: string, now = Math.floor(Date.now() / 1000)) {
   const c = input.controls;
@@ -86,22 +112,9 @@ export class CoreClient extends PortionClient {
     const l = await this.contract.read('listing', [record.assetId]);
     if (String(l.docHash).toLowerCase() !== record.docHash.toLowerCase()) throw new Error('Published document differs from the contract.');
     const doc = coreDocument(await this.source.document(l.docHash), record.assetId, this.deployment.deedsCollection);
-    const health = number(await this.contract.read('health', [record.assetId]));
-    if (health > 3) throw new Error('Unknown listing health.');
-    const escrow = this.v2 ? escrowView(l, Array.from(await this.contract.read('tranches', [record.assetId]))) : undefined;
-    // v2 has no saleOpen flag: a sale is open while funding, before the deadline, with shares left.
-    const saleOpen = escrow ? escrow.phase === 'Funding' && number(l.forSale) > 0 && escrow.deadline >= Math.floor(Date.now() / 1000) : Boolean(l.saleOpen);
-    return {
-      id: record.assetId, operator: String(l.operator).toLowerCase(), payToken: this.pusdToken, assetId: record.assetId,
-      nftCollection: doc.nftCollection, nftItem: doc.nftItem, category: doc.category, strikes: null,
-      totalShares: number(l.totalShares), cadence: number(l.cadence), createdAt: record.createdAt,
-      lastDepositAt: number(l.lastDepositAt), closedAt: number(l.closedAt), saleOpen,
-      docHash: String(l.docHash), coverHash: doc.coverHash, minPerPeriod: BigInt(l.minimum), name: doc.name, summary: doc.summary,
-      health: HEALTH[health], shareToken: assetErc20Address(record.assetId),
-      vault: { totalStaked: BigInt(l.staked), accPerShare: BigInt(l.acc), totalRevenue: BigInt(l.revenue), deposits: null,
-        bond: BigInt(l.bond), forSale: number(l.forSale), sold: number(l.sold), salePrice: BigInt(l.price) },
-      ...(escrow ? { escrow } : {}),
-    };
+    const health = await this.contract.read('health', [record.assetId]);
+    const tranches = this.v2 ? Array.from(await this.contract.read('tranches', [record.assetId])) : undefined;
+    return coreListingView({ record, l, doc, health, tranches, payToken: this.pusdToken, now: Math.floor(Date.now() / 1000) });
   }
   async positions(address: string) {
     return (await Promise.all((await this.source.catalog()).map(async record => {
@@ -110,8 +123,7 @@ export class CoreClient extends PortionClient {
       const position: PositionView = { id: record.assetId, staked: number(stake.amount), pending: BigInt(pending) };
       if (!this.v2) return position;
       const [l, paid, taken] = await Promise.all([this.contract.read('listing', [record.assetId]), this.contract.read('paid', [record.assetId, who]), this.contract.read('refundTaken', [record.assetId, who])]);
-      const refundable = number(l.phase) === 3 && !taken && BigInt(l.raised) > 0n ? BigInt(l.refundPool) * BigInt(paid) / BigInt(l.raised) : 0n;
-      return { ...position, refundable };
+      return { ...position, refundable: refundableOf(l, paid, taken) };
     }))).filter((position: PositionView) => position.staked > 0 || position.pending > 0n || (position.refundable ?? 0n) > 0n);
   }
   async rules() {

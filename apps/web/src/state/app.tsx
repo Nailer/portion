@@ -12,6 +12,12 @@ interface AppState {
   status: 'connecting' | 'ready' | 'offline';
   error?: string;
   reconnect(): void;
+  /** True while this tab runs the simulated sandbox instead of the Portaldot testnet. */
+  sandbox: boolean;
+  enterSandbox(): void;
+  exitSandbox(): void;
+  /** Clears the saved sandbox and starts again from the opening state. */
+  resetSandbox(): void;
   /** bumps after any successful action so pages refetch */
   tick: number;
   refresh(): void;
@@ -20,7 +26,11 @@ interface AppState {
 const Ctx = createContext<AppState>(null as any);
 export const useApp = () => useContext(Ctx);
 
-const PUBLIC_ENTRY = ['/', '/guide', '/business', '/evidence'];
+const PUBLIC_ENTRY = ['/', '/guide', '/business', '/evidence', '/sandbox'];
+// Sandbox mode is per tab, so a separate tab on the live site is never switched by surprise.
+const SANDBOX_FLAG = 'portion.sandbox.on';
+const sandboxFlag = () => { try { return sessionStorage.getItem(SANDBOX_FLAG) === '1'; } catch { return false; } };
+const setSandboxFlag = (on: boolean) => { try { if (on) sessionStorage.setItem(SANDBOX_FLAG, '1'); else sessionStorage.removeItem(SANDBOX_FLAG); } catch { /* storage blocked */ } };
 /** Resolves after the page has loaded and the main thread has had a chance to paint the first screen. */
 function afterFirstPaint(): Promise<void> {
   return new Promise(resolve => {
@@ -42,6 +52,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AppState['status']>('connecting');
   const [error, setError] = useState<string>();
   const [tick, setTick] = useState(0);
+  const [sandbox, setSandbox] = useState(sandboxFlag);
 
   useEffect(() => {
     let dead = false;
@@ -50,6 +61,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setError(undefined);
     setBackend(null);
     (async () => {
+      if (sandbox) {
+        try {
+          const { SandboxBackend } = await import('../sandbox/backend');
+          const next = await SandboxBackend.open();
+          if (dead) return;
+          setBackend(next); setStatus('ready');
+        } catch (e) { if (!dead) { setError(`The sandbox could not start: ${(e as Error).message}`); setStatus('offline'); } }
+        return;
+      }
       try {
         // Public landing pages paint first; the heavy chain client loads once the browser is idle.
         if (attempt === 0 && PUBLIC_ENTRY.includes(window.location.pathname)) await afterFirstPaint();
@@ -96,13 +116,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     })();
     return () => { dead = true; cleanup?.(); };
-  }, [attempt]);
+  }, [attempt, sandbox]);
 
   const value = useMemo<AppState>(() => ({
-    backend, status, error, tick,
+    backend, status, error, tick, sandbox,
     refresh: () => setTick((t) => t + 1),
     reconnect: () => setAttempt(n => n + 1),
-  }), [backend, status, error, tick]);
+    enterSandbox: () => { setSandboxFlag(true); setSandbox(true); },
+    exitSandbox: () => { setSandboxFlag(false); setSandbox(false); },
+    resetSandbox: () => { void import('../sandbox/backend').then(({ SandboxBackend }) => { SandboxBackend.reset(); setAttempt(n => n + 1); }); },
+  }), [backend, status, error, tick, sandbox]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

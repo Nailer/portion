@@ -1,0 +1,157 @@
+{
+ "contractName": "SandboxToken",
+ "abi": [
+  {
+   "type": "function",
+   "name": "allowance",
+   "inputs": [
+    {
+     "name": "",
+     "type": "address",
+     "internalType": "address"
+    },
+    {
+     "name": "",
+     "type": "address",
+     "internalType": "address"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "",
+     "type": "uint256",
+     "internalType": "uint256"
+    }
+   ],
+   "stateMutability": "view"
+  },
+  {
+   "type": "function",
+   "name": "approve",
+   "inputs": [
+    {
+     "name": "s",
+     "type": "address",
+     "internalType": "address"
+    },
+    {
+     "name": "v",
+     "type": "uint256",
+     "internalType": "uint256"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "",
+     "type": "bool",
+     "internalType": "bool"
+    }
+   ],
+   "stateMutability": "nonpayable"
+  },
+  {
+   "type": "function",
+   "name": "balanceOf",
+   "inputs": [
+    {
+     "name": "",
+     "type": "address",
+     "internalType": "address"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "",
+     "type": "uint256",
+     "internalType": "uint256"
+    }
+   ],
+   "stateMutability": "view"
+  },
+  {
+   "type": "function",
+   "name": "mint",
+   "inputs": [
+    {
+     "name": "to",
+     "type": "address",
+     "internalType": "address"
+    },
+    {
+     "name": "v",
+     "type": "uint256",
+     "internalType": "uint256"
+    }
+   ],
+   "outputs": [],
+   "stateMutability": "nonpayable"
+  },
+  {
+   "type": "function",
+   "name": "totalSupply",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "",
+     "type": "uint256",
+     "internalType": "uint256"
+    }
+   ],
+   "stateMutability": "view"
+  },
+  {
+   "type": "function",
+   "name": "transfer",
+   "inputs": [
+    {
+     "name": "to",
+     "type": "address",
+     "internalType": "address"
+    },
+    {
+     "name": "v",
+     "type": "uint256",
+     "internalType": "uint256"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "",
+     "type": "bool",
+     "internalType": "bool"
+    }
+   ],
+   "stateMutability": "nonpayable"
+  },
+  {
+   "type": "function",
+   "name": "transferFrom",
+   "inputs": [
+    {
+     "name": "f",
+     "type": "address",
+     "internalType": "address"
+    },
+    {
+     "name": "to",
+     "type": "address",
+     "internalType": "address"
+    },
+    {
+     "name": "v",
+     "type": "uint256",
+     "internalType": "uint256"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "",
+     "type": "bool",
+     "internalType": "bool"
+    }
+   ],
+   "stateMutability": "nonpayable"
+  }
+ ],
+ "runtimeBytecode": "0x6080604052600436101561001257600080fd5b60003560e01c8063095ea7b3146102ca57806318160ddd146102ac57806323b872dd146101c857806340c10f191461017857806370a082311461013e578063a9059cbb146100bf5763dd62ed3e1461006957600080fd5b346100ba5760403660031901126100ba57610082610315565b61008a61032b565b6001600160a01b039182166000908152600260209081526040808320949093168252928352819020549051908152f35b600080fd5b346100ba5760403660031901126100ba576100d8610315565b602435903360005260016020526100f6826040600020541015610341565b336000526001602052604060002061010f838254610377565b905560018060a01b03166000526001602052610131604060002091825461039a565b9055602060405160018152f35b346100ba5760203660031901126100ba576001600160a01b0361015f610315565b1660005260016020526020604060002054604051908152f35b346100ba5760403660031901126100ba57610191610315565b602435906101a18260005461039a565b60005560018060a01b031660005260016020526101c4604060002091825461039a565b9055005b346100ba5760603660031901126100ba576101e1610315565b6101e961032b565b6001600160a01b039091166000818152600260209081526040808320338452909152902054604435929190831161027b57806000526001602052610234836040600020541015610341565b806000526002602052604060002060018060a01b0333166000526020526040600020610261848254610377565b90556000526001602052604060002061010f838254610377565b60405162461bcd60e51b8152602060048201526009602482015268616c6c6f77616e636560b81b6044820152606490fd5b346100ba5760003660031901126100ba576020600054604051908152f35b346100ba5760403660031901126100ba576102e3610315565b33600052600260205260406000209060018060a01b031660005260205260406000206024359055602060405160018152f35b600435906001600160a01b03821682036100ba57565b602435906001600160a01b03821682036100ba57565b1561034857565b60405162461bcd60e51b815260206004820152600760248201526662616c616e636560c81b6044820152606490fd5b9190820391821161038457565b634e487b7160e01b600052601160045260246000fd5b919082018092116103845756fea164736f6c634300081c000a"
+}

@@ -17,7 +17,7 @@ export function Faucet() {
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<DripResult>();
   const [err, setErr] = useState<string>();
-  const { data: status, error: statusError } = useAsync(() => api<FaucetStatus>('/api/faucet'), [backend]);
+  const { data: status, error: statusError } = useAsync(async () => backend?.sandbox ? null : api<FaucetStatus>('/api/faucet'), [backend]);
 
   const target = addr.trim() || passport?.address || '';
   const go = async () => {
@@ -25,6 +25,7 @@ export function Faucet() {
     try { if(!passport) throw new Error('Connect the recipient wallet first.'); setRes(await backend!.drip(target,passport)); refresh(); } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   };
 
+  if (backend?.sandbox) return <div className="market-empty"><span className="eyebrow">SANDBOX</span><h1>Sandbox money comes from the sandbox bar.</h1><p>Use “Add 1,000 pUSD” at the top of the page to give the current role more pretend money. It has no value and never leaves this browser. The real testnet faucet works only outside the sandbox.</p></div>;
   return (
     <div className="two-col" style={{ alignItems: 'start' }}>
       <div>

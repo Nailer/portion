@@ -10,7 +10,7 @@ import { BrandMark, Icon } from './Icon';
 export function PassportDialog() {
   const { passportOpen, closePassport } = useRunner();
   const { requestConnection, selectAccount, walletAccounts } = usePassport();
-  const { refresh } = useApp();
+  const { refresh, backend } = useApp();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [providers, setProviders] = useState<string[]>([]);
@@ -25,6 +25,23 @@ export function PassportDialog() {
   const choose = (address: string) => {
     try { selectAccount(address); refresh(); closePassport(); } catch (err) { setError((err as Error).message); }
   };
+  const personas = backend?.sandbox?.personas;
+  if (personas) return <Dialog onClose={closePassport} labelledBy="pp-title" className="auth-dialog" focusKey="sandbox">
+    <aside className="auth-story">
+      <div className="auth-brand"><BrandMark/><span>Portion</span></div>
+      <span className="eyebrow">SANDBOX</span>
+      <h2>Play every role.</h2>
+      <p>These are labelled sandbox accounts with pretend money. They have no keys, and nothing they do reaches Portaldot.</p>
+      <div className="auth-security"><Icon name="shield" size={22}/><span>To use a real wallet, exit the sandbox.<br/><b>Portion never asks for your recovery phrase.</b></span></div>
+    </aside>
+    <section className="auth-options">
+      <button className="dialog-close" aria-label="Close role picker" onClick={closePassport}><Icon name="close"/></button>
+      <span className="eyebrow">CHOOSE A ROLE</span>
+      <h2 id="pp-title">Who are you acting as?</h2>
+      <div className="wallet-accounts">{personas.map(p => <button className="auth-choice" key={p.key} onClick={() => choose(p.key)}><span className="choice-symbol"><Icon name="wallet"/></span><span><b>{p.label}</b><small>{p.role}</small></span><Icon name="arrow"/></button>)}</div>
+      {error && <p className="auth-error" role="alert">{error}</p>}
+    </section>
+  </Dialog>;
   return <Dialog onClose={closePassport} labelledBy="pp-title" className="auth-dialog" closeDisabled={busy} focusKey={choosing ? 'accounts' : 'welcome'}>
     <aside className="auth-story">
       <div className="auth-brand"><BrandMark/><span>Portion</span></div>

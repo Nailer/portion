@@ -17,7 +17,7 @@ export function StepList({ steps, state = 'idle', atomicFrom }: { steps: PlanSte
             <div className="step-title">{s.title}</div>
             <div className="step-detail">{s.detail}</div>
             <div className="step-call">
-              <span className={`lane-chip lane-${s.lane}`} title={LANES[s.lane].hint}>{LANES[s.lane].label}</span>
+              <span className={`lane-chip lane-${s.lane}`} title={s.pallet.startsWith('Sandbox') ? 'simulated in this browser, not on Portaldot' : LANES[s.lane].hint}>{LANES[s.lane].label}</span>
               <code>{s.pallet}.{s.method}</code>
               {atomicFrom !== undefined && i === atomicFrom && <span className="atomic">atomic batch starts here</span>}
             </div>

@@ -33,6 +33,7 @@ export function Create() {
   const [photo, setPhoto] = useState<Photo | null>(null);
   // Core v2 funding controls. Not saved in the browser draft: they name other people's addresses.
   const v2 = (backend as { deployment?: { contractVersion?: string } } | undefined)?.deployment?.contractVersion === 'core-v2';
+  const sandboxReviewer = backend?.sandbox?.personas.find(p => p.key === 'reviewer')?.passport.h160;
   const [reviewer, setReviewer] = useState('');
   const [recovery, setRecovery] = useState('');
   const [targetPct, setTargetPct] = useState(50);
@@ -83,7 +84,7 @@ export function Create() {
   if (safeUnits(bond) <= 0n || safeUnits(bond) < minBond) errors.bond = `The bond must be at least ${usd(minBond)} (${(rules?.minBondBps ?? 0) / 100}% of the raise).`;
   if (forSale < 1 || forSale > totalShares) errors.shares = 'Choose at least one share to offer for funding.';
   if (!Number.isSafeInteger(totalShares) || totalShares < 10 || totalShares > 1000000) errors.shares = 'Use a whole number between 10 and 1,000,000.';
-  if (!photo) errors.photo = 'Upload a real asset photo.';
+  if (!photo && !backend?.sandbox) errors.photo = 'Upload a real asset photo.';
   const H160 = /^0x[0-9a-fA-F]{40}$/;
   const minSold = Math.max(1, Math.ceil(forSale * targetPct / 100));
   const tranches = Array.from({ length: trancheCount }, (_, i) => i < trancheCount - 1 ? Math.floor(10_000 / trancheCount) : 10_000 - Math.floor(10_000 / trancheCount) * (trancheCount - 1));
@@ -217,6 +218,7 @@ export function Create() {
               <div className="field">
                 <label htmlFor="reviewer">Independent reviewer’s address</label>
                 <input id="reviewer" value={reviewer} placeholder="0x…" onChange={e => setReviewer(e.target.value.trim())} />
+                {sandboxReviewer && reviewer.toLowerCase() !== sandboxReviewer && <button type="button" className="link-btn" onClick={() => setReviewer(sandboxReviewer)}>Fill in the sandbox Reviewer</button>}
                 {show('reviewer') ? <p className="err">{show('reviewer')}</p> : <p className="hint">No one can buy until this person records a review on-chain. They also approve each release of escrow. Choose someone who will check the asset and is not you.</p>}
               </div>
               <div className="field">

@@ -1,4 +1,4 @@
-# User and judge walkthrough — updated 27 October 2026
+# User and judge walkthrough — updated 29 October 2026
 
 The website reads the real Portaldot V3 test network. It creates no visitor wallet and no opening balance. The only published asset, **Portion Development — TEST ONLY**, was explicitly authorised as a protocol test; it represents no equipment, ownership, investment or revenue. All tokens are test tokens with no value.
 
@@ -35,7 +35,8 @@ Then read, in the repository: [INVESTMENT-ASSESSMENT.md](INVESTMENT-ASSESSMENT.m
 
 ## D. Participant
 
-- **Today:** no offer is open, so a purchase cannot be demonstrated from the existing asset. Reading `/listing/585886` and `/portfolio` (needs a connected wallet to read, signs nothing) is the honest path.
+- **Fastest full experience: the sandbox.** Open `/sandbox` and press **Start the sandbox**. It runs the Core v2 contract code in the browser with five labelled roles and pretend money, so you can buy, settle, release escrow, claim, default, slash, refund and pause in a few minutes. Nothing reaches Portaldot, and every screen says so. See [SANDBOX.md](SANDBOX.md).
+- **On the live testnet today:** no offer is open, so a purchase cannot be demonstrated from the existing asset. Reading `/listing/585886` and `/portfolio` (needs a connected wallet to read, signs nothing) is the honest path.
 - **To test a purchase** a new test offer must be published from one funded wallet and bought from a second funded wallet in the browser. The first test run reduced the deployment account's free balance by 47.56 tPOT (including storage deposits and fees); the optimised hash storage saves about 2.52 tPOT. Spare balance above the 40 tPOT reserve was 4.83 tPOT when last measured (24 October), so this needs more tPOT from the organisers first. **It is not authorised or funded.**
 
 ## E. Wallet
@@ -44,7 +45,7 @@ Use **Portaldot Wallet** (or another native injected wallet that appears in the 
 
 ## F. Three-minute demo video: suggested shot list
 
-The organisers require a public demo video of at most three minutes that shows a real product, core functions and Portaldot use. **It has not been recorded.** Suggested order, narrated by the founder:
+The organisers require a public demo video of at most three minutes that shows a real product, core functions and Portaldot use. **It has not been recorded.** The recommended script is now in [SANDBOX.md](SANDBOX.md#three-minute-demo-video-script): about two minutes in the sandbox for the core functions, and the live evidence page for Portaldot use, saying on camera which is which. The earlier live-only order, which cannot show a purchase, was:
 
 1. 0:00 — Homepage: the problem, the five steps, the test-tokens notice (20 s).
 2. 0:20 — `/evidence`: contract address and a transaction hash opened in the explorer (40 s).

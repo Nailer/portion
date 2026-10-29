@@ -333,3 +333,54 @@ footer.foot .wrap { display: grid; grid-template-columns: minmax(0, 1.2fr) minma
 .escrow .tranches li[data-state="open"] { border-color: var(--accent); }
 .escrow h3 { font-size: 16px; margin-top: 12px; }
 .escrow code { font-size: 13px; overflow-wrap: anywhere; }
+
+/* ── Sandbox: unmistakably simulated ─────────────────────────────────────── */
+.test-strip a + a { margin-left: 14px; }
+.sandbox-bar { background: repeating-linear-gradient(135deg, #f5b83d 0 14px, #f2ad24 14px 28px); color: #1d1300; font-size: 13.5px; border-bottom: 1px solid #c88a0e; position: sticky; top: 0; z-index: 30; }
+.sandbox-bar .wrap { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding-block: 8px; }
+.sandbox-id { display: flex; gap: 10px; align-items: center; min-width: 0; }
+.sandbox-badge { background: #1d1300; color: #ffd27a; font: 700 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; padding: 6px 8px; border-radius: 6px; flex: none; }
+.sandbox-controls { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-left: auto; }
+.sandbox-controls .btn.ghost { background: rgba(255,255,255,.55); border-color: rgba(29,19,0,.35); color: #1d1300; }
+.sandbox-role { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; white-space: nowrap; }
+.sandbox-role select { font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(29,19,0,.4); background: #fff8e8; color: #1d1300; }
+.sandbox-money, .sandbox-clock { font: 600 12.5px var(--mono); background: rgba(255,255,255,.55); padding: 6px 8px; border-radius: 8px; white-space: nowrap; }
+.sandbox-error { flex-basis: 100%; margin: 0; font-weight: 600; color: #6b0010; }
+.network-chip.sandbox { background: #ffe7b0; border-color: #e0a630; color: #3a2700; }
+.network-chip.sandbox .live-indicator { background: #e09a10; }
+
+.sandbox-page { display: grid; gap: 40px; padding-bottom: 40px; }
+.sandbox-hero { max-width: 860px; }
+.sandbox-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 18px; }
+.sandbox-truth { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.sandbox-truth > div { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius, 16px); padding: 20px 22px; }
+.sandbox-truth h2 { font-size: 18px; margin: 0 0 8px; }
+.sandbox-truth ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; color: var(--ink-2); line-height: 1.5; }
+.sandbox-truth .note { margin: 14px 0 0; }
+.sandbox-roles h2, .sandbox-tours > h2 { font-size: 24px; margin: 0 0 12px; }
+.sandbox-role-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.sandbox-role-card { text-align: left; display: grid; gap: 6px; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--ground); color: var(--ink); font: inherit; cursor: pointer; }
+.sandbox-role-card span { font-size: 13px; color: var(--ink-3); line-height: 1.45; }
+.sandbox-role-card code { font-size: 11.5px; color: var(--ink-3); }
+.sandbox-role-card.active { border-color: #e0a630; background: #fff3d6; box-shadow: inset 0 0 0 1px #e0a630; }
+.sandbox-tours { display: grid; gap: 18px; }
+.sandbox-tour { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius, 16px); padding: 22px 24px; }
+.sandbox-tour h3 { margin: 0 0 6px; font-size: 20px; }
+.sandbox-tour > p { margin: 0 0 14px; color: var(--ink-2); }
+.sandbox-tour ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: step; }
+.sandbox-tour li { counter-increment: step; display: flex; gap: 14px; align-items: center; justify-content: space-between; background: var(--ground); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.sandbox-tour li > div { min-width: 0; }
+.sandbox-tour li b::before { content: counter(step) '. '; color: var(--ink-3); }
+.sandbox-tour li p { margin: 4px 0 0; font-size: 14px; color: var(--ink-2); line-height: 1.5; }
+.sandbox-tour li .btn { flex: none; }
+.sandbox-who { display: inline-block; margin-right: 8px; font: 700 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; padding: 5px 7px; border-radius: 6px; background: #ffe7b0; color: #3a2700; }
+.sandbox-who.time { background: var(--surface-2, #d0daeb); color: var(--ink-2); }
+@media (max-width: 900px) {
+  .sandbox-truth { grid-template-columns: 1fr; }
+  .sandbox-role-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sandbox-bar { position: static; }
+  .sandbox-controls { margin-left: 0; gap: 6px; }
+  .sandbox-controls .btn { padding: 6px 10px; font-size: 12.5px; min-height: 0; }
+  .sandbox-id span:last-child { font-size: 12.5px; }
+  .sandbox-tour li { flex-direction: column; align-items: stretch; }
+}

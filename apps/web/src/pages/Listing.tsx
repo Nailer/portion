@@ -53,6 +53,20 @@ function describe(a: ActivityRow): string {
     case 'WoundDown': return 'Operator wound the listing down';
     case 'Staked': return `${d.amount ?? ''} shares staked`.trim();
     case 'Unstaked': return `${d.amount} shares unstaked`;
+    case 'Reviewed': return 'The named reviewer attested and opened the sale';
+    case 'FundingSettled': return d.activated ? `Raise settled: target met with ${usd(d.raised)} held in escrow` : 'Raise settled: target missed, full refunds opened';
+    case 'TrancheProposed': return `Operator requested tranche ${Number(d.tranche) + 1}`;
+    case 'TrancheApproved': return `Reviewer approved tranche ${Number(d.tranche) + 1}; challenge window open`;
+    case 'TrancheChallenged': return `A holder challenged tranche ${Number(d.tranche) + 1}`;
+    case 'TrancheReleased': return `Tranche ${Number(d.tranche) + 1} released: ${usd(d.amount)}, of which ${usd(BigInt(d.amount) - BigInt(d.fee))} to the operator and ${usd(d.fee)} fee`;
+    case 'TrancheLapsed': return `Tranche ${Number(d.tranche) + 1} failed (${d.lapses} of 2 allowed)`;
+    case 'RefundOpened': return `Refunds opened: ${usd(d.refundPool)} returnable to buyers`;
+    case 'Refunded': return `${usd(d.amount)} refunded to a buyer`;
+    case 'Reserved': return `${usd(d.amount)} held in reserve for holders (nothing staked)`;
+    case 'WindDownNoticed': return 'Operator gave notice of wind-down';
+    case 'BondWithdrawn': return `Operator withdrew ${usd(d.amount)} of bond`;
+    case 'OperatorProposed': return 'A new operator was proposed';
+    case 'OperatorChanged': return 'The operator changed';
     default: return a.kind;
   }
 }
@@ -61,18 +75,19 @@ function ClosedOffer({ l, soldOut, onMine }: { l: ListingView; soldOut: boolean;
   const wound = l.health === 'WoundDown', defaulted = l.health === 'Defaulted';
   const phase = l.escrow?.phase;
   if (phase === 'Pending' || phase === 'Refunding' || phase === 'Funding') return <div className="closed-offer" role="status">
-    <h3>{phase === 'Pending' ? 'Not open yet: waiting for independent review' : phase === 'Refunding' ? 'This raise is refunding' : 'The funding deadline has passed'}</h3>
-    <p>{phase === 'Pending' ? 'The named reviewer must attest before anyone can buy.' : phase === 'Refunding' ? 'Buyers can take back their share of the money the operator never received.' : 'Anyone can now settle the raise: it either activates or opens full refunds.'}</p>
+    <h3>{phase === 'Pending' ? 'Not open yet: waiting for independent review' : phase === 'Refunding' ? 'This raise is refunding' : l.vault.forSale === 0 ? 'Sold out: ready to settle' : 'The funding deadline has passed'}</h3>
+    <p>{phase === 'Pending' ? 'The named reviewer must attest before anyone can buy.' : phase === 'Refunding' ? 'Buyers can take back their share of the money the operator never received.' : l.vault.forSale === 0 ? 'Every offered share was bought, so the target is met. Anyone can now settle the raise to activate the listing.' : 'Anyone can now settle the raise: it either activates or opens full refunds.'}</p>
     <ul><li><button type="button" className="link-btn" onClick={onMine}>Check your own shares, claims and refunds</button></li></ul>
   </div>;
-  const title = wound ? 'This listing has been wound down' : defaulted ? 'New funding is blocked: the operator is in default' : soldOut ? `Sold out: all ${l.totalShares.toLocaleString()} shares were bought` : 'The primary sale is closed';
-  const why = wound ? 'The operator closed it. Allocations already earned stay claimable by their holders.' : defaulted ? 'Two payment periods passed without a qualifying deposit. Holders can still claim, and anyone may submit a bond recovery.' : soldOut ? 'This offer cannot take another purchase. Nothing is broken; the purchase button only exists while shares remain.' : 'The operator closed the sale before every share was bought.';
+  const offered = l.escrow ? l.vault.sold : l.totalShares;
+  const title = wound ? 'This listing has been wound down' : defaulted ? 'New funding is blocked: the operator is in default' : soldOut ? `Sold out: all ${offered.toLocaleString()} offered shares were bought` : l.escrow ? 'Funded: the raise met its target' : 'The primary sale is closed';
+  const why = wound ? 'The operator closed it. Allocations already earned stay claimable by their holders.' : defaulted ? 'Two payment periods passed without a qualifying deposit. Holders can still claim, and anyone may submit a bond recovery.' : soldOut ? 'This offer cannot take another purchase. Nothing is broken; the purchase button only exists while shares remain.' : l.escrow ? 'The deadline passed with the funding target met. Unsold shares went back to the operator.' : 'The operator closed the sale before every share was bought.';
   return <div className="closed-offer" role="status">
     <h3>{title}</h3><p>{why}</p>
     <ul>
       <li><a href="#activity">See exactly what was bought, deposited and claimed</a></li>
       <li><button type="button" className="link-btn" onClick={onMine}>Check your own shares and claims</button></li>
-      <li><Link to="/evidence">See how a fresh purchase could be tested</Link></li>
+      {!l.escrow && <li><Link to="/evidence">See how a fresh purchase could be tested</Link></li>}
     </ul>
     <small>No market exists for these shares yet. Trading needs someone to fund a pool, and Portion does not promise liquidity.</small>
   </div>;
@@ -103,7 +118,8 @@ export function ListingPage() {
   const { data: docMeta } = useAsync(async () => (l ? backend!.docMeta(l.docHash) : null), [l?.docHash]);
   const { data: proof } = useAsync(async () => (l ? backend!.proof(id) : null), [l?.id, tick]);
   const { data: revenue } = useAsync(() => backend!.revenue(id), [id, tick]);
-  const { data: coverage } = useAsync(() => serviceApi<{ contractTotal: string; publishedTotal: string; missingAllocation: string | null; totalsMatch: boolean; inconsistent: boolean; finalizedBlock: number }>(`/api/listings/${id}/history`), [id, tick]);
+  const sandbox = backend!.mode === 'sandbox';
+  const { data: coverage } = useAsync(async () => sandbox ? null : serviceApi<{ contractTotal: string; publishedTotal: string; missingAllocation: string | null; totalsMatch: boolean; inconsistent: boolean; finalizedBlock: number }>(`/api/listings/${id}/history`), [id, tick]);
   const { data: activity } = useAsync(() => backend!.activity({ listing: id, limit: 12 }), [id, tick]);
   const { data: pool } = useAsync(async () => (l ? backend!.pool(l) : null), [l?.id, tick]);
   const { data: spare } = useAsync(async () => (l && passport ? backend!.shareBalance(l.assetId, passport.address) : 0n), [l?.id, passport?.address, tick]);
@@ -152,14 +168,14 @@ export function ListingPage() {
             <div className="fact"><small>Operator bond</small><b>{usd(l.vault.bond)}</b></div>
           </div>
 
-          {l.escrow && <EscrowPanel l={{ ...l, escrow: l.escrow }} me={passport?.h160.toLowerCase() ?? null} now={nowSec} act={act} refundable={me?.refundable ?? 0n} stake={staked} />}
+          {l.escrow && <EscrowPanel l={{ ...l, escrow: l.escrow }} me={passport?.h160.toLowerCase() ?? null} now={nowSec} act={act} refundable={me?.refundable ?? 0n} stake={staked} sample={sandbox} />}
 
           <section className="block">
             <h2>Is the operator depositing?</h2>
             <div style={{ maxWidth: 520 }}><Health l={l} /></div>
             <p className="note" style={{ marginTop: 12 }}>
               The operator has committed to deposit at least {usd(l.minPerPeriod,6)} {cadenceLabel(l.cadence)}; this is a commitment recorded in the listing, not a guaranteed income. After {span(2 * l.cadence)} without a qualifying payment, anyone can slash the
-              {' '}{usd(l.vault.bond,6)} bond. The caller receives {(rules.slashTipBps / 100)}% of the bond; the remainder goes to current stakers, or the treasury if nobody is staked. Slashing requires a transaction; no automatic keeper is promised.{l.strikes !== null && l.strikes > 0 && <> This operator has been slashed {l.strikes} time{l.strikes > 1 ? 's' : ''}.</>}
+              {' '}{usd(l.vault.bond,6)} bond. The caller receives {(rules.slashTipBps / 100)}% of the bond; the remainder goes to current stakers, {l.escrow ? 'or is held in reserve for holders if nobody is staked' : 'or the treasury if nobody is staked'}. Slashing requires a transaction; no automatic keeper is promised.{l.strikes !== null && l.strikes > 0 && <> This operator has been slashed {l.strikes} time{l.strikes > 1 ? 's' : ''}.</>}
             </p>
             {l.health === 'Defaulted' && l.vault.bond > 0n && (
               <div style={{ marginTop: 14 }}><button className="btn primary" onClick={() => act({ kind: 'slash', id })}>Review bond recovery</button></div>
@@ -167,7 +183,14 @@ export function ListingPage() {
             {l.health === 'Late' && <p className="note" style={{ marginTop: 10 }}>Slashable in {span(toSlash)} if no payment arrives.</p>}
           </section>
 
-          <section className="block">
+          {sandbox ? <section className="block">
+            <h2>Sandbox listing checks</h2>
+            <div className="proof">
+              <div className="proof-row"><span className="tick">✓</span><div><b>Terms and photo match their hashes</b><span>The document and image shown here are checked against the hash the contract holds, as on the live app. In the sandbox they are stored in this browser, not on Portaldot.</span></div></div>
+              <div className="proof-row wait"><span className="tick">~</span><div><b>Deed and share supply are simulated</b><span>On Portaldot a deed NFT is locked and fractionalized into {l.totalShares.toLocaleString()} native shares. The sandbox mints a stand-in token at the same address instead.</span></div><span>asset {l.assetId}</span></div>
+              <div className={`proof-row${l.vault.bond > 0n ? '' : ' bad'}`}><span className="tick">{l.vault.bond > 0n ? '✓' : '!'}</span><div><b>{l.vault.bond > 0n ? 'Operator bond held' : 'No operator bond remains'}</b><span>{usd(l.vault.bond)} of sandbox pUSD is held by the Core v2 contract.</span></div></div>
+            </div>
+          </section> : <section className="block">
             <h2>Onchain listing checks</h2>
             <div className="proof">
               <div className={`proof-row ${docMeta ? '' : 'wait'}`}>
@@ -191,7 +214,7 @@ export function ListingPage() {
               </div>
             </div>
             {proof?.notes?.length ? <p className="note" style={{ marginTop: 10 }}>{proof.notes.join(' ')}</p> : null}
-          </section>
+          </section>}
 
           {terms && (
             <section className="block">
@@ -204,7 +227,7 @@ export function ListingPage() {
           <section className="block">
             <h2>Revenue paid in</h2>
             {revenue ? <RevenueChart rows={revenue} /> : <p className="notice">Revenue history unavailable. No payment totals are inferred.</p>}
-            <p className="notice">Published receipts are partial history. {coverage ? coverage.inconsistent ? 'Receipt totals differ from the contract; do not rely on the chart until reconciled.' : <>Receipts account for {usd(coverage.publishedTotal)} of {usd(coverage.contractTotal)} in cumulative contract allocations at finalized block {coverage.finalizedBlock.toLocaleString()}. {coverage.totalsMatch ? 'Matching totals do not prove complete history.' : `${usd(coverage.missingAllocation)} has no published allocation receipt yet.`}</> : 'Receipt coverage could not be reconciled. Missing records do not mean zero income.'}</p>
+            {sandbox ? <p className="notice">In the sandbox this chart reads every deposit and slash event from the simulated chain, so the history is complete.</p> : <p className="notice">Published receipts are partial history. {coverage ? coverage.inconsistent ? 'Receipt totals differ from the contract; do not rely on the chart until reconciled.' : <>Receipts account for {usd(coverage.publishedTotal)} of {usd(coverage.contractTotal)} in cumulative contract allocations at finalized block {coverage.finalizedBlock.toLocaleString()}. {coverage.totalsMatch ? 'Matching totals do not prove complete history.' : `${usd(coverage.missingAllocation)} has no published allocation receipt yet.`}</> : 'Receipt coverage could not be reconciled. Missing records do not mean zero income.'}</p>}
           </section>
 
           <section className="block" id="activity">
@@ -280,11 +303,11 @@ export function ListingPage() {
               {passport ? (
                 <>
                   <button className="btn primary" onClick={() => act({ kind: 'buy', id, shares })}>Buy {shares} share{shares === 1 ? '' : 's'}</button>
-                  {balances && <p className="hint" style={{ color: 'var(--ink-3)', fontSize: 13 }}>You have {usd(balances.pusd)} and {pot(balances.pot, 1)}.</p>}
+                  {balances && <p className="hint" style={{ color: 'var(--ink-3)', fontSize: 13 }}>You have {usd(balances.pusd)}{sandbox ? ' of sandbox money' : <> and {pot(balances.pot, 1)}</>}.</p>}
                 </>
               ) : <button className="btn primary" onClick={openPassport}>Connect wallet to buy</button>}
             </>
-          ) : <ClosedOffer l={l} soldOut={l.vault.sold === l.totalShares || l.saleOpen && l.vault.forSale === 0} onMine={() => setTab('mine')} />)}
+          ) : <ClosedOffer l={l} soldOut={l.vault.sold === l.totalShares || (l.saleOpen || !!l.escrow) && l.vault.forSale === 0} onMine={() => setTab('mine')} />)}
 
           {tab === 'trade' && (
             <div style={{ display: 'grid', gap: 14 }}>

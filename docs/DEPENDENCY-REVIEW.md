@@ -40,3 +40,11 @@ Compatibility checks exercise the CLI-config schemas with synthetic values only,
 plus loading the bundled API. They never read local authentication files. Contract
 bytecode and protocol behaviour do not change with this patch. A clean audit
 records known advisories at that time, not a guarantee against vulnerabilities.
+
+## Browser sandbox EVM — 29 October 2026
+
+The web app adds `@ethereumjs/evm`, `@ethereumjs/common` and `@ethereumjs/util`, each pinned to exactly **10.1.3**, to run the Core v2 bytecode in the browser sandbox ([SANDBOX.md](SANDBOX.md)). They pull in `@ethereumjs/statemanager`, `mpt`, `rlp` and `binarytree` at the same release.
+
+- **Reach:** imported only by `apps/web/src/sandbox/`, which the app loads with a dynamic import when a visitor starts the sandbox. The production build places them in the sandbox chunk (386 kB, 124.5 kB gzipped); the entry bundle contains none of them. The server and SDK do not depend on them.
+- **Data handled:** none outside the visitor's own browser. The sandbox makes no network requests, holds no keys and signs nothing.
+- **Audit on 29 October 2026** with npm 11.21.1: no advisory against these packages. The only finding was one moderate advisory in `@hono/node-server` ([GHSA-rmxm-3fg6-px4f](https://github.com/advisories/GHSA-rmxm-3fg6-px4f)), which predates this change and is not reachable from the sandbox. It is recorded here, not fixed in this change.
