@@ -49,10 +49,10 @@ export function Home() {
       <div>
         <span className="pv-eyebrow">Revenue sharing for productive assets</span>
         <h1 id="home-title">Share what an asset earns, with <em>a record everyone can check.</em></h1>
-        <p className="pv-lede">Portion lets an operator of solar installations, vehicle fleets or machinery deposit revenue, split it among participants by their shares, and let each person claim their part. Every step is a visible transaction on the Portaldot test network.</p>
+        <p className="pv-lede">Portion lets an operator of solar installations, vehicle fleets or machinery deposit revenue, split it among participants by their shares, and let each person claim their part. {sandbox ? 'In this sandbox every step runs on the Core v2 contract code inside your browser, with pretend money. Nothing here reaches Portaldot.' : 'Every step is a visible transaction on the Portaldot test network.'}</p>
         <div className="pv-actions">
           <a className="btn primary" href="#how">Walk through a payout <Icon name="arrow" size={18}/></a>
-          <Link className="btn ghost" to="/evidence">Inspect the evidence</Link>
+          {sandbox ? <Link className="btn ghost" to="/sandbox">Open the demo guide</Link> : <Link className="btn ghost" to="/evidence">Inspect the evidence</Link>}
         </div>
         <div className="pv-hero-note" role="note"><Icon name="shield" size={20}/><span><b>Test tokens only.</b> No real money moves and no return is promised. Portion records deposits an operator chooses to make; it does not collect income or verify that equipment exists.</span></div>
       </div>
@@ -61,6 +61,7 @@ export function Home() {
 
     <section aria-labelledby="proof-title" data-reveal>
       <h2 id="proof-title" className="sr-only" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>What is working today</h2>
+      {sandbox && <p className="notice" role="note">These four facts describe the live Core v1 deployment on Portaldot, not the sandbox. The sandbox runs Core v2, which holds purchase money in escrow and releases it in reviewer-approved tranches. Core v2 is not deployed or audited.</p>}
       <div className="pv-proof">
         <div><small>Contract</small><b>Live on testnet</b><span>Core deployed at block {RECORDED.core.block.toLocaleString()}; address checked against the chain before any action is enabled.</span></div>
         <div><small>Recorded lifecycle</small><b>Offer to claim</b><span>Create, buy, deposit, claim and unstake finalized. One development account played both roles.</span></div>
@@ -140,7 +141,7 @@ export function Home() {
     <section className="pv-section" style={{ paddingTop: 0 }} data-reveal aria-labelledby="close-title">
       <div className="pv-close">
         <div><h2 id="close-title">See it work before you trust it.</h2><p>Everything here runs against a public test network. Read the record, then try your own preparation. Nothing you do carries financial risk.</p></div>
-        <div className="stack"><Link className="btn primary" to="/evidence">Inspect the evidence <Icon name="arrow" size={18}/></Link><Link className="btn ghost" to="/create">Prepare an offer</Link></div>
+        <div className="stack">{sandbox ? <Link className="btn primary" to="/sandbox">Open the demo guide <Icon name="arrow" size={18}/></Link> : <Link className="btn primary" to="/evidence">Inspect the evidence <Icon name="arrow" size={18}/></Link>}<Link className="btn ghost" to="/create">Prepare an offer</Link></div>
       </div>
     </section>
   </div>;

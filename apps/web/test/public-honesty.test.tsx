@@ -7,7 +7,7 @@ import { Guide } from '../src/pages/Guide';
 import { Home } from '../src/pages/Home';
 import { RECORDED } from '../src/lib/evidence';
 
-const state = vi.hoisted(() => ({ status: 'ready', backend: null as any }));
+const state = vi.hoisted(() => ({ status: 'ready', backend: null as any, sandbox: false }));
 vi.mock('../src/state/app', () => ({ useApp: () => ({ ...state, reconnect: vi.fn(), tick: 0 }) }));
 vi.mock('../src/state/runner', () => ({ useRunner: () => ({ openPassport: vi.fn() }) }));
 vi.mock('../src/state/passport', () => ({ usePassport: () => ({ passport: null, balances: null }) }));
@@ -39,6 +39,17 @@ describe('public pages keep their disclosures', () => {
     expect(html).toContain('This is not escrow');
     expect(html).toContain('Held for spending control');
     expect(html).not.toMatch(/guaranteed (return|income|profit)|risk-free|insured/i);
+  });
+  it('home never claims Portaldot transactions while in the sandbox', () => {
+    state.sandbox = true;
+    try {
+      const html = renderToStaticMarkup(<MemoryRouter><Home/></MemoryRouter>);
+      expect(html).not.toContain('Every step is a visible transaction on the Portaldot test network');
+      expect(html).toContain('Nothing here reaches Portaldot');
+      expect(html).toContain('describe the live Core v1 deployment on Portaldot, not the sandbox');
+      expect(html).toContain('Open the demo guide');
+      expect(html).not.toContain('Inspect the evidence');
+    } finally { state.sandbox = false; }
   });
   it('evidence says one account played both roles and lists every recorded hash', () => {
     const html = renderToStaticMarkup(<MemoryRouter><Evidence/></MemoryRouter>);
