@@ -47,3 +47,11 @@ Google Cloud work is paused. [Detailed acceptance evidence](EXECUTION-2026-10-25
 ## Principal review — 27 October 2026
 
 A fresh review carried through to implementation: [REVIEW-2026-10-27.md](REVIEW-2026-10-27.md). It narrows the first product to operator revenue-sharing administration, redesigns the public interface and adds an evidence page, publishes the investment assessment, competitor notes, hackathon evidence map and a reproducible cost model, and adds a tested **local-only** controlled-funding contract candidate. **Still 25 complete; 31 remaining (15 in progress, 16 open).** Three tasks moved from open to in progress (B05, D04, O07) and nine in-progress or completed tasks gained evidence notes; none was marked complete without meeting its acceptance text. No chain write, spend, deployment, outside message or Google Cloud work occurred.
+
+## Market-readiness review — 29 October 2026
+
+[MARKET-READINESS-REVIEW.md](../MARKET-READINESS-REVIEW.md) lists nine contract loopholes and nine market gaps from a developer and investor view. Three contract findings were not recorded before: faked revenue history through the operator's own staked shares (C2), the nothing-staked chain in which either a forced default sends the bond to the treasury or the operator winds down and withdraws its bond (C3), and the operator key that can never be rotated (C7). All findings are reasoned from source; none is yet demonstrated by an exploit test. Documentation only; task counts unchanged. No chain write, spend or deployment occurred.
+
+## Core v2 candidate — 29 October 2026
+
+[CORE-V2-CANDIDATE.md](../CORE-V2-CANDIDATE.md): `PortionCoreV2.sol` closes or narrows C1–C4 and C7. Six tests demonstrate each loophole against the deployed v1 code; twenty tests show v2 refusing them and keeping v1's fees, payouts and default protection, including a 512-run fuzz that the contract always covers claims, reserve and bond. Nine injected bugs were all caught. Full Solidity suite: 117 passing. `ControlledFunding.t.sol` now advances time from `vm.getBlockTimestamp()` (cached `block.timestamp` under via_ir); its 23 tests still pass. Local only: no chain write, spend or deployment; the SDK and app still use v1.

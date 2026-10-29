@@ -2,7 +2,7 @@
 
 **Share what an asset earns, with a record everyone can check.** Portion lets an operator of productive equipment deposit revenue, split it among participants by their shares, and let each participant claim their part. The Core contract is live on the Portaldot V3 testnet; publishing, deposits and claims are real testnet transactions in test tokens that have no value.
 
-Portion's first product is **revenue-sharing administration for operators**: terms, deposits, allocations, claims and receipts. Raising money through Portion is a secondary, test-only module. **Purchase proceeds currently go directly to the operator**, nothing verifies that equipment exists or that revenue is complete, and the operator bond is limited recovery, not principal insurance. See [funding and protection boundaries](docs/FUNDING-PROTECTION.md), the [money and trust lifecycle](docs/MONEY-AND-TRUST-LIFECYCLE.md) and the [investment assessment](docs/INVESTMENT-ASSESSMENT.md).
+Portion's first product is **revenue-sharing administration for operators**: terms, deposits, allocations, claims and receipts. Raising money through Portion is a secondary, test-only module. **Purchase proceeds currently go directly to the operator**, nothing verifies that equipment exists or that revenue is complete, and the operator bond is limited recovery, not principal insurance. See [funding and protection boundaries](docs/FUNDING-PROTECTION.md), the [money and trust lifecycle](docs/MONEY-AND-TRUST-LIFECYCLE.md), the [investment assessment](docs/INVESTMENT-ASSESSMENT.md) and the [market-readiness review](docs/MARKET-READINESS-REVIEW.md) of loopholes still to close.
 
 Built for the **Portaldot Hacker House 2026**, with **Ecosystem DApps** as the primary fit. Track eligibility and any additional award submission remain separate decisions.
 
@@ -13,6 +13,7 @@ Built for the **Portaldot Hacker House 2026**, with **Ecosystem DApps** as the p
 | Wallet onboarding | Existing native injected-wallet signing design; full separate-user browser proof remains outstanding |
 | Native tools | Direct network readings and optional native tools; verify each action before a demonstration |
 | Controlled-funding escrow | `contracts/src/candidates/ControlledFunding.sol`: 23 local tests; **not deployed, not in the app** ([candidate notes](docs/CONTROLLED-FUNDING-CANDIDATE.md)) |
+| Core v2 loophole fixes | `contracts/src/candidates/PortionCoreV2.sol`: closes or narrows review findings C1–C4 and C7; 26 local tests incl. v1 exploit demonstrations; **not deployed, not in the app** ([candidate notes](docs/CORE-V2-CANDIDATE.md)) |
 | Bridge, automatic keepers, full archive | Legacy source/roadmap; not deployed ongoing services in this release |
 
 Current deployment and validation: [live Core release](docs/LIVE-CORE-RELEASE.md) and [finalized protocol test](docs/LIVE-TEST-RESULTS.md). Hosted features use verified receipts and durable document copies; legacy keepers and the cross-chain bridge are not deployed.

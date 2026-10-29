@@ -79,7 +79,7 @@ contract ControlledFundingTest is Test {
     }
     function _propose(uint256 id) private { vm.prank(operator); f.propose(id, keccak256("invoice")); }
     function _approveBoth(uint256 id) private { vm.prank(reviewer); f.approve(id); vm.prank(rep); f.approve(id); }
-    function _release(uint256 id) private { _propose(id); _approveBoth(id); vm.warp(block.timestamp + WINDOW); f.release(id); }
+    function _release(uint256 id) private { _propose(id); _approveBoth(id); vm.warp(vm.getBlockTimestamp() + WINDOW); f.release(id); }
     function _sumHeld() private view returns (uint256 total) { for (uint256 i = 1; i <= f.campaignCount(); i++) total += f.held(i); }
 
     // ── creation rules ─────────────────────────────────────────────────────────
@@ -122,14 +122,14 @@ contract ControlledFundingTest is Test {
         vm.prank(alice); f.contribute(id, 1_000);
         vm.prank(bob); vm.expectRevert(ControlledFunding.Invalid.selector); f.contribute(id, 1); // over cap
         uint256 id2 = _create(500, 1_000);
-        vm.warp(block.timestamp + 10 days + 1);
+        vm.warp(vm.getBlockTimestamp() + 10 days + 1);
         vm.prank(alice); vm.expectRevert(ControlledFunding.Closed.selector); f.contribute(id2, 1);
     }
     function testFinalizeWaitsForDeadlineUnlessCapReached() public {
         uint256 id = _create(500, 1_000);
         vm.prank(alice); f.contribute(id, 600);
         vm.expectRevert(ControlledFunding.Protected.selector); f.finalize(id);
-        vm.warp(block.timestamp + 10 days + 1);
+        vm.warp(vm.getBlockTimestamp() + 10 days + 1);
         f.finalize(id);
         assertEq(uint8(f.campaign(id).phase), uint8(ControlledFunding.Phase.Active));
     }
@@ -137,7 +137,7 @@ contract ControlledFundingTest is Test {
         uint256 id = _create(900, 1_000);
         vm.prank(alice); f.contribute(id, 300);
         vm.prank(bob); f.contribute(id, 200);
-        vm.warp(block.timestamp + 10 days + 1);
+        vm.warp(vm.getBlockTimestamp() + 10 days + 1);
         f.finalize(id);
         assertEq(uint8(f.campaign(id).phase), uint8(ControlledFunding.Phase.Refunding));
         vm.prank(alice); assertEq(f.refund(id), 300);
@@ -176,22 +176,22 @@ contract ControlledFundingTest is Test {
     function testCannotReleaseWithoutBothApprovalsOrBeforeTheChallengeWindow() public {
         uint256 id = _active();
         _propose(id);
-        vm.warp(block.timestamp + WINDOW);
+        vm.warp(vm.getBlockTimestamp() + WINDOW);
         vm.expectRevert(ControlledFunding.Protected.selector); f.release(id); // no approvals
         vm.prank(reviewer); f.approve(id);
         vm.expectRevert(ControlledFunding.Protected.selector); f.release(id); // only one
         vm.prank(rep); f.approve(id);
         vm.expectRevert(ControlledFunding.Protected.selector); f.release(id); // window not yet elapsed
-        vm.warp(block.timestamp + WINDOW - 1);
+        vm.warp(vm.getBlockTimestamp() + WINDOW - 1);
         vm.expectRevert(ControlledFunding.Protected.selector); f.release(id);
-        vm.warp(block.timestamp + 1);
+        vm.warp(vm.getBlockTimestamp() + 1);
         f.release(id);
     }
     function testExpiredProposalCannotBeApprovedOrReleased() public {
         uint256 id = _active();
         _propose(id);
         _approveBoth(id);
-        vm.warp(block.timestamp + LIFE + 1);
+        vm.warp(vm.getBlockTimestamp() + LIFE + 1);
         vm.expectRevert(ControlledFunding.Protected.selector); f.release(id);
         vm.prank(reviewer); vm.expectRevert(ControlledFunding.Protected.selector); f.approve(id);
     }
@@ -201,7 +201,7 @@ contract ControlledFundingTest is Test {
         vm.expectRevert(ControlledFunding.Invalid.selector); f.release(id); // proposal cleared
         _propose(id);
         _approveBoth(id);
-        vm.warp(block.timestamp + WINDOW);
+        vm.warp(vm.getBlockTimestamp() + WINDOW);
         f.release(id);
         assertEq(pay.balanceOf(vendorA), 333); // paid once, to the address fixed at creation
         assertEq(pay.balanceOf(vendorB), 333);
@@ -210,7 +210,7 @@ contract ControlledFundingTest is Test {
     function testAnyoneCanTriggerReleaseButMoneyOnlyGoesToTheBeneficiary() public {
         uint256 id = _active();
         _propose(id); _approveBoth(id);
-        vm.warp(block.timestamp + WINDOW);
+        vm.warp(vm.getBlockTimestamp() + WINDOW);
         vm.prank(address(0xBEEF)); f.release(id);
         assertEq(pay.balanceOf(address(0xBEEF)), 0);
         assertEq(pay.balanceOf(vendorA), 333);
@@ -234,7 +234,7 @@ contract ControlledFundingTest is Test {
         uint256 id = _active();
         _propose(id); _approveBoth(id);
         vm.prank(bob); f.challenge(id); // 30%
-        vm.warp(block.timestamp + WINDOW);
+        vm.warp(vm.getBlockTimestamp() + WINDOW);
         vm.expectRevert(ControlledFunding.Protected.selector); f.release(id);
         f.lapse(id);
         assertEq(f.campaign(id).lapses, 1);
@@ -251,10 +251,10 @@ contract ControlledFundingTest is Test {
         uint256 id = _active();
         _propose(id);
         vm.expectRevert(ControlledFunding.Protected.selector); f.lapse(id); // still within its life
-        vm.warp(block.timestamp + LIFE + 1);
+        vm.warp(vm.getBlockTimestamp() + LIFE + 1);
         f.lapse(id);
         _propose(id);
-        vm.warp(block.timestamp + LIFE + 1);
+        vm.warp(vm.getBlockTimestamp() + LIFE + 1);
         f.lapse(id);
         assertEq(uint8(f.campaign(id).phase), uint8(ControlledFunding.Phase.Refunding));
         vm.prank(alice); f.refund(id);
@@ -309,7 +309,7 @@ contract ControlledFundingTest is Test {
         g.finalize(id);
         vm.prank(operator); g.propose(id, keccak256("e"));
         vm.prank(reviewer); g.approve(id); vm.prank(rep); g.approve(id);
-        vm.warp(block.timestamp + WINDOW);
+        vm.warp(vm.getBlockTimestamp() + WINDOW);
         t.setFail(true);
         vm.expectRevert(); g.release(id);
         assertFalse(g.milestones(id)[0].released);
