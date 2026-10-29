@@ -100,8 +100,11 @@ describe('browser sandbox', () => {
 
   it('shows refusals before confirming and blocks roles the contract forbids', async () => {
     const { backend, role } = await start();
-    await expect(backend.prepare({ kind: 'buy', id: 100_002, shares: 10 }, role('operator').passport)).rejects.toThrow(/Unauthorized/);
-    await expect(backend.prepare({ kind: 'buy', id: 100_002, shares: 10 }, role('reviewer').passport)).rejects.toThrow(/less than/);
+    await expect(backend.prepare({ kind: 'buy', id: 100_002, shares: 10 }, role('operator').passport)).rejects.toThrow(/cannot buy its own listing.*Unauthorized/);
+    await expect(backend.prepare({ kind: 'buy', id: 100_002, shares: 10 }, role('reviewer').passport)).rejects.toThrow(/reviewer cannot buy/);
+    await backend.sandbox.addFunds(role('reviewer').passport.h160);
+    // Even with money and the plain-words check bypassed, the contract itself refuses the reviewer (Invalid).
+    await expect((backend as any).action('x', [], [{ op: 'call', from: role('reviewer').passport.h160, fn: 'buy', args: [100_002, 10n], approve: [{ asset: 1984, amount: '50000000' }] }])).rejects.toThrow(/Invalid/);
     await expect(backend.prepare({ kind: 'guardian', fn: 'pause' }, role('buyerA').passport)).rejects.toThrow(/Unauthorized/);
   });
 

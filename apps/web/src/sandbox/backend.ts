@@ -223,6 +223,9 @@ export class SandboxBackend implements Backend {
       case 'buy': {
         const l = await this.listing(intent.id);
         if (!l.saleOpen) throw new UserError(l.escrow?.phase === 'Pending' ? 'No one can buy until the named reviewer attests. Switch to the Reviewer.' : 'This sale is closed.');
+        // C2: the contract refuses these; say why in plain words before it does.
+        if (me === l.operator) throw new UserError('The operator cannot buy its own listing, so it cannot fake demand or revenue. Switch to Buyer A or Buyer B. (contract error: Unauthorized)');
+        if (me === l.escrow?.reviewer) throw new UserError('The named reviewer cannot buy the listing it reviews. Switch to Buyer A or Buyer B. (contract error: Invalid)');
         const cost = BigInt(intent.shares) * l.vault.salePrice;
         await pusd(cost);
         return this.action(`Buy ${intent.shares} share${intent.shares === 1 ? '' : 's'} of ${l.name}`,

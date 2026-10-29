@@ -125,7 +125,7 @@ export function App() {
         {!PUBLIC_PATHS.includes(loc.pathname) && status === 'offline' && (
           <div className="empty">
             <h3>{sandbox ? 'The sandbox could not start' : 'The Portaldot testnet is not answering'}</h3>
-            <p>{error}. {sandbox ? 'Reset the sandbox from the demo guide, or exit it.' : 'Live data is unavailable. No balances or activity will be invented.'}</p>
+            <p>{error?.replace(/\.$/, '')}. {sandbox ? 'Reset the sandbox from the demo guide, or exit it.' : 'Live data is unavailable. No balances or activity will be invented.'}</p>
             <button className="btn primary" onClick={reconnect}>Retry connection</button>
           </div>
         )}
