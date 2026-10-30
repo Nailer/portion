@@ -7,17 +7,17 @@ import { useReveal } from '../lib/scroll';
 type Step = { h: string; p: string; cost: string; next: string; to?: string; cta?: string };
 
 const OPERATOR: Step[] = [
-  { h: 'Draft your offer', p: 'Describe the asset, upload a real photo, set the shares, price, the deposit schedule you expect to keep, and a bond.', cost: 'Free. No wallet needed.', next: 'The draft is saved only in this browser, only if you choose to save it.', to: '/create', cta: 'Prepare an offer' },
+  { h: 'Draft your offer', p: 'Describe the asset, upload a real photo, set the shares, price, the deposit schedule you expect to keep, and a bond.', cost: 'Free. No wallet needed.', next: 'The draft is saved only in this browser, only if you choose to save it.', to: '/create', cta: 'Create an offer' },
   { h: 'Connect a Portaldot wallet', p: 'Approve account access in the extension. Portion never asks for a recovery phrase and never creates a wallet for you.', cost: 'Free. Your wallet needs tPOT for network fees and storage deposits, and test pUSD for the bond.', next: 'Balances are read from the chain. Missing or unavailable is never shown as zero.' },
   { h: 'Review, then publish', p: 'You approve two document stores (terms and image) and one atomic batch that creates the deed, shares, approvals and the listing.', cost: 'Up to three wallet approvals. Fee estimates are shown before you sign. They are estimates, not enforced caps; storage deposits are separate.', next: 'The listing appears after its finalized receipt is verified. If a later step fails, earlier finalized steps are kept and resumed, not repeated.' },
-  { h: 'Record revenue deposits', p: 'When you decide to share revenue, deposit it. The 0.5% fee is shown first; the rest is split among shares staked at that moment.', cost: 'The deposit amount, the fee, and a network fee. A deposit needs at least one staked share.', next: 'Holders can claim immediately. A deposit at or above your stated minimum resets the late clock.', to: '/operator', cta: 'Open the workspace' },
+  { h: 'Record revenue deposits', p: 'When you decide to share revenue, deposit it. The 0.5% fee is shown first; the rest is split among shares staked at that moment.', cost: 'The deposit amount, the fee, and a network fee. A deposit needs at least one staked share.', next: 'Holders can claim immediately. A deposit at or above your stated minimum resets the late clock.', to: '/operator', cta: 'Manage offers' },
   { h: 'Keep to your schedule', p: 'After one missed period the listing is late; after two it is in default, new purchases stop and anyone can submit a bond recovery.', cost: 'The bond is held by the contract.', next: 'The bond is limited recovery, not insurance, and nothing runs automatically.' },
 ];
 const PARTICIPANT: Step[] = [
-  { h: 'Read the record', p: 'Open an asset to see its hashed terms, native backing checks, bond, deposit history and activity.', cost: 'Free. No wallet needed.', next: 'You will see exactly where the money would go and what is not guaranteed.', to: '/', cta: 'See published assets' },
-  { h: 'Connect and check readiness', p: 'Connect a Portaldot wallet. Check your tPOT and pUSD balances below before you try anything.', cost: 'Free to connect.', next: 'Test credits come from a limited, explicit request. Nothing is assigned automatically.', to: '/faucet', cta: 'Check test credits' },
-  { h: 'Buy shares, if an offer is open', p: 'Choose how many shares, review the total and the fee, and approve in your wallet.', cost: 'Price × shares, including a 1% fee, plus a network fee.', next: 'Your payment goes directly to the operator. Shares start earning when staked. Right now no offer is open.' },
-  { h: 'Stake and claim', p: 'Stake shares so they receive future deposits, and claim what has been allocated to you.', cost: 'A network fee per action.', next: 'Claims are pulled, not pushed. Unstaking returns shares, not your purchase price.', to: '/portfolio', cta: 'Open your portfolio' },
+  { h: 'Read the record', p: 'Open an asset to see its hashed terms, native backing checks, bond, deposit history and activity.', cost: 'Free. No wallet needed.', next: 'You will see exactly where the money would go and what is not guaranteed.', to: '/assets', cta: 'Explore assets' },
+  { h: 'Connect and check readiness', p: 'Connect a Portaldot wallet. Check your tPOT and pUSD balances below before you try anything.', cost: 'Free to connect.', next: 'Test credits come from a limited, explicit request. Nothing is assigned automatically.', to: '/faucet', cta: 'Get test tokens' },
+  { h: 'Buy shares, if an offer is open', p: 'Choose how many shares, review the total and the fee, and approve in your wallet.', cost: 'Price × shares, including a 1% fee, plus a network fee.', next: 'Your payment goes directly to the operator. Shares start earning when staked.' },
+  { h: 'Stake and claim', p: 'Stake shares so they receive future deposits, and claim what has been allocated to you.', cost: 'A network fee per action.', next: 'Claims are pulled, not pushed. Unstaking returns shares, not your purchase price.', to: '/portfolio', cta: 'Open my portfolio' },
 ];
 const REVIEWER: Step[] = [
   { h: 'Check the deployment', p: 'Compare the contract address, block and transaction hash with the chain.', cost: 'Free. No wallet needed.', next: 'You learn that the contract exists and matches the recorded bytecode.', to: '/evidence', cta: 'Open the evidence' },
@@ -44,10 +44,10 @@ export function Guide() {
   useReveal();
   return <div className="pv">
     <section className="pv-section" style={{ paddingBottom: 24 }}>
-      <span className="pv-eyebrow">Guide</span>
+      <span className="pv-eyebrow">How it works</span>
       <h1 className="pv-title" style={{ fontSize: 'clamp(34px,5vw,58px)' }}>Pick your role. Every step shows its cost.</h1>
       <p className="pv-lede">Portion runs on the Portaldot test network with test tokens. Each step below says what it costs and what happens next, so nothing is a surprise at the wallet prompt.</p>
-      <p className="pv-actions"><a className="btn primary" href="#operator">I run an asset</a><a className="btn ghost" href="#participant">I take part</a><a className="btn ghost" href="#reviewer">I am reviewing</a><button className="btn ghost" onClick={openPassport}>Connect wallet</button></p>
+      <p className="pv-actions"><a className="btn primary" href="#operator">I run an asset</a><a className="btn ghost" href="#participant">I take part</a><a className="btn ghost" href="#reviewer">I am reviewing</a><button className="btn ghost" onClick={() => openPassport()}>Connect wallet</button></p>
     </section>
 
     <Readiness/>

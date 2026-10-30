@@ -2,7 +2,17 @@
 
 The live testnet record cannot show a purchase: listing 585886 sold all 100 shares in the recorded run, and publishing a new test offer costs about 45 tPOT, against 4.83 tPOT above the 40 tPOT reserve. Core v2 is not deployed at all. The sandbox fixes both problems without spending anything. Anyone can **create an asset, fund it, release escrow, pay and claim revenue, default, slash, refund and pause**, through the app's real pages, with nothing reaching Portaldot.
 
-Open it at `/sandbox` (linked as **Sandbox** in the main navigation and from the test-network strip) and press **Start the sandbox**.
+Open it at `/sandbox` (under **More → Sandbox (simulated)**) and press **Start the sandbox**.
+
+## Conflict with the real-data requirement
+
+The founder's earlier rule is that the product shows real, verified data. The sandbox's listings and balances are fictional, so it conflicts with that rule if it is treated as part of the product. It was built at the founder's explicit request for demonstrations, and it is kept on these terms:
+
+- **Off by default and out of the main journey.** It lives under More → Sandbox (simulated) and in the reviewers' section of the homepage. The live product never shows sandbox data.
+- **Never a fallback.** If the testnet is unavailable, pages say so and show no substitute records. Entering the sandbox is always a deliberate click.
+- **Kept apart.** Its balances, receipts and history stay in that browser and never enter the real receipt journal. Its results say "Done in the sandbox only" and are never called finalized.
+
+If the founder prefers the strict rule, the route and its navigation links can be removed without touching the live flows.
 
 ## What is real and what is simulated
 

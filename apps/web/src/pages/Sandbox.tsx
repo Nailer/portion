@@ -32,7 +32,7 @@ const TOURS: Tour[] = [
     { who: 'buyerB', title: 'Take back your share of the escrow', body: 'Buyer B paid a third of the raise, so receives a third of the money the operator never received. Released money cannot be recovered.', to: '/listing/100001' },
   ] },
   { id: 'create', title: '3. Create an asset and miss the target', lede: 'Publish a new fictional offer, have it reviewed, and watch a failed raise refund every buyer in full.', steps: [
-    { who: 'operator', title: 'Prepare and publish an offer', body: 'Fill in a fictional asset. Use “Fill in the sandbox Reviewer” on the funding step. A photo is optional here; the sandbox uses a placeholder.', to: '/create' },
+    { who: 'operator', title: 'Create and publish an offer', body: 'Fill in a fictional asset. Use “Fill in the sandbox Reviewer” on the funding step. A photo is optional here; the sandbox uses a placeholder.', to: '/create' },
     { who: 'reviewer', title: 'Record the review', body: 'Open the new listing from the overview. No one could buy until now. Attach any file as review evidence.', to: '/' },
     { who: 'buyerA', title: 'Buy a few shares', body: 'Buy fewer than the funding target.', to: '/' },
     { title: 'Let the deadline pass', body: 'Skip past the funding deadline you chose.', skip: 31 * DAY },

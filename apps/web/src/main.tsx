@@ -9,6 +9,7 @@ import './styles.css';
 import './workspaces.css';
 import './brand.css';
 import './portion.css';
+import './journeys.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

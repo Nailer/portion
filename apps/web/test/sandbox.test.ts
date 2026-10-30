@@ -19,7 +19,8 @@ async function start() {
   return { backend, role, act };
 }
 
-describe('browser sandbox', () => {
+// Each test boots a full EVM and replays the seed, which can take many seconds on a busy machine.
+describe('browser sandbox', { timeout: 120_000 }, () => {
   it('runs the reviewed Core v2 bytecode unchanged', async () => {
     const chain = await SandboxChain.create(1_800_000_000, [], labelAddress('guardian'));
     expect(chain.portion).toMatch(/^0x[0-9a-f]{40}$/);

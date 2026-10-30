@@ -4,6 +4,10 @@ The website reads the real Portaldot V3 test network. It creates no visitor wall
 
 Live app: https://portion-one.vercel.app. The public test endpoint often takes 10 seconds or more to answer; pages that need the chain say so while they wait.
 
+## Start here: what the site is organised around
+
+Visitors should not need this document. The header offers **Explore assets**, **Create an offer**, **Manage offers** and **My portfolio**; help, evidence and network tools are under **More**. The tables below are for checking behaviour and for judges. They are engineering walkthroughs, not evidence that first-time users understand the site; no such user testing has been done.
+
 ## A. Judge: five minutes, no wallet, no cost
 
 | # | Start at | Do | Expect |
@@ -11,7 +15,7 @@ Live app: https://portion-one.vercel.app. The public test endpoint often takes 1
 | 1 | `/` | Read the headline, the illustration and the five steps | A plain explanation of the product, labelled "Illustration · not a live record", and who controls the money at each step |
 | 2 | `/evidence` | Compare the contract address, block 160,455 and each transaction hash with the explorer | Values match the repository's deployment files (a test enforces this) |
 | 3 | `/evidence` → "Live check now" | Wait for the connection | "Contract found on the connected testnet" and the fees read from the contract: 1% on sales, 0.5% on deposits |
-| 4 | `/listing/585886` | Read the terms, native-backing checks, bond and activity | Sold out (100 of 100 shares). A panel explains why and what to do next. The 40×40 image is the original recorded bytes, not enlarged or replaced |
+| 4 | `/assets`, then `/listing/585886` | Read the status, “Where your money goes”, the checks and activity | Labelled a disclosed development test and sold out (100 of 100 shares). No purchase button and no market is offered; the side panel says what this account can do. The 40×40 image is the original recorded bytes, not enlarged or replaced |
 | 5 | `/evidence` → criteria table | Read each criterion's evidence and its biggest gap | The weaknesses are stated, not hidden: one account in both roles, no separate-user browser proof, no customer evidence |
 | 6 | `/business` | Read the direction and why current fees do not cover service cost | The cost-model reasoning, with assumptions labelled |
 
@@ -20,7 +24,7 @@ Then read, in the repository: [INVESTMENT-ASSESSMENT.md](INVESTMENT-ASSESSMENT.m
 ## B. First-time visitor
 
 1. Open `/`. Within a few seconds the page says who Portion is for (operators of equipment such as solar installations, and the people who take part), the outcome (revenue shared by recorded deposit), what works today, and that the app uses test tokens.
-2. Choose "Walk through a payout" or a role card. Each step lists who acts, where the money is and what is not guaranteed.
+2. Choose **Explore assets** or **Create an offer**. Further down, "Where the money goes" lists who acts, where the money is and what is not guaranteed at each step.
 
 ## C. Operator — draft without a wallet
 

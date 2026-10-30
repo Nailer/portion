@@ -1,0 +1,141 @@
+/* Goal-based navigation, discovery, account-aware panels and transaction feedback. Loaded last. */
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.portfolio-link { white-space: nowrap; font-weight: 600; }
+.portfolio-link.active { background: var(--raised); border-color: var(--line-strong); }
+.connect-btn { white-space: nowrap; gap: 0; }
+.connect-btn span { white-space: pre; }
+.tools-menu small { display: block; padding: 10px 12px 4px; font: 600 11px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.tools-menu small:first-child { padding-top: 4px; }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent-strong, #3366ff); outline-offset: 2px; }
+@media (max-width: 1180px) { .network-chip { display: none; } }
+@media (max-width: 600px) {
+  .top .wrap { gap: 6px; }
+  .top .brand { font-size: 0; gap: 0; flex: none; }
+  .top .wrap { padding-inline: 12px; }
+  .portfolio-link, .connect-btn, .top .menu-btn { padding: 8px 9px; font-size: 12.5px; min-height: 40px; flex: none; }
+  .connect-btn span { display: none; }
+  .chip { padding: 6px; }
+  .chip small { display: none; }
+}
+
+/* ── Explore assets ──────────────────────────────────────────────────────── */
+.assets-page { display: grid; gap: 28px; padding-bottom: 40px; }
+.assets-head { max-width: 760px; }
+.assets-head h1 { font-size: clamp(38px, 5vw, 60px); font-weight: 600; letter-spacing: -.045em; line-height: 1.05; margin: 8px 0 14px; }
+.assets-head p { color: var(--ink-2); line-height: 1.65; }
+.assets-tools { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.assets-search { margin: 0; flex: 1 1 240px; max-width: 360px; padding: 4px 0; }
+.workspace-filters button { min-height: 38px; color: var(--ink-2); }
+.workspace-filters button[aria-pressed='true'] { background: var(--ink); color: #fff; }
+.assets-note { color: var(--ink-2); line-height: 1.65; padding: 14px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin-top: 18px; }
+.home-assets { padding-top: 0; }
+.asset-test { position: absolute; top: 12px; right: 12px; background: #fff; color: var(--ink); border: 1px solid var(--line-strong); font: 600 11px/1 var(--mono); padding: 7px 9px; border-radius: 7px; }
+.funding-label b[data-offer='open'] { color: var(--native); }
+.funding-label b[data-offer='sold-out'], .funding-label b[data-offer='closed'] { color: var(--ink); }
+
+/* ── Asset detail ────────────────────────────────────────────────────────── */
+.offer-chip { display: inline-block; font: 600 12px/1 var(--mono); padding: 7px 10px; border-radius: 7px; background: var(--surface); border: 1px solid var(--line-strong); color: var(--ink); margin-bottom: 12px; }
+.offer-chip.offer-open { background: var(--mint-soft); border-color: var(--native); color: #063f50; }
+.offer-chip.offer-blocked, .offer-chip.offer-refunding { background: var(--tomato-soft); border-color: var(--tomato); color: var(--tomato); }
+.dev-test { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line-strong); color: var(--ink-2); line-height: 1.55; font-size: 14px; }
+.money-facts { display: grid; gap: 0; margin: 0; }
+.money-facts > div { display: grid; grid-template-columns: minmax(150px, 220px) 1fr; gap: 6px 20px; padding: 14px 0; border-top: 1px solid var(--line); }
+.money-facts > div:first-child { border-top: 0; padding-top: 4px; }
+.money-facts dt { font-weight: 600; color: var(--ink); }
+.money-facts dd { margin: 0; color: var(--ink-2); line-height: 1.6; }
+.mine { display: grid; gap: 12px; }
+.closed-offer small { display: block; margin-top: 8px; color: var(--ink-3); line-height: 1.5; }
+@media (max-width: 640px) { .money-facts > div { grid-template-columns: 1fr; } }
+
+/* ── Create an offer ─────────────────────────────────────────────────────── */
+.create > h1 { margin-bottom: 12px; }
+.create-before { margin: 26px 0 18px; padding: 22px 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.create-before h2 { font-size: 20px; font-weight: 600; margin: 0 0 14px; }
+.create-before > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.create-before ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; color: var(--ink-2); line-height: 1.5; font-size: 14px; }
+.create-readiness { margin-bottom: 14px; }
+.create-readiness summary { cursor: pointer; color: var(--ink-2); font-size: 14px; }
+.create-review h2 { margin-top: 0; }
+.create-review code { overflow-wrap: anywhere; }
+input[aria-invalid='true'], textarea[aria-invalid='true'] { border-color: var(--tomato); box-shadow: inset 0 0 0 1px var(--tomato); }
+@media (max-width: 800px) { .create-before > div { grid-template-columns: 1fr; gap: 16px; } .create-before { padding: 18px; } }
+
+/* ── My portfolio ────────────────────────────────────────────────────────── */
+.position-numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.position-note { font-size: 12px; color: var(--ink-3); line-height: 1.5; margin: 10px 0 0; }
+.position-footer { flex-wrap: wrap; }
+.position-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.payment-input input { padding-left: 14px; }
+
+/* ── Transaction sheet: title, status, subject, progress or result, details, next step ── */
+.transaction-dialog { position: relative; display: grid; gap: 16px; width: min(560px, 100%); padding: 28px; }
+.transaction-dialog > h2 { font-size: 24px; line-height: 1.25; padding-right: 40px; margin: 0; overflow-wrap: anywhere; }
+.transaction-dialog > .dialog-close { position: absolute; top: 18px; right: 18px; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line); background: var(--ground); color: var(--ink); cursor: pointer; }
+.transaction-dialog .sheet-sub, .transaction-dialog .sheet-cost, .transaction-dialog .sheet-error, .tx-next { margin: 0; overflow-wrap: anywhere; line-height: 1.55; }
+.transaction-dialog .sheet-cost { background: var(--ground); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; color: var(--ink); font-size: 14.5px; }
+.transaction-dialog .sheet-error { border-radius: 10px; font-size: 14px; }
+.tx-next { font-size: 14.5px; color: var(--ink-2); }
+.tx-account { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 14px; }
+.tx-account dt { color: var(--ink-3); }
+.tx-account dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+.tx-now { display: flex; gap: 12px; align-items: flex-start; }
+.tx-now > div { display: grid; gap: 3px; min-width: 0; }
+.tx-now span:not(.spinner) { color: var(--ink-2); font-size: 14px; line-height: 1.5; }
+.tx-progress { display: grid; gap: 12px; padding: 14px; border-radius: 12px; background: var(--ground); border: 1px solid var(--line); }
+.tx-stages { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: 13.5px; color: var(--ink-3); }
+.tx-stages li { display: flex; gap: 9px; align-items: center; }
+.tx-stages li::before { content: ''; width: 9px; height: 9px; flex: none; border-radius: 50%; border: 1.5px solid var(--line-strong); }
+.tx-stages li[data-state='done'] { color: var(--ink-2); }
+.tx-stages li[data-state='done']::before { background: var(--native); border-color: var(--native); }
+.tx-stages li[data-state='current'] { color: var(--ink); font-weight: 600; }
+.tx-stages li[data-state='current']::before { border-color: var(--accent-strong, #3366ff); box-shadow: 0 0 0 3px rgb(51 102 255 / .18); }
+.tx-verdict { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 12px 14px; border-radius: 10px; line-height: 1.5; font-size: 14.5px; border: 1px solid var(--line-strong); background: var(--ground); overflow-wrap: anywhere; }
+.tx-verdict svg { flex: none; margin-top: 2px; }
+.tx-verdict.ok { background: var(--mint-soft); border-color: var(--native); color: #063f50; font-weight: 600; }
+.tx-verdict.simulated { background: var(--amber-soft); border-color: var(--amber-line); color: var(--amber); font-weight: 600; }
+.tx-verdict.failed, .tx-verdict.unavailable, .tx-verdict.funds { background: var(--tomato-soft); border-color: var(--tomato); }
+.tx-verdict.unknown { background: var(--amber-soft); border-color: var(--amber-line); color: var(--amber); }
+.tx-changed { display: grid; gap: 4px; }
+.tx-changed small { font: 600 11px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.tx-changed p { margin: 0; line-height: 1.6; color: var(--ink); }
+.tx-receipts { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 12px; font-size: 13.5px; }
+.tx-receipts li { display: grid; gap: 4px; min-width: 0; }
+.tx-receipts code { overflow-wrap: anywhere; word-break: break-all; font-size: 12.5px; color: var(--ink-2); }
+.tx-receipt-actions { display: flex; gap: 14px; }
+.transaction-dialog .transaction-details { background: var(--ground); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 0; }
+.transaction-details summary { cursor: pointer; font-size: 14px; color: var(--ink-2); }
+.transaction-details[open] summary { margin-bottom: 8px; }
+.transaction-dialog .sheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 2px; }
+.auth-reason { margin: 6px 0 10px; padding: 10px 12px; border-radius: 10px; background: var(--ground); border: 1px solid var(--line-strong); font-size: 14px; line-height: 1.5; color: var(--ink); }
+
+/* A hidden or finished transaction stays visible here until dismissed. */
+.tx-tray { position: fixed; right: 18px; bottom: 18px; z-index: 45; width: min(380px, calc(100vw - 36px)); display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line-strong); box-shadow: 0 14px 40px rgb(0 19 60 / .18); }
+.tx-tray > div { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.tx-tray b { overflow-wrap: anywhere; font-size: 14px; }
+.tx-tray span:not(.spinner) { font-size: 13px; color: var(--ink-2); }
+.tx-tray.ok { border-color: var(--native); }
+.tx-tray.problem { border-color: var(--tomato); }
+.tx-tray .dialog-close { position: static; width: 32px; height: 32px; flex: none; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--line); background: var(--ground); cursor: pointer; color: var(--ink); }
+@media (prefers-reduced-motion: no-preference) { .tx-tray { animation: tx-tray-in .18s ease-out; } @keyframes tx-tray-in { from { opacity: 0; transform: translateY(8px); } } }
+@media (max-width: 560px) {
+  .overlay { padding: 8px; align-items: end; }
+  .transaction-dialog { padding: 20px 18px; gap: 14px; max-height: calc(100dvh - 16px); }
+  .transaction-dialog > h2 { font-size: 21px; }
+  .transaction-dialog .sheet-actions { flex-direction: column-reverse; flex-wrap: nowrap; }
+  .transaction-dialog .sheet-actions .btn { flex: none; width: 100%; min-height: 46px; }
+  .tx-tray { right: 8px; left: 8px; bottom: 8px; width: auto; }
+}
+
+/* Claimable income is the portfolio's headline; it must read clearly and its action must look like one. */
+.workspace-stats > div.stat-dark { background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
+.workspace-stats > div.stat-dark::before, .workspace-stats > div.stat-dark::after { display: none; }
+.workspace-stats > div.stat-dark span, .workspace-stats > div.stat-dark b, .workspace-stats > div.stat-dark small { color: #fff; }
+.workspace-stats > div.stat-dark .stat-claim { display: inline-flex; width: fit-content; margin-top: 10px; padding: 9px 12px; min-height: 40px; align-items: center; border-radius: 9px; border: 0; background: #fff; color: var(--accent-strong); font-weight: 650; font-size: 13.5px; cursor: pointer; }
+
+/* The side panel must never hide its own action: it scrolls inside itself when taller than the window. */
+@media (min-width: 981px) {
+  .listing-grid .panel { position: sticky; top: 96px; max-height: calc(100dvh - 112px); overflow-y: auto; overscroll-behavior: contain; }
+}
+.share-breakdown { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+.share-breakdown summary { cursor: pointer; font-size: 14px; color: var(--ink-2); margin-bottom: 8px; }
