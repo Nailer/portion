@@ -10,6 +10,7 @@ import './workspaces.css';
 import './brand.css';
 import './portion.css';
 import './journeys.css';
+import './theme.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

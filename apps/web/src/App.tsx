@@ -10,6 +10,7 @@ import { pot, usd, short } from './lib/format';
 import { useRouteScroll } from './lib/scroll';
 import { Home } from './pages/Home';
 import { SandboxBar } from './components/SandboxBar';
+import { ThemeChoices, ThemeMenu } from './components/ThemeSwitch';
 const ListingPage = lazy(() => import('./pages/Listing').then(module => ({ default: module.ListingPage })));
 const Create = lazy(() => import('./pages/Create').then(module => ({ default: module.Create })));
 const Portfolio = lazy(() => import('./pages/Portfolio').then(module => ({ default: module.Portfolio })));
@@ -110,9 +111,11 @@ export function App() {
               <NavLink to="/pools" onClick={close}>Staking pools</NavLink>
               <NavLink to="/teleport" onClick={close}>Teleport bridge</NavLink>
             </div></details>
+            <ThemeChoices/>
           </nav>
           <div className="spacer" />
           <span className={`network-chip${sandbox ? ' sandbox' : ''}`}><i className="live-indicator" />{sandbox ? (status === 'ready' ? 'Sandbox · simulated' : status === 'connecting' ? 'Starting sandbox' : 'Sandbox failed') : status === 'ready' ? 'Testnet connected' : status === 'connecting' ? 'Connecting' : 'Offline'}</span>
+          <ThemeMenu/>
           <NavLink to="/portfolio" className="btn ghost sm portfolio-link" onClick={close}>My portfolio</NavLink>
           <AccountChip />
           <button className="btn ghost sm menu-btn" onClick={() => setNavOpen((o) => !o)} aria-label="Menu" aria-expanded={navOpen} aria-controls="main-nav">Menu</button>

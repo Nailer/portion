@@ -1,0 +1,58 @@
+/* Colour themes. Tokens only: components never choose a colour per theme. Loaded last so these win.
+   Light values match the design layer in portion.css. data-theme is set before first paint (index.html, lib/theme.ts). */
+:root {
+  color-scheme: light;
+  --accent-text: #2250d6; --accent-text-strong: #1a42b5; --focus: #1a42b5;
+  --on-status: #ffffff; --mint-text: #0e7a5c; --mint-ink: #063f50; --tomato-text: #a3263a; --amber-ink: #4d3200;
+  --chart: #1145a2; --strip: #0c1f44; --selection: #c9d9fb;
+  --header-bg: rgb(255 255 255 / .86); --overlay: rgb(12 31 68 / .42);
+  --glow-a: #dfe9ff; --glow-b: #e6f3fb; --glow-soft: #fcfcfc44; --hairline: #1a1a1a0e;
+  --lane-native-bg: #d9f0f7; --lane-native-ink: #0a4a5e;
+  --lane-evm-bg: #e8e2fb; --lane-evm-ink: #3a2a8a;
+  --lane-storage-bg: #fde9c6; --lane-storage-ink: #6b4200;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --ground: #0b1424; --surface: #121d32; --surface-2: #1a2741; --raised: #1a2741;
+  --ink: #e8eefb; --ink-2: #bcc9e2; --ink-3: #93a4c4;
+  --line: #26344f; --line-strong: #3d5175;
+  /* Accent fills stay dark enough for white text; text on dark surfaces uses the lighter accent-text. */
+  --accent: #3460df; --accent-strong: #2a53cc; --accent-soft: #1c2c52; --accent-ink: #ffffff;
+  --accent-text: #9db9ff; --accent-text-strong: #a9c2ff; --focus: #a9c2ff;
+  --cyan: #56c2df; --native: #56c2df; --evm: #a893f5; --storage: #e3a54a; --saffron: #7ea2ff; --saffron-ink: #0b1424;
+  --on-status: #06140f; --mint: #2fb98b; --mint-soft: #10302a; --mint-text: #5fd9b0; --mint-ink: #a4ecd3;
+  --amber: #f0c069; --amber-soft: #2e2410; --amber-line: #6a5120; --amber-ink: #f3d9a4;
+  --tomato: #ff98a8; --tomato-soft: #3a1a22; --tomato-text: #ffb3bf;
+  --chart: #7ea2ff; --strip: #070e1b; --selection: #2c4a94;
+  --header-bg: rgb(11 20 36 / .86); --overlay: rgb(2 6 16 / .66);
+  --glow-a: #14244a; --glow-b: #0f2a3a; --glow-soft: transparent; --hairline: #ffffff14;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / .4), 0 8px 24px rgb(0 0 0 / .28);
+  --shadow-2: 0 2px 6px rgb(0 0 0 / .45), 0 24px 60px rgb(0 0 0 / .5);
+  --lane-native-bg: #0f3442; --lane-native-ink: #9fe0f2;
+  --lane-evm-bg: #2a2256; --lane-evm-ink: #cfc4ff;
+  --lane-storage-bg: #3b2a0c; --lane-storage-ink: #f3cf8e;
+}
+/* Native controls and the page background follow the theme without a colour transition, which would flash. */
+:root[data-theme='dark'] img { color-scheme: normal; }
+
+/* Appearance control */
+.theme-menu { position: relative; flex: none; }
+.theme-menu > summary { list-style: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer; }
+.theme-menu > summary::-webkit-details-marker { display: none; }
+.theme-menu[open] > summary { background: var(--accent-soft); }
+.theme-menu > div { position: absolute; right: 0; top: calc(100% + 10px); z-index: 80; width: 190px; padding: 8px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--surface); box-shadow: var(--shadow-2); }
+.theme-choice { border: 0; margin: 0; padding: 0; display: grid; gap: 2px; min-width: 0; }
+.theme-choice legend { padding: 4px 10px 8px; font: 600 11px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.theme-choice label { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 8px 10px; border-radius: 8px; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.theme-choice label:hover { background: var(--raised); color: var(--ink); }
+.theme-choice label:has(input:checked) { background: var(--accent-soft); color: var(--accent-text-strong); font-weight: 600; }
+.theme-choice label:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 1px; }
+.theme-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.theme-choice svg { flex: none; }
+.nav .theme-choice { display: none; }
+@media (max-width: 950px) {
+  .theme-menu { display: none; }
+  .nav .theme-choice { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .nav .theme-choice legend { grid-column: 1 / -1; padding-inline: 4px; float: left; width: 100%; }
+  .nav .theme-choice label { justify-content: center; padding: 8px 4px; border: 1px solid var(--line); font-size: 13px; gap: 6px; }
+}
