@@ -49,7 +49,7 @@ Use **Portaldot Wallet** (or another native injected wallet that appears in the 
 
 ## F. Three-minute demo video: suggested shot list
 
-The organisers require a public demo video of at most three minutes that shows a real product, core functions and Portaldot use. **It has not been recorded.** The recommended script is now in [SANDBOX.md](SANDBOX.md#three-minute-demo-video-script): about two minutes in the sandbox for the core functions, and the live evidence page for Portaldot use, saying on camera which is which. The earlier live-only order, which cannot show a purchase, was:
+The organisers require a public demo video of at most three minutes that shows a real product, core functions and Portaldot use. **It was recorded on 1 November 2026; see the [production record](demo/DEMO-PRODUCTION.md) for what it shows.** The planning script is in [SANDBOX.md](SANDBOX.md#three-minute-demo-video-script): about two minutes in the sandbox for the core functions, and the live evidence page for Portaldot use, saying on camera which is which. The earlier live-only order, which cannot show a purchase, was:
 
 1. 0:00 — Homepage: the problem, the five steps, the test-tokens notice (20 s).
 2. 0:20 — `/evidence`: contract address and a transaction hash opened in the explorer (40 s).

@@ -1,5 +1,7 @@
 # Pitch deck text — draft for the founder to build, 27 October 2026
 
+**Superseded on 1 November 2026 by the built deck, [portion-pitch-deck.pdf](portion-pitch-deck.pdf).** This draft predates Core v2 and the sandbox, and its numbers are out of date. It is kept for its source labels and its "Do not say" list.
+
 Source: [INVESTMENT-ASSESSMENT.md](INVESTMENT-ASSESSMENT.md), [FINANCIAL-MODEL.md](FINANCIAL-MODEL.md), [MARKET-AND-COMPETITORS.md](MARKET-AND-COMPETITORS.md), [LIVE-TEST-RESULTS.md](LIVE-TEST-RESULTS.md) and the live [evidence page](https://portion-one.vercel.app/evidence).
 
 The organisers ask for a deck (PDF or public link) covering **the problem, why Portaldot is essential, proof the product works, and reasons for continued support**. This text is a draft, not a built deck.

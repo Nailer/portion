@@ -155,4 +155,4 @@ The capture stops if any of these differ.
 ## Remaining submission risks
 
 - **Testnet node:** the public node has been intermittent, so a judge may briefly see the "not answering" screen. Asset 585886 shows Late now and will show Defaulted after 6 November, because no deposit is scheduled; the video shows its state on the recording date.
-- **Still needed:** the pitch deck, a public upload of the video, and the DoraHacks fields only the founder can complete.
+- **Still needed:** a public upload of the video, and the DoraHacks fields only the founder can complete. See the [proposed entry text](DORAHACKS-ENTRY.md).

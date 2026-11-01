@@ -29,8 +29,8 @@ Tracks: Modular Cloud & Middleware; Multi-Chain & Cross-Chain Infra; Node Operat
 | Complete README, architecture diagram, deployment instructions | Met | README, `docs/architecture.md/.svg`, `docs/SETUP.md` | README should lead with the narrowed direction |
 | Runnable code and demo link | Met | https://portion-one.vercel.app | Verify again after each release |
 | Third-party code disclosed and licensed | Mostly met | README credits section | **No `LICENSE` file existed** although the README says MIT. A standard MIT file is added in this review; the founder should confirm the copyright holder name. |
-| **Demo video ≤ 3 minutes** showing a real product, core function and Portaldot use, publicly accessible | **Not done** | — | Cannot be produced by this review. A shot list is in `docs/WALKTHROUGH.md`. Founder records it. |
-| **Pitch deck** (PDF or link): problem, why Portaldot is essential, proof of function, reasons for continued support | **Not done** | — | Outline in `docs/INVESTMENT-ASSESSMENT.md` §Pitch spine. Founder builds the deck. |
+| **Demo video ≤ 3 minutes** showing a real product, core function and Portaldot use, publicly accessible | Finished at 2:54, not uploaded (1 Nov) | `docs/demo/DEMO-PRODUCTION.md` | Founder reviews, uploads and replaces the wrong video link on the entry |
+| **Pitch deck** (PDF or link): problem, why Portaldot is essential, proof of function, reasons for continued support | Built (1 Nov) | `docs/portion-pitch-deck.pdf` | Founder reviews and attaches it to the entry |
 | Project name, team members, one-sentence overview, contract address and tx hash | Partly | Contract and hash exist | Founder supplies team members and confirms the sentence |
 | Code freeze after the deadline; serious bug fixes reported with a modification record | Rule noted | — | After 6 Nov 04:00 UTC make no substantial changes |
 

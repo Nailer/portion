@@ -44,7 +44,7 @@ All or nothing. Shares and the pUSD test-credit asset are *native assets* that S
 See [docs/research.md](docs/research.md) for the ecosystem research and why this idea, [docs/architecture.md](docs/architecture.md) for the design,
 and [docs/TESTING.md](docs/TESTING.md) for how to check every claim.
 
-New here? Open the [public preview](https://portion-one.vercel.app), read its [evidence page](https://portion-one.vercel.app/evidence) and follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). Source: [Nailer/portion](https://github.com/Nailer/portion). The public preview reads the real testnet; the Core contract is deployed and its runtime bytecode is verified before actions are enabled. No simulation or fabricated opening balances are available. See [hosting scope](docs/HOSTING.md) for what Vercel publishes.
+New here? Open the [public preview](https://portion-one.vercel.app), read its [evidence page](https://portion-one.vercel.app/evidence) and follow the [plain-language user and judge walkthrough](docs/WALKTHROUGH.md). Source: [Nailer/portion](https://github.com/Nailer/portion). The public preview reads the real testnet; the Core contract is deployed and its runtime bytecode is verified before actions are enabled. Live pages show no simulated data or fabricated opening balances. The separately labelled [sandbox](https://portion-one.vercel.app/sandbox) uses fictional roles and pretend money, and nothing in it reaches Portaldot. See [hosting scope](docs/HOSTING.md) for what Vercel publishes, and the [pitch deck](docs/portion-pitch-deck.pdf) for the short version.
 
 Account connection never asks for a recovery phrase. Approve a compatible browser-wallet connection for native testnet tools. Keys remain in the extension. No wallet is created by the app. See [account connection and legacy-data handling](docs/ACCOUNT-CONNECTION.md).
 
@@ -90,10 +90,10 @@ npx tsx scripts/deploy-live-core.ts --execute # only for a new deployment after 
 ## Repository layout
 
 ```
-contracts/       Solidity (Foundry): PortionCore.sol (deployed), src/candidates/ControlledFunding.sol (local only), legacy Portion/Teleport/WrappedToken + tests
+contracts/       Solidity (Foundry): PortionCore.sol (deployed), src/candidates/PortionCoreV2.sol and ControlledFunding.sol (not deployed), legacy Portion/Teleport/WrappedToken + tests
 packages/sdk/    @portion/sdk: addresses, passports, revive, batches, documents, DEX
 packages/server/ indexer, document gateway, faucet, keepers, network analysis, relayer
-apps/web/        React app (Vite), real chain reads and deployment-gated asset actions
+apps/web/        React app (Vite), real chain reads, deployment-gated asset actions and the browser sandbox
 scripts/         keygen, deploy, e2e, local Teleport test
 docs/            research, architecture, testing, investment assessment, market, cost model, submission pack
 deployments/     addresses and evidence written by the scripts
@@ -104,7 +104,7 @@ See [hackathon readiness](docs/HACKATHON-READINESS.md) for verified requirements
 ## Honest limits
 
 - Operator revenue is self-reported. Bond + cadence make non-payment visible and expensive; they do not prove revenue. A production version would add payment-rail attestations.
-- No admission, verification or escrow: `create` is permissionless and purchase money is not held for approved spending.
+- In the deployed Core v1 there is no admission, verification or escrow: `create` is permissionless and purchase money is not held for approved spending. Core v2 adds these controls, but runs only in the sandbox and local tests, and is unaudited.
 - The recorded lifecycle used one development account as operator and buyer, signed by a script. Separate-user browser signing is not yet witnessed.
 - Legacy Teleport source assumes a relayer committee; no live bridge or light-client migration is claimed here.
 - `pallet-nfts` lets an item's owner burn it; the proof panel will show "the deed no longer exists".
@@ -113,5 +113,5 @@ See [hackathon readiness](docs/HACKATHON-READINESS.md) for verified requirements
 
 ## Credits and disclosures
 
-Built from scratch during the hackathon window (14 Oct – 6 Nov 2026). Third-party code used as dependencies: Polkadot-JS, ethers, React, Vite, Hono, Foundry's forge-std (MIT), vitest.
+Built from scratch during the hackathon window (14 Oct – 6 Nov 2026). Third-party code used as dependencies: Polkadot-JS, ethers, React, React Router, Vite, Hono, Vercel Blob (Apache-2.0), Foundry's forge-std (MIT), vitest and, in sandbox mode only, the EthereumJS EVM and utilities (`@ethereumjs/evm` and `@ethereumjs/util` MPL-2.0, `@ethereumjs/common` MIT). Fonts: Inter, Manrope, IBM Plex Mono and Fraunces, from Google Fonts. Demo video narration generated with Kokoro-82M (Apache-2.0).
 Research notes cite public repositories from other hackathon teams only to describe the landscape; no code was copied. Licensed MIT (see [LICENSE](LICENSE)).

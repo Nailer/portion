@@ -20,7 +20,7 @@ Current evidence supersedes historical undeployed/budget notes. Official event d
 | Actual separate-user browser lifecycle | Still outstanding; mocked signer tests and development-script receipts do not prove this. |
 | README/architecture/setup | Current descriptions reconciled; fresh-install verification and operational restore are separate open tasks. |
 | Initial demo evidence | Live app/receipt evidence available; actual check-in submission remains unconfirmed. |
-| Final video (at most 3 minutes) and pitch deck | Still to produce and verify publicly. |
+| Final video (at most 3 minutes) and pitch deck | Video finished at 2:54 ([production record](demo/DEMO-PRODUCTION.md)) but not uploaded. Deck: [portion-pitch-deck.pdf](portion-pitch-deck.pdf). See the [1 November update](SUBMISSION.md#update-1-november-2026). |
 | Business and operator pilot | Reachable contact, not a partnership. Willingness to pay, real cash flows and eligible offering/collections model remain unvalidated. |
 | Further funds / deployment | Existing deployment needs no repeat. Last recorded remaining free native balance 44.82920824 tPOT, dated 23 October; new writes require fresh cost/reserve checks. |
 

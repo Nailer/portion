@@ -41,8 +41,28 @@ The check-in accepts a working demo link or an initial video of at most three mi
 - Official page re-read through a browser; dates are unchanged. See [HACKATHON-EVIDENCE-MAP.md](HACKATHON-EVIDENCE-MAP.md) for the full requirement-to-evidence table. The official Discord was not accessible to this review, so announcements made only there are unchecked.
 - **The office-hour application deadline (27 Oct 12:00 UTC) had passed** when this was written. Whether the founder applied is unknown; ask the organisers about a late request rather than assuming one.
 - A standard MIT `LICENSE` file was added (the README already said MIT). The founder should confirm the copyright holder name.
-- **Still missing and required: the ≤3-minute demo video and the pitch deck.** A shot list is in [WALKTHROUGH.md](WALKTHROUGH.md) and a deck spine in [INVESTMENT-ASSESSMENT.md](INVESTMENT-ASSESSMENT.md). Team members and the one-sentence overview are the founder's to supply.
+- At this date, both the ≤3-minute demo video and the pitch deck were missing (see the 1 November update below). A shot list is in [WALKTHROUGH.md](WALKTHROUGH.md) and a deck spine in [INVESTMENT-ASSESSMENT.md](INVESTMENT-ASSESSMENT.md). Team members and the one-sentence overview are the founder's to supply.
 - Commit discipline: the rules forbid committing final core versions all at once in the last 24 hours before 6 Nov 04:00 UTC. Keep the remaining work in small, steady commits.
+
+## Update, 1 November 2026
+
+The public DoraHacks page and the public view of [Portion's entry](https://dorahacks.io/build/50267) were re-read while logged out. Dates are unchanged. The rules say "all finalist teams" must make the final submission, and the page does not say how finalists are chosen, so this needs confirming on Discord. Discord, the entry's edit form and private messages were not read.
+
+**Problems on the entry, to be fixed by the founder:**
+
+| Field | Shown now | Should be |
+| --- | --- | --- |
+| Track | Multi-Chain & Cross-Chain Infra | Ecosystem DApps. Portion has no live bridge |
+| Video link | `youtu.be/gTR4EguxiNI`, which YouTube titles "Paytrace Monad Metropolis Hackathon Demo Video" | The Portion demo video, once uploaded |
+| Description | The internal decisions document | Proposed text in [DORAHACKS-ENTRY.md](demo/DORAHACKS-ENTRY.md) |
+| Overview and tags | Unpolished sentence, no tags | Proposed text in the same file |
+| Pitch deck | None | [portion-pitch-deck.pdf](portion-pitch-deck.pdf) |
+
+**Materials now:** the video is finished at 2:54 but not uploaded, and the deck is built from checked facts. Automated checks at this date: 337 tests passing (130 contract, 56 SDK, 111 web, 40 server), with 4 optional live SDK tests skipped.
+
+**Discord:** `discord.gg/portaldot`, given on the event page, showed "Invite Invalid" on 1 November. `discord.gg/Vt9VpG6Ed` opens the Portaldot server.
+
+**Live demo dates:** DoraHacks says 8–9 November. A search summary of an earlier Portaldot article gave different dates, and the article itself could not be opened, so confirm the slot on Discord.
 
 ## Story and track decision
 
