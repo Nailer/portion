@@ -11,3 +11,4 @@ contracts/lib
 data
 *.log
 .DS_Store
+demo-output
