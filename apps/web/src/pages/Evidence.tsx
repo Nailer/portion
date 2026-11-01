@@ -42,6 +42,7 @@ export function Evidence() {
     <section className="pv-section" style={{ paddingTop: 0 }} aria-labelledby="ev-run">
       <h2 id="ev-run" className="pv-title" style={{ fontSize: 'clamp(26px,3vw,36px)' }}>The recorded lifecycle</h2>
       <p className="pv-lede">Asset <Link to={`/listing/${RECORDED.listing.assetId}`}>{RECORDED.listing.assetId}</Link>, “{RECORDED.listing.name}”, was disclosed as a protocol test representing no equipment, ownership or revenue.</p>
+      <p className="pv-eyebrow" style={{ marginTop: 18 }}>Recorded Portaldot testnet transactions</p>
       <div className="ev-table-wrap" data-reveal><table className="ev-table"><thead><tr><th scope="col">Step</th><th scope="col">Block</th><th scope="col">Transaction hash</th></tr></thead><tbody>
         {RECORDED.steps.map(s => <tr key={s.hash}><th scope="row">{s.label}</th><td><a href={explorerBlock(s.block)} target="_blank" rel="noreferrer">{s.block.toLocaleString()}</a></td><td className="mono">{shortHash(s.hash, 12, 8)} <CopyButton text={s.hash}/></td></tr>)}
       </tbody></table></div>

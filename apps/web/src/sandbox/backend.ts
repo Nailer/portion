@@ -279,7 +279,10 @@ export class SandboxBackend implements Backend {
           noticeWindDown: ['Give notice of wind-down', 'Holders get two periods to respond before the listing can close.'],
         };
         const [title, detail] = copy[intent.fn];
-        return this.action(title, [step(intent.fn, title, detail)], [call(intent.fn, needsEvidence ? [id, ev] : [id])]);
+        if (intent.fn !== 'release') return this.action(title, [step(intent.fn, title, detail)], [call(intent.fn, needsEvidence ? [id, ev] : [id])]);
+        // The contract gives one error for every release rule, so say which rule applies to this tranche.
+        const proposal = (await this.listing(id)).escrow?.proposal;
+        return this.action(title, [step(intent.fn, title, detail)], [call(intent.fn, [id])]).catch((error: Error) => { throw new UserError(proposal && !proposal.approvedAt ? 'The contract refused the release: the named reviewer has not approved this tranche. (contract error: Protected)' : proposal ? 'The contract refused the release: the challenge window has not ended. (contract error: Protected)' : error.message); });
       }
       case 'guardian': {
         const [title, detail] = intent.fn === 'pause'

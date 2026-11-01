@@ -76,6 +76,8 @@ export function EscrowPanel({ l, me, now, act, refundable, stake, sample = false
       {refundable > 0n && <button className="btn primary sm" onClick={() => run('refund')}>Take back {usd(refundable, 6)}</button>}
       {t.canFinalize && <button className="btn ghost sm" onClick={() => run('finalize')}>Settle the raise</button>}
       {t.canRelease && <button className="btn ghost sm" onClick={() => run('release')}>Release the approved tranche</button>}
+      {/* Sandbox only: lets a viewer see the contract itself refuse a release that is not yet allowed. */}
+      {sample && e.proposal && !e.proposal.challenged && !t.canRelease && <button className="btn ghost sm" onClick={() => run('release')}>Sandbox: try to release it now</button>}
       {t.canLapse && <button className="btn ghost sm" onClick={() => run('lapse')}>Clear the failed request</button>}
       {e.proposal && !e.proposal.challenged && canChallenge && <button className="btn ghost sm" onClick={() => run('challenge')}>Challenge this tranche</button>}
       {isReviewer && e.proposal && !e.proposal.approvedAt && !e.proposal.challenged && <button className="btn primary sm" onClick={() => run('approve')}>Approve the tranche</button>}

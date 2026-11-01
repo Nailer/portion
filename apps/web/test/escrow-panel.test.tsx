@@ -11,6 +11,15 @@ const listing: any = { id: 7, operator: '0x' + 'aa'.repeat(20), cadence, totalSh
 const html = (e: Partial<EscrowView>, me: string | null = null, extra: { refundable?: bigint; stake?: number } = {}) =>
   renderToStaticMarkup(<EscrowPanel l={{ ...listing, escrow: { ...escrow, ...e } }} me={me} now={10 * day} act={vi.fn()} refundable={extra.refundable ?? 0n} stake={extra.stake ?? 0} />);
 
+describe('sandbox release attempt', () => {
+  const proposal = { evidence: '0x' + '11'.repeat(32), proposedAt: 9 * day, approvedAt: 0, challenged: false };
+  const render = (sample: boolean) => renderToStaticMarkup(<EscrowPanel l={{ ...listing, escrow: { ...escrow, proposal } }} me={null} now={10 * day} act={vi.fn()} refundable={0n} stake={0} sample={sample}/>);
+  it('is offered only in the sandbox, so the live app never shows a button that cannot succeed', () => {
+    expect(render(true)).toContain('Sandbox: try to release it now');
+    expect(render(false)).not.toContain('try to release');
+  });
+});
+
 describe('escrow timing mirrors the contract', () => {
   const proposal = { evidence: '0x' + '11'.repeat(32), proposedAt: 0, approvedAt: day, challenged: false };
   it('allows release one period after approval and before expiry, never earlier', () => {

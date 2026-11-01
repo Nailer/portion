@@ -24,7 +24,7 @@ export function SandboxBar() {
       <div className="wrap">
         <div className="sandbox-id">
           <span className="sandbox-badge">Sandbox</span>
-          <span><b>Simulated in this browser.</b> Not on Portaldot. Pretend money with no value.</span>
+          <span><b>Core v2 sandbox</b> — local execution, pretend funds, not deployed.</span>
         </div>
         {controls ? <div className="sandbox-controls">
           <label className="sandbox-role">Acting as

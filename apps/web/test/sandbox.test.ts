@@ -56,7 +56,7 @@ describe('browser sandbox', { timeout: 120_000 }, () => {
     // The operator cannot release money the reviewer has not approved.
     expect((await act(role('operator'), { kind: 'escrow', fn: 'propose', id, evidence: ev('invoice') })).ok).toBe(true);
     await backend.sandbox.skip(WEEK + 1);
-    await expect(backend.prepare({ kind: 'escrow', fn: 'release', id }, role('operator').passport)).rejects.toThrow(/refused/i);
+    await expect(backend.prepare({ kind: 'escrow', fn: 'release', id }, role('operator').passport)).rejects.toThrow(/reviewer has not approved.*Protected/);
     expect((await act(role('reviewer'), { kind: 'escrow', fn: 'approve', id })).ok).toBe(true);
     await expect(backend.prepare({ kind: 'escrow', fn: 'release', id }, role('operator').passport)).rejects.toThrow();
     await backend.sandbox.skip(WEEK + 1);

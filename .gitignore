@@ -18,3 +18,6 @@ coverage/
 
 /serverless/bundle.cjs
 backups/
+
+# Demo video build output (large binaries; review copies are delivered separately)
+demo-output/
