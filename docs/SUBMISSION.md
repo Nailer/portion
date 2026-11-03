@@ -58,11 +58,15 @@ The public DoraHacks page and the public view of [Portion's entry](https://dorah
 | Overview and tags | Unpolished sentence, no tags | Proposed text in the same file |
 | Pitch deck | None | [portion-pitch-deck.pdf](portion-pitch-deck.pdf) |
 
-**Materials now:** the video is finished at 2:54 but not uploaded, and the deck is built from checked facts. Automated checks at this date: 337 tests passing (130 contract, 56 SDK, 111 web, 40 server), with 4 optional live SDK tests skipped.
+**Materials now:** the video is finished at 2:54 but not uploaded, and the deck is built from checked facts. Automated checks at 2 November: 356 tests passing (149 contract, 56 SDK, 111 web, 40 server), with 4 optional live SDK tests skipped.
 
 **Discord:** `discord.gg/portaldot`, given on the event page, showed "Invite Invalid" on 1 November. `discord.gg/Vt9VpG6Ed` opens the Portaldot server.
 
-**Live demo dates:** DoraHacks says 8–9 November. A search summary of an earlier Portaldot article gave different dates, and the article itself could not be opened, so confirm the slot on Discord.
+**Check-in result, read on 2 November:** [Portion passed](https://docs.google.com/document/d/1sHqbRgpsY5icNReaokhk43nm36psp91L6N2gcqA0GW8/edit?usp=sharing) (entry 55 of 62). The review found every form field mis-filled: the summary held a YouTube link, and the demo and deck fields held the repository URL. Mentor feedback: "Technical base to be strengthened; ecosystem contribution to watch; commercial potential to watch." The second-wave check-in closes on 4 November at 04:00 UTC, so correct the form before then. [Verification evidence](VERIFICATION-EVIDENCE.md) answers the technical feedback.
+
+**Finalists:** no finalist list has been found. An organiser told a team that had skipped the check-in on 2 November that it could still make the final submission.
+
+**Live demo dates:** unconfirmed. DoraHacks says 8–9 November, a search summary of a Portaldot article said 7–8 November, and a Discord moderator said 7–9 November. Hold all three days until the organisers confirm the slot.
 
 ## Story and track decision
 

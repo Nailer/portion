@@ -32,7 +32,8 @@
     "build": "node scripts/build-api.mjs && npm run build -w @portion/web",
     "budget:status": "tsx scripts/budget-status.ts",
     "backup:documents": "tsx scripts/backup-public-documents.ts",
-    "faucet:reconcile": "tsx scripts/reconcile-test-credits.ts"
+    "faucet:reconcile": "tsx scripts/reconcile-test-credits.ts",
+    "verify:chain": "node scripts/verify-chain.mjs"
   },
   "devDependencies": {
     "@polkadot/api": "^16.5.0",

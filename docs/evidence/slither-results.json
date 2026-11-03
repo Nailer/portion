@@ -1,0 +1,502 @@
+{
+ "tool": "slither-analyzer 0.11.3",
+ "command": "slither . --filter-paths 'lib/|test/' --exclude-informational",
+ "ranOn": "2026-11-02",
+ "results": [
+  {
+   "impact": "Medium",
+   "confidence": "High",
+   "check": "incorrect-equality",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.idOfAsset(uint32) (src/Portion.sol#436-439) uses a dangerous strict equality:"
+  },
+  {
+   "impact": "Medium",
+   "confidence": "Medium",
+   "check": "uninitialized-local",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.positionsOf(address,uint256,uint256).c (src/Portion.sol#478) is a local variable never initialized"
+  },
+  {
+   "impact": "Medium",
+   "confidence": "Medium",
+   "check": "uninitialized-local",
+   "files": [
+    "src/Teleport.sol"
+   ],
+   "description": "Teleport.bridgeIn(Teleport.Message,bytes[]).last (src/Teleport.sol#116) is a local variable never initialized"
+  },
+  {
+   "impact": "Medium",
+   "confidence": "Medium",
+   "check": "uninitialized-local",
+   "files": [
+    "src/candidates/ControlledFunding.sol"
+   ],
+   "description": "ControlledFunding.create(address,address,uint256,uint256,uint64,uint64,uint64,address[],uint16[]).total (src/candidates/ControlledFunding.sol#124) is a local variable never initialized"
+  },
+  {
+   "impact": "Medium",
+   "confidence": "Medium",
+   "check": "uninitialized-local",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.create(PortionCoreV2.Terms).total (src/candidates/PortionCoreV2.sol#249) is a local variable never initialized"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "events-access",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.transferOwnership(address) (src/Portion.sol#508-511) should emit an event for: "
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "events-maths",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.setRules(uint16,uint16,uint64) (src/Portion.sol#496-501) should emit an event for: "
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "events-maths",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.setFees(uint16,uint16) (src/Portion.sol#490-494) should emit an event for: "
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "missing-zero-check",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.constructor(address,uint16).treasury_ (src/Portion.sol#166) lacks a zero-check on :"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.idOfAsset(uint32) (src/Portion.sol#436-439) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.withdrawBond(uint256) (src/Portion.sol#390-400) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.health(uint256) (src/Portion.sol#404-411) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.createListing(Portion.CreateParams) (src/Portion.sol#188-232) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.getListings(uint256,uint256) (src/Portion.sol#448-464) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.positionsOf(address,uint256,uint256) (src/Portion.sol#473-486) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion.secondsUntilSlashable(uint256) (src/Portion.sol#414-419) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/Portion.sol"
+   ],
+   "description": "Portion._get(uint256) (src/Portion.sol#179-182) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/PortionCore.sol"
+   ],
+   "description": "PortionCore.health(uint32) (src/PortionCore.sol#123-129) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/PortionCore.sol"
+   ],
+   "description": "PortionCore.withdrawBond(uint32) (src/PortionCore.sol#255-264) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "events-access",
+   "files": [
+    "src/Teleport.sol"
+   ],
+   "description": "Teleport.transferOwnership(address) (src/Teleport.sol#182-185) should emit an event for: "
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "events-maths",
+   "files": [
+    "src/Teleport.sol"
+   ],
+   "description": "Teleport.setCaps(uint256,uint256) (src/Teleport.sol#173-176) should emit an event for: "
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "reentrancy-events",
+   "files": [
+    "src/Teleport.sol"
+   ],
+   "description": "Reentrancy in Teleport.addLiquidity(uint256) (src/Teleport.sol#131-134):"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "reentrancy-events",
+   "files": [
+    "src/Teleport.sol"
+   ],
+   "description": "Reentrancy in Teleport.bridgeIn(Teleport.Message,bytes[]) (src/Teleport.sol#105-128):"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "reentrancy-events",
+   "files": [
+    "src/Teleport.sol"
+   ],
+   "description": "Reentrancy in Teleport.bridgeOut(uint256,address,uint256) (src/Teleport.sol#91-102):"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/Teleport.sol"
+   ],
+   "description": "Teleport._spendCap(uint256) (src/Teleport.sol#189-197) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "missing-zero-check",
+   "files": [
+    "src/WrappedToken.sol"
+   ],
+   "description": "WrappedToken.setBridge(address).bridge_ (src/WrappedToken.sol#35) lacks a zero-check on :"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/ControlledFunding.sol"
+   ],
+   "description": "ControlledFunding.lapse(uint256) (src/candidates/ControlledFunding.sol#235-245) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/ControlledFunding.sol"
+   ],
+   "description": "ControlledFunding.contribute(uint256,uint256) (src/candidates/ControlledFunding.sol#145-154) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/ControlledFunding.sol"
+   ],
+   "description": "ControlledFunding.release(uint256) (src/candidates/ControlledFunding.sol#210-232) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/ControlledFunding.sol"
+   ],
+   "description": "ControlledFunding.finalize(uint256) (src/candidates/ControlledFunding.sol#157-167) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/ControlledFunding.sol"
+   ],
+   "description": "ControlledFunding.approve(uint256) (src/candidates/ControlledFunding.sol#187-197) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/ControlledFunding.sol"
+   ],
+   "description": "ControlledFunding.create(address,address,uint256,uint256,uint64,uint64,uint64,address[],uint16[]) (src/candidates/ControlledFunding.sol#104-143) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "missing-zero-check",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.constructor(address,address,address,uint16).guardian_ (src/candidates/PortionCoreV2.sol#138) lacks a zero-check on :"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.windDown(uint32) (src/candidates/PortionCoreV2.sol#485-494) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.unpause() (src/candidates/PortionCoreV2.sol#546-551) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.withdrawBond(uint32) (src/candidates/PortionCoreV2.sol#496-505) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.acceptOperator(uint32) (src/candidates/PortionCoreV2.sol#523-536) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.pause() (src/candidates/PortionCoreV2.sol#539-545) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.approve(uint32) (src/candidates/PortionCoreV2.sol#354-361) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.create(PortionCoreV2.Terms) (src/candidates/PortionCoreV2.sol#239-274) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.release(uint32) (src/candidates/PortionCoreV2.sol#371-389) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.lapse(uint32) (src/candidates/PortionCoreV2.sol#392-401) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.buy(uint32,uint256) (src/candidates/PortionCoreV2.sol#284-298) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.health(uint32) (src/candidates/PortionCoreV2.sol#179-186) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.finalize(uint32) (src/candidates/PortionCoreV2.sol#300-314) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Low",
+   "confidence": "Medium",
+   "check": "timestamp",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.slash(uint32) (src/candidates/PortionCoreV2.sol#463-473) uses timestamp for comparisons"
+  },
+  {
+   "impact": "Optimization",
+   "confidence": "High",
+   "check": "immutable-states",
+   "files": [
+    "src/PortionCore.sol"
+   ],
+   "description": "PortionCore._prefix (src/PortionCore.sol#53) should be immutable"
+  },
+  {
+   "impact": "Optimization",
+   "confidence": "High",
+   "check": "immutable-states",
+   "files": [
+    "src/PortionCore.sol"
+   ],
+   "description": "PortionCore.paymentToken (src/PortionCore.sol#51) should be immutable"
+  },
+  {
+   "impact": "Optimization",
+   "confidence": "High",
+   "check": "immutable-states",
+   "files": [
+    "src/PortionCore.sol"
+   ],
+   "description": "PortionCore.treasury (src/PortionCore.sol#52) should be immutable"
+  },
+  {
+   "impact": "Optimization",
+   "confidence": "High",
+   "check": "cache-array-length",
+   "files": [
+    "src/Teleport.sol"
+   ],
+   "description": "Loop condition i < _relayers.length (src/Teleport.sol#158) should use cached array length instead of referencing `length` member of the storage array."
+  },
+  {
+   "impact": "Optimization",
+   "confidence": "High",
+   "check": "immutable-states",
+   "files": [
+    "src/WrappedToken.sol"
+   ],
+   "description": "WrappedToken.owner (src/WrappedToken.sol#12) should be immutable"
+  },
+  {
+   "impact": "Optimization",
+   "confidence": "High",
+   "check": "immutable-states",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.treasury (src/candidates/PortionCoreV2.sol#99) should be immutable"
+  },
+  {
+   "impact": "Optimization",
+   "confidence": "High",
+   "check": "immutable-states",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.paymentToken (src/candidates/PortionCoreV2.sol#98) should be immutable"
+  },
+  {
+   "impact": "Optimization",
+   "confidence": "High",
+   "check": "immutable-states",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2.guardian (src/candidates/PortionCoreV2.sol#101) should be immutable"
+  },
+  {
+   "impact": "Optimization",
+   "confidence": "High",
+   "check": "immutable-states",
+   "files": [
+    "src/candidates/PortionCoreV2.sol"
+   ],
+   "description": "PortionCoreV2._prefix (src/candidates/PortionCoreV2.sol#102) should be immutable"
+  }
+ ]
+}

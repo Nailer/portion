@@ -2,7 +2,7 @@
 
 Perspective: a senior developer and a prospective investor asking what must change before Portion is fit for real operators and real money. Sources: `contracts/src/PortionCore.sol` as deployed (Core v1, read at commit `648e87a`), the web app, and the existing reviews linked below. This is an engineering and investment review, **not an audit or legal opinion**. No chain write, spend, deployment or outside contact occurred.
 
-**Evidence level.** C1, C2, C3, C4 and C7 are demonstrated against the deployed v1 code by `contracts/test/CoreV2Loopholes.t.sol` (`CoreV1LoopholeTest`). C5, C6, C8 and C9 are reasoned from source and earlier reviews. **Update, 29 October 2026:** all nine are closed or narrowed in the [Core v2 candidate](CORE-V2-CANDIDATE.md), which the SDK, server and web app now support. It is **not deployed**: it needs about 800 to 1,110 tPOT of storage deposit, and the deployer holds 44.83.
+**Evidence level.** C1, C2, C3, C4 and C7 are demonstrated against the deployed v1 code by `contracts/test/CoreV2Loopholes.t.sol` (`CoreV1LoopholeTest`), and C10 by `contracts/test/PortionCore.invariant.t.sol` ([details](VERIFICATION-EVIDENCE.md#finding-c10-rounding-can-over-allocate)). C5, C6, C8 and C9 are reasoned from source and earlier reviews. **Update, 29 October 2026:** all nine are closed or narrowed in the [Core v2 candidate](CORE-V2-CANDIDATE.md), which the SDK, server and web app now support. It is **not deployed**: it needs about 800 to 1,110 tPOT of storage deposit, and the deployer holds 44.83.
 
 ## Verdict
 
@@ -23,6 +23,7 @@ Perspective: a senior developer and a prospective investor asking what must chan
 | C7 | **The operator address can never change.** There is no rotation function. | whole contract | A lost or stolen operator key leaves the listing unable to deposit; it defaults and is slashed. A stolen key can also wind down or close the sale. | **New** | High | Operator rotation with a delay and holder notice; recommend or require a multisig for operators. |
 | C8 | **No emergency stop and no upgrade path.** Token, treasury and fees are fixed with no setters, by design. | whole contract | A discovered bug cannot be contained; every listing must migrate. | Known design choice; market risk not previously stated | Medium | A time-limited pause held by a multisig that can stop **new** money but never block claims or unstaking; a written migration plan. |
 | C9 | **Anyone can list, with any terms that pass basic checks.** | `create` [:130](../contracts/src/PortionCore.sol) | Direct contract callers skip every check the web app performs. | Known | High | Keep the contract open, but have the app show only listings whose reviewer is recorded on-chain, and label all others as unreviewed. |
+| C10 | **Rounding can over-allocate by one unit per stake change.** Added 2 November 2026; found by the invariant tests. Also present in Core v2. | `_harvest`, `_credit` [:105](../contracts/src/PortionCore.sol) | Stake changes between deposits can leave holders owed more than was deposited. The extra unit comes from the bond or another listing, and the last payout can fail until someone sends that unit. A transaction costs far more than the unit gained. | New | Low | Keep unrounded reward debt and divide only when paying out. Not yet applied to v2. |
 
 ## 2. Gaps outside the code
 

@@ -4,10 +4,10 @@ Current evidence supersedes historical undeployed/budget notes. Official event d
 
 | Milestone | Time / actual status |
 | --- | --- |
-| Check-in | 24 October, 13:00; founder reports registered and check-in submitted; entry not independently inspected |
+| Check-in | 24 October, 13:00; [passed](https://docs.google.com/document/d/1sHqbRgpsY5icNReaokhk43nm36psp91L6N2gcqA0GW8/edit?usp=sharing), with form fields to correct by the second wave on 4 November, 05:00 |
 | Office-hour application | 27 October, 13:00; optional, not claimed submitted |
 | Final submission / code freeze | 6 November, 05:00 |
-| Live demo | 8–9 November UTC; assigned slot not confirmed |
+| Live demo | 8–9 November UTC on DoraHacks; other sources say 7–8 or 7–9 November; assigned slot not confirmed |
 
 ## Evidence status
 

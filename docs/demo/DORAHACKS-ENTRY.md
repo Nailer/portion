@@ -19,7 +19,8 @@ Proposed wording for [Portion's entry](https://dorahacks.io/build/50267). The fo
 | Core contract | `0x17501f4510ba4298b618209e105cd47036509706` (block 160,455) |
 | Deployment transaction | `0x6bdc10ea83152665dc6d7007d217ee4648af6fe0d6efd7b3f4f6697911034b70` |
 | Lifecycle transaction | `0x353098afddba251740dcc6f7d39b6a757fc8449d647cbb5ed40666c51e9bf912` (block 165,573) |
-| Explorer | https://node-console.portaldot.dev/?rpc=wss%3A%2F%2Ftest-node-v3.portaldot.dev#/explorer/query/160455 |
+| Explorer | Deployment: https://scanner-testnet-v3.portaldot.dev/#/extrinsics/160455-1 · Lifecycle: https://scanner-testnet-v3.portaldot.dev/#/extrinsics/165573-1 |
+| Check-in form fields | The review found these mis-filled, so check each one: the summary is the overview above, the demo is the app link, the video is the new upload, and the deck is the PDF |
 
 ## Description
 
@@ -52,7 +53,9 @@ With one signature, a single all-or-nothing batch mints a native NFT deed, store
 
 **Browser sandbox (Core v2).** Listing 585886 is sold out, and Core v2 is not deployed. So https://portion-one.vercel.app/sandbox runs the compiled Core v2 bytecode in a browser EVM, with fictional roles and pretend money. Anyone can try it without a wallet: create an offer, fund it, see the contract refuse an unapproved release, approve, release, deposit, claim, default, slash, refund and pause. Nothing in the sandbox reaches Portaldot.
 
-**Engineering.** 337 automated tests pass in CI (130 contract, 56 SDK, 111 web, 40 server), with the full commit history public.
+**Check the chain yourself.** `npm run verify:chain` needs no wallet or keys. It compares the deployed contract with the compiled source byte for byte, then replays the contract's events and checks that the recomputed accounting equals what the chain reports.
+
+**Engineering.** 356 automated tests pass in CI (149 contract, 56 SDK, 111 web, 40 server), with the full commit history public. Invariant tests run random call sequences against both contract versions; results, coverage and static analysis are in `docs/VERIFICATION-EVIDENCE.md`. These tests found a rounding issue, which is disclosed there. None of this is an audit.
 
 ### What changes in Core v2
 
@@ -68,7 +71,7 @@ The proposed customer is the operator, paying a subscription for less allocation
 
 ### Credits
 
-Built during the Hacker House window. Third-party dependencies are listed in the README. Demo video narration generated with Kokoro-82M (Apache-2.0).
+Built during the Hacker House window. Third-party dependencies are listed in the README. AI coding tools, including Claude Code, were used throughout. Demo video narration generated with Kokoro-82M (Apache-2.0).
 
 ---
 
@@ -87,7 +90,11 @@ Set the video to **Public** or **Unlisted**, then open the link in a private win
 
 Ask on [Discord](https://discord.gg/Vt9VpG6Ed):
 
-1. Is Portion a finalist, and where is its check-in feedback from 26 October?
-2. What is Portion's live demo slot, and how long does it last?
+1. What is Portion's live demo slot, and how long does it last?
+2. Is any further step needed to count as a finalist? Portion passed the check-in.
 3. Can the entry's track be changed to Ecosystem DApps, if the form doesn't allow it?
-4. Can Portion receive more test tokens for a separate-user test and a Core v2 deployment? Core v2 alone needs about 800–1,110 tPOT of storage deposit.
+4. Do all teams present on demo day, or only a shortlist, and on which dates?
+5. Must the project also post a description in `office-hour-info`? At the earlier hackathon, entries without one were invalid.
+6. Do the repository name format and README template in `read-me` apply to the Hacker House?
+
+For test tokens, mods send tPOT daily to the native `5…` address on the DoraHacks form. If nothing arrives, message Stella on DoraHacks or open a ticket in `open-ticket` and tag @Steve.

@@ -13,7 +13,7 @@ Visitors should not need this document. The header offers **Explore assets**, **
 | # | Start at | Do | Expect |
 | --- | --- | --- | --- |
 | 1 | `/` | Read the headline, the illustration and the five steps | A plain explanation of the product, labelled "Illustration · not a live record", and who controls the money at each step |
-| 2 | `/evidence` | Compare the contract address, block 160,455 and each transaction hash with the explorer | Values match the repository's deployment files (a test enforces this) |
+| 2 | `/evidence` | Compare the contract address, block 160,455 and each transaction hash with the [testnet explorer](https://scanner-testnet-v3.portaldot.dev/#/extrinsics/165573-1) | Values match the repository's deployment files (a test enforces this). To check without trusting the app, run `npm run verify:chain` |
 | 3 | `/evidence` → "Live check now" | Wait for the connection | "Contract found on the connected testnet" and the fees read from the contract: 1% on sales, 0.5% on deposits |
 | 4 | `/assets`, then `/listing/585886` | Read the status, “Where your money goes”, the checks and activity | Labelled a disclosed development test and sold out (100 of 100 shares). No purchase button and no market is offered; the side panel says what this account can do. The 40×40 image is the original recorded bytes, not enlarged or replaced |
 | 5 | `/evidence` → criteria table | Read each criterion's evidence and its biggest gap | The weaknesses are stated, not hidden: one account in both roles, no separate-user browser proof, no customer evidence |

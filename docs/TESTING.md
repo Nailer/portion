@@ -4,6 +4,10 @@
 
 Current public workflow: [WALKTHROUGH.md](WALKTHROUGH.md). Runtime simulation and generated commercial examples have been removed. The sole authorized development test is labelled TEST ONLY.
 
+## Checking the deployed contract
+
+`npm run verify:chain` is read-only and needs no wallet or keys. It compares the deployed code with the compiled source, confirms the recorded transactions succeeded, and replays their contract events to recompute the accounting. Results and limits are in [VERIFICATION-EVIDENCE.md](VERIFICATION-EVIDENCE.md).
+
 ## Automated checks
 
 ```sh

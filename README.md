@@ -19,6 +19,75 @@ Built for the **Portaldot Hacker House 2026**, with **Ecosystem DApps** as the p
 
 Current deployment and validation: [live Core release](docs/LIVE-CORE-RELEASE.md) and [finalized protocol test](docs/LIVE-TEST-RESULTS.md). Hosted features use verified receipts and durable document copies; legacy keepers and the cross-chain bridge are not deployed.
 
+## Project overview
+
+**Problem.** People who run earning equipment, such as solar canopies, vehicles or machinery, often share income with the people who backed them. We expect most of this runs on spreadsheets, bank transfers and emailed statements, so backers take the numbers on trust. This is a working assumption: no operator has been interviewed yet.
+
+**Solution.** An operator publishes hashed terms, a share count, a deposit schedule and a bond. Backers buy and stake shares. The operator deposits revenue, the contract splits it by staked shares after a 0.5% fee, and each holder claims their own part. Portion does not create revenue or guarantee returns.
+
+**Blockchain relevance.** One all-or-nothing batch mints a native NFT deed, fractionalizes it into native shares and calls the Solidity contract, which reads those native assets as ERC-20 tokens through precompiles. A plain database could run the admin. Portaldot matters when backers must check the record themselves.
+
+## Check it yourself
+
+These read public endpoints only, need no wallet or keys, and spend nothing.
+
+```bash
+npm run verify:chain
+```
+
+This compiles the source and compares it with the deployed contract byte for byte, confirms the recorded transactions succeeded, then replays the contract's events and checks that the recomputed sales, stakes, revenue, payouts and token balances equal what the contract reports. Last result: [`deployments/chain-verification.json`](deployments/chain-verification.json).
+
+| On chain | Reference | Open it |
+|---|---|---|
+| Core contract | `0x17501f4510ba4298b618209e105cd47036509706` | [Deployed in block 160,455](https://scanner-testnet-v3.portaldot.dev/#/extrinsics/160455-1) |
+| Deployment | `0x6bdc10ea83152665dc6d7007d217ee4648af6fe0d6efd7b3f4f6697911034b70` | [Extrinsic 160,455-1](https://scanner-testnet-v3.portaldot.dev/#/extrinsics/160455-1) |
+| Create listing 585886 | `0xb8ed7f04904bd53080fddf341fde1d8bc01a4dfdb88574af6cfd423bb7f82085` | [Extrinsic 165,551-1](https://scanner-testnet-v3.portaldot.dev/#/extrinsics/165551-1) |
+| Buy, deposit, claim, unstake | `0x353098afddba251740dcc6f7d39b6a757fc8449d647cbb5ed40666c51e9bf912` | [Extrinsic 165,573-1](https://scanner-testnet-v3.portaldot.dev/#/extrinsics/165573-1) |
+
+Network: Portaldot V3 testnet, EVM chain ID 420420777, `wss://test-node-v3.portaldot.dev`, `https://test-evm-rpc-v3.portaldot.dev`. These are native transactions calling `Revive.call`, so they appear in the [testnet explorer](https://scanner-testnet-v3.portaldot.dev/), not through `eth_getTransactionReceipt` or `eth_getLogs`.
+
+[Verification evidence](docs/VERIFICATION-EVIDENCE.md) records the invariant tests, test coverage, static analysis and the rounding finding they led to. None of this is an audit.
+
+## Technical architecture
+
+Diagram: [docs/architecture.svg](docs/architecture.svg). Design notes: [docs/architecture.md](docs/architecture.md).
+
+| Layer | Technology |
+|---|---|
+| Blockchain | Portaldot V3 testnet: native Nfts, Assets, NftFractionalization and TransactionStorage pallets, with Solidity running on Revive |
+| Contracts | Solidity 0.8.28, built and tested with Foundry |
+| Frontend | React and Vite, signing through the Portaldot Wallet or another native injected wallet |
+| SDK and API | TypeScript, Polkadot-JS and ethers; a Hono API on Vercel with Vercel Blob for hash-verified document copies |
+| Sandbox | The Core v2 bytecode running in the browser on the EthereumJS EVM |
+
+## Smart contracts
+
+| Contract | File | What it does | Status |
+|---|---|---|---|
+| `PortionCore` | `contracts/src/PortionCore.sol` | Sale, staking, revenue deposits, per-share allocation, claims, operator bond, default and slash | **Deployed on testnet** |
+| `CoreTransfer` | `contracts/src/lib/CoreTransfer.sol` | Checked token transfers for Core | Deployed as part of Core |
+| `PortionCoreV2` | `contracts/src/candidates/PortionCoreV2.sol` | Core plus escrow, a funding target, reviewer attestation, tranche release, refunds, operator rotation and a time-limited pause | Not deployed: local tests and sandbox only |
+| `ControlledFunding` | `contracts/src/candidates/ControlledFunding.sol` | Earlier escrow design | Not deployed |
+| `SandboxToken` | `contracts/src/sandbox/SandboxToken.sol` | Pretend payment token for the sandbox | Browser only |
+| `Portion`, `Teleport`, `WrappedToken` | `contracts/src/` | Legacy design and bridge source | Not deployed in this release |
+
+Deployment commands are under [Run it](#run-it), and every local step is in [SETUP.md](docs/SETUP.md).
+
+## Demo
+
+- **Live app:** <https://portion-one.vercel.app>
+- **Sandbox, no wallet needed:** <https://portion-one.vercel.app/sandbox>
+- **Evidence page:** <https://portion-one.vercel.app/evidence>
+- **Video:** recorded at 2:54; the public link is added here once it is uploaded
+- **Pitch deck:** [docs/portion-pitch-deck.pdf](docs/portion-pitch-deck.pdf)
+- **Test data:** test listing 585886 is a disclosed development test and is sold out, so the sandbox is the way to try a purchase
+
+## Roadmap
+
+**Completed:** Core v1 deployed with a finalized create, buy, deposit, claim and unstake cycle; web app, SDK and API; hash-verified documents and receipts; Core v2 in code, with the sandbox running it.
+
+**Next, in order:** discovery with a real operator; a pilot scope with a stated price; a separate-user browser test; Core v2 on testnet with an external review; then named reviewers and a legal view before any real money.
+
 ## Delivery tasks and decisions
 
 The [execution log](docs/planning/TASK-PROGRESS.md) records completed work. The [complete 56-task backlog](docs/planning/MASTER-BACKLOG.md) links to individual GitHub issues, priorities, dependencies and completion checks. The [42 plain-language answers](docs/planning/DECISIONS-AND-ANSWERS.md) explain product, wallet, cost, business and submission decisions and identify what still needs evidence.
@@ -80,7 +149,8 @@ npx tsx scripts/deploy-live-core.ts --execute # only for a new deployment after 
 | Command | What it does |
 |---|---|
 | `npm run dev` | API + web app |
-| `npm run contracts:build` / `contracts:test` | compile + export artifacts / Foundry tests |
+| `npm run verify:chain` | check the deployed contract and its accounting against the source, read-only |
+| `npm run contracts:build` / `contracts:test` | compile + export artifacts / Foundry tests, including the invariant suites |
 | `npm test` | contract tests + SDK tests |
 | `npm run teleport:local` | two-chain bridge test on local anvil |
 | `npx tsx scripts/deploy-live-core.ts` | current bounded Core budget check; `--execute` is a separately budgeted write |
@@ -109,9 +179,20 @@ See [hackathon readiness](docs/HACKATHON-READINESS.md) for verified requirements
 - Legacy Teleport source assumes a relayer committee; no live bridge or light-client migration is claimed here.
 - `pallet-nfts` lets an item's owner burn it; the proof panel will show "the deed no longer exists".
 - Public document copies use verified finalized pins. App receipt history is partial; old/pruned outside transactions require their own recovery/archive path.
+- Rounding can credit holders up to one smallest unit too much each time a stake changes, in Core v1 and v2. The extra unit comes from the contract's other balances ([finding C10](docs/VERIFICATION-EVIDENCE.md#finding-c10-rounding-can-over-allocate)). It does not affect the recorded test listing.
 - Unaudited testnet software. tPOT and pUSD have no value.
+
+## Team
+
+Sukuna, solo builder: product, contracts and app. Hackathon contact: [DoraHacks](https://dorahacks.io/builder/sukuna), `sukuna` on the Portaldot Discord, or [GitHub issues](https://github.com/Nailer/portion/issues).
 
 ## Credits and disclosures
 
+**AI assistance.** AI coding tools, including Claude Code (Anthropic), were used throughout the contracts, SDK, app, tests and documents. Many commits say so with a `Co-Authored-By` line, but those lines are not a complete record. The founder directed the work and is responsible for it.
+
 Built from scratch during the hackathon window (14 Oct – 6 Nov 2026). Third-party code used as dependencies: Polkadot-JS, ethers, React, React Router, Vite, Hono, Vercel Blob (Apache-2.0), Foundry's forge-std (MIT), vitest and, in sandbox mode only, the EthereumJS EVM and utilities (`@ethereumjs/evm` and `@ethereumjs/util` MPL-2.0, `@ethereumjs/common` MIT). Fonts: Inter, Manrope, IBM Plex Mono and Fraunces, from Google Fonts. Demo video narration generated with Kokoro-82M (Apache-2.0).
-Research notes cite public repositories from other hackathon teams only to describe the landscape; no code was copied. Licensed MIT (see [LICENSE](LICENSE)).
+Research notes cite public repositories from other hackathon teams only to describe the landscape; no code was copied.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
