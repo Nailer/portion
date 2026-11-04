@@ -1,6 +1,6 @@
 # Core v2 candidate — not deployed, 29 October 2026
 
-`contracts/src/candidates/PortionCoreV2.sol` is Core v1 with all nine contract loopholes from the [market-readiness review](MARKET-READINESS-REVIEW.md) closed or narrowed, C1 to C9. A later finding, the rounding issue C10, is [also present in v2 and not yet fixed](VERIFICATION-EVIDENCE.md#finding-c10-rounding-can-over-allocate). The SDK, the server and the web app all support it, but only when a deployment file names `core-v2`. **It is not deployed and not audited.** The live site and listing 585886 stay on Core v1. No chain write, spend or deployment occurred.
+`contracts/src/candidates/PortionCoreV2.sol` is Core v1 with all nine contract loopholes from the [market-readiness review](MARKET-READINESS-REVIEW.md) closed or narrowed, C1 to C9. A later finding, the rounding issue C10, is [also present in v2 and not yet fixed](VERIFICATION-EVIDENCE.md#finding-c10-rounding-can-over-allocate), as is C11, the [last-minute staker](VERIFICATION-EVIDENCE.md#outside-report-kupiasec-2-november-2026) reported by KupiaSec. v2 does close the slash route of C2 they reported. The SDK, the server and the web app all support it, but only when a deployment file names `core-v2`. **It is not deployed and not audited.** The live site and listing 585886 stay on Core v1. No chain write, spend or deployment occurred.
 
 ## How a v2 listing works
 

@@ -180,6 +180,7 @@ See [hackathon readiness](docs/HACKATHON-READINESS.md) for verified requirements
 - `pallet-nfts` lets an item's owner burn it; the proof panel will show "the deed no longer exists".
 - Public document copies use verified finalized pins. App receipt history is partial; old/pruned outside transactions require their own recovery/archive path.
 - Rounding can credit holders up to one smallest unit too much each time a stake changes, in Core v1 and v2. The extra unit comes from the contract's other balances ([finding C10](docs/VERIFICATION-EVIDENCE.md#finding-c10-rounding-can-over-allocate)). It does not affect the recorded test listing.
+- A holder can stake just before a known deposit, take a share of it and unstake at once, in Core v1 and v2 ([finding C11](docs/VERIFICATION-EVIDENCE.md#outside-report-kupiasec-2-november-2026), reported by KupiaSec).
 - Unaudited testnet software. tPOT and pUSD have no value.
 
 ## Team

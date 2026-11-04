@@ -72,6 +72,16 @@ holders hold 2 and 1 shares → deposit 2 → first holder stakes 1 → deposit 
 
 **Status.** Core v1 is deployed and cannot change. Core v2 has the same rounding and is not fixed. The fix is to keep the reward debt unrounded and divide only when paying out. Applying it changes the v2 bytecode, so the sandbox would need rebuilding and redeploying. Fix it before v2 goes on any network.
 
+## Outside report: KupiaSec, 2 November 2026
+
+KupiaSec, a security firm, read the public repository and emailed two issues, offering a paid audit. They said they had not tested against the live deployment. Both issues were reproduced here as tests. No audit was commissioned, and this is not one.
+
+**1. A defaulting operator can recover most of its own bond (slash route of C2).** In Core v1 the operator can stake the shares it kept back, and `slash()` pays whoever is staked. With 100 shares, 20 sold at 10 pUSD and a 10 pUSD bond, the operator stakes its 80 and defaults: of the 9.9 pUSD paid out, the operator gets 7.92 and buyers 1.98, about 1% of the sale rather than the 5% bonded. `test_C2_operatorRecoversMostOfItsOwnBond` shows it in v1. Core v2 refuses stake from the operator, so the whole 9.9 goes to buyers (`test_C2_operatorCannotRecoverItsOwnBond`). The live test listing has nothing staked, so nothing is at risk there.
+
+**2. A last-minute staker takes a share of the next deposit (new finding C11).** Deposits are split among whoever is staked at that moment. A holder who keeps shares unstaked can stake just before a predictable operator deposit, claim and unstake at once: with two 50-share holders, the one who staked for an instant takes half of the deposit from the one who stayed staked all week. Both versions behave this way (`test_C11_lastMinuteStakerTakesShareOfDeposit` and `test_C11_lastMinuteStakerStillTakesShareOfDeposit`). **Severity: medium-low.** It needs shares already and a known deposit time. **Not fixed.** The fix is to make new stake wait a period before it earns, or to credit deposits by time staked, before v2 goes on any network.
+
+Their third point, that moving purchase money into the contract raises the stakes of the same accounting, is general and is already why Core v2 is described as unaudited.
+
 ## Test coverage
 
 Measured with `forge coverage --ir-minimum` ([full table](evidence/coverage-summary.txt)). This mode changes how the code is compiled, so the numbers are close to the deployed build rather than identical. Coverage shows which lines ran, not that they are correct.
@@ -82,7 +92,7 @@ Measured with `forge coverage --ir-minimum` ([full table](evidence/coverage-summ
 | `PortionCoreV2.sol` (candidate) | 98.74% (314/318) | 83.95% (68/81) | 97.56% (40/41) |
 | `ControlledFunding.sol` (candidate) | 99.23% (129/130) | 67.57% (25/37) | 100% (17/17) |
 
-The rest are legacy contracts, and `SandboxToken`, which the browser sandbox exercises rather than Foundry. All 149 contract tests pass.
+The rest are legacy contracts, and `SandboxToken`, which the browser sandbox exercises rather than Foundry. All 149 contract tests passed when coverage was measured; 153 pass after the outside-report tests were added.
 
 ## Static analysis
 

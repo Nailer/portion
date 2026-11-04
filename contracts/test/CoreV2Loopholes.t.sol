@@ -72,6 +72,35 @@ contract CoreV1LoopholeTest is LoopholeBase {
         assertEq(before - pay.balanceOf(operator), 10_450_000, "it cost the operator 10.45 pUSD");
     }
 
+    /// C2, slash route (reported by KupiaSec): the operator stakes the 80 shares it kept, defaults, and recovers
+    ///   most of its own bond. Buyers of a 200 pUSD sale share 1.98 pUSD, about 1% of the sale, not the 5% bonded.
+    function test_C2_operatorRecoversMostOfItsOwnBond() public {
+        vm.prank(operator);
+        core.create(PortionCore.Terms(ASSET, 100, 20, 7 days, 10e6, 20e6, 10e6, keccak256("terms")));
+        vm.prank(operator); core.stake(ASSET, 80);
+        vm.prank(alice); core.buy(ASSET, 20);
+        _skip(14 days + 1);
+        core.slash(ASSET);
+        assertEq(core.pending(ASSET, operator), 7_920_000, "the defaulting operator gets 7.92 of the 9.9 paid out");
+        assertEq(core.pending(ASSET, alice), 1_980_000, "buyers get 1.98");
+    }
+
+    /// C11 (reported by KupiaSec): a holder stakes just before a known deposit, claims and leaves at once, and
+    ///   takes half the deposit from the holder who stayed staked all period.
+    function test_C11_lastMinuteStakerTakesShareOfDeposit() public {
+        _create(100, 20e6);
+        vm.prank(alice); core.buy(ASSET, 50);
+        vm.prank(bob); core.buy(ASSET, 50);
+        vm.prank(bob); core.unstake(ASSET, 50);
+        _skip(7 days);
+        vm.prank(bob); core.stake(ASSET, 50);
+        vm.prank(operator); core.deposit(ASSET, 100e6);
+        vm.prank(bob); core.claim(ASSET);
+        vm.prank(bob); core.unstake(ASSET, 50);
+        assertEq(pay.balanceOf(bob), 10_000_000e6 - 500e6 + 49_750_000, "bob takes 49.75 for an instant of stake");
+        assertEq(core.pending(ASSET, alice), 49_750_000, "alice, staked all week, gets the same");
+    }
+
     /// C3a: holders unstake, the operator cannot deposit, defaults, and the bond goes to the treasury.
     function test_C3_forcedDefaultSendsBondToTreasury() public {
         _create(100, 20e6);
@@ -187,6 +216,20 @@ contract PortionCoreV2Test is LoopholeBase {
         vm.prank(alice); core.unstake(ASSET, 10);
         vm.prank(alice); shares.transfer(operator, 10);
         vm.prank(operator); vm.expectRevert(PortionCoreV2.Unauthorized.selector); core.stake(ASSET, 10);
+    }
+    /// C2, slash route (reported by KupiaSec): the operator cannot stake the shares it kept, so the whole
+    ///   slashed bond goes to buyers.
+    function test_C2_operatorCannotRecoverItsOwnBond() public {
+        PortionCoreV2.Terms memory t = _terms(MIN, 1);
+        t.forSale = 20; t.bond = 10e6;
+        vm.prank(operator); core.create(t);
+        vm.prank(rev); core.attest(ASSET, EV);
+        _buy(alice, 20); core.finalize(ASSET);
+        vm.prank(operator); vm.expectRevert(PortionCoreV2.Unauthorized.selector); core.stake(ASSET, 80);
+        _skip(21 days + 1);
+        core.slash(ASSET);
+        assertEq(core.pending(ASSET, alice), 9_900_000, "buyers get the whole 9.9 paid out");
+        assertEq(core.pending(ASSET, operator), 0);
     }
     function test_C2_thirdPartyDepositsAreNotTrackRecord() public {
         _active(10, 0);
@@ -483,6 +526,19 @@ contract PortionCoreV2Test is LoopholeBase {
         _deposit(operator, MIN);
         assertEq(core.pending(ASSET, alice), 29_850_000);
         assertEq(core.pending(ASSET, bob), 9_950_000);
+    }
+    /// C11 is not fixed in v2: a last-minute staker still takes a share of the next deposit. This test passes
+    ///   because v2 behaves this way; a fix needs stake to wait before it earns.
+    function test_C11_lastMinuteStakerStillTakesShareOfDeposit() public {
+        _active(50, 50);
+        vm.prank(bob); core.unstake(ASSET, 50);
+        _skip(7 days);
+        vm.prank(bob); core.stake(ASSET, 50);
+        _deposit(operator, MIN);
+        vm.prank(bob); core.claim(ASSET);
+        vm.prank(bob); core.unstake(ASSET, 50);
+        assertEq(core.pending(ASSET, alice), 9_950_000, "alice, staked all week, gets half");
+        assertEq(core.pending(ASSET, bob), 0, "bob already took the other half");
     }
     function test_defaultedListingCannotWindDownWithBond() public {
         _active(100, 0);
