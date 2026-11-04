@@ -58,7 +58,7 @@ The public DoraHacks page and the public view of [Portion's entry](https://dorah
 | Overview and tags | Unpolished sentence, no tags | Proposed text in the same file |
 | Pitch deck | None | [portion-pitch-deck.pdf](portion-pitch-deck.pdf) |
 
-**Materials now:** the video is finished at 2:54 but not uploaded, and the deck is built from checked facts. Automated checks at 2 November: 356 tests passing (149 contract, 56 SDK, 111 web, 40 server), with 4 optional live SDK tests skipped.
+**Final submission, 4 November:** the entry now has the new overview, tags, description, deck link and [video](https://youtu.be/rPeJY-nuwrI) (2:56, unlisted), and its track is Ecosystem DApps. Every link was opened logged out. Earlier note: the video was finished but not yet uploaded, and the deck is built from checked facts. Automated checks at 2 November: 356 tests passing (149 contract, 56 SDK, 111 web, 40 server), with 4 optional live SDK tests skipped.
 
 **Discord:** `discord.gg/portaldot`, given on the event page, showed "Invite Invalid" on 1 November. `discord.gg/Vt9VpG6Ed` opens the Portaldot server.
 

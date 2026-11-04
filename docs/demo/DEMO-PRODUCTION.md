@@ -1,4 +1,68 @@
-# Portion demo video: production record — 1 November 2026
+# Portion demo video: production record
+
+## Version 2 — 4 November 2026
+
+**Status: uploaded and submitted.** Public link: https://youtu.be/rPeJY-nuwrI (unlisted, 2:56, on the founder's channel). It replaces version 1 below, at the founder's request: same voice, same sandbox section, plus the public Portaldot explorer and a live run of the read-only verifier, so the video shows a working project on chain and not only an interface. The founder listens to it and publishes it.
+
+| | |
+| --- | --- |
+| File | `demo-output/portion-demo.mp4`, 176.17 s (2:56.2), 1920×1080, H.264/AAC. Version 1 is kept as `demo-output/portion-demo-v1.mp4` |
+| Subtitles | [portion-demo.srt](portion-demo.srt), also burned in |
+| Recorded from | Commit `8979c11`. Its web bundle, `index-VZDDxsEy.js`, is the same file the live site serves, so the app in the video is the deployed app |
+| Capture run | 2026-11-04T06:58:54Z; the verifier ran during it and passed 15 of 15 checks at block 317,043 |
+| Voice | Unchanged: Kokoro-82M, `af_heart`, natural speed |
+
+**No new test asset was created.** The deployment wallet holds 44.83 tPOT, and the 40 tPOT reserve stays in place. A new listing cost about 45 tPOT last time, before its buy, deposit and claim, so it would not fit even without the reserve. The video shows listing 585886, which is real, labelled as a disclosed test and sold out. Recording a fresh live listing needs more test tokens from the organisers.
+
+### What changed
+
+| Time | Scene | Change |
+| --- | --- | --- |
+| 0:13.5–0:30.5 | Problem, listing 585886 | Problem line shortened. The listing scene now says plainly that this is a real asset on the Portaldot testnet, a disclosed test, sold out, and rings the sold-out panel |
+| 0:30.6–0:37.8 | Explorer: extrinsic 160,455-1 | New. `revive.instantiateWithCode`, the contract's deployment, in the public explorer |
+| 0:37.7–0:48.5 | Explorer: extrinsic 165,551-1 | New. The batch that created the asset: `nfts.mint` (deed NFT), `nfts.setAttribute` (terms hash), `nftFractionalization.fractionalize` (100 native shares of asset 585886) and `revive.call`, labelled with its decoded call, `PortionCore.create(asset 585886)` |
+| 0:48.6–1:01.7 | Explorer: extrinsic 165,573-1 | New. The lifecycle batch, with its decoded calls `buy(585886, 100 shares)`, `deposit(585886, 1 pUSD)` and `claim(585886)`, then the signer, to show one account signed both batches |
+| 1:01.6–1:12.5 | Terminal | New. The real output of `npm run verify:chain`, run during the recording and replayed line by line. Labelled as output from this recording |
+| 1:12.5–2:34.0 | Sandbox | Unchanged |
+| 2:34.0–2:45.0 | Business | Shortened to the fee line; the "aim for operators" line was cut for time |
+| 2:44.9–2:56.2 | Status card | Says Core v1 is live and verifiable, and visible in the public explorer |
+
+The app's own evidence page was removed from the video, because the explorer shows the same facts from a source Portion does not control.
+
+**Decoded calls.** The labels on the explorer come from decoding each `revive.call` with the contract ABI before recording: block 165,551 call 5 is `create(585886, 100, 100, 604800, 1000000, 1000000, 5000000, 0x7a81ab7e…)`; block 165,573 calls 1, 3, 4 and 5 are `buy(585886, 100)`, `deposit(585886, 1000000)`, `claim(585886)` and `unstake(585886, 100)`.
+
+### Changed narration
+
+- **s2a** Without a shared record, operators track payments by hand, and backers take the numbers on trust.
+- **s2b** This is a real asset, listed on the Portaldot testnet as a disclosed test, now sold out. Holders receive only money actually deposited.
+- **e1** This is not just an interface. The public Portaldot explorer shows our contract being deployed through Revive.
+- **e2** One signed batch created that asset. It minted the deed NFT, stored its terms hash, split it into 100 native shares, and listed it in our Solidity contract.
+- **e3** A second batch bought all 100 shares, deposited 1 test pUSD, and claimed 0.995.
+- **s3d** One development account played both roles, and none of this verifies physical equipment. (unchanged)
+- **v1** Anyone can check this without our app. One command matches the live contract to our source, byte for byte, and recomputes every amount. All 15 checks pass.
+- **s6b** Deployed fees are 1% of sales and 0.5% of deposits. That alone won't sustain a business, so a paid operator service is proposed, but unvalidated.
+- **s7a** Core v1 is live and verifiable, Core v2 runs locally, and there are no customers yet.
+
+Removed: s3a, s3b and s3c (the evidence-page lines) and s6a. The sentence "can't prove all income was reported" left with s2b; s3d still says none of this verifies physical equipment.
+
+### Quality control
+
+| Check | Result |
+| --- | --- |
+| Duration | 176.17 s, 3.8 s under the limit |
+| Streams and decode | H.264 1920×1080 30 fps, 5,285 frames; AAC 48 kHz stereo; no decode errors |
+| Loudness | −16.0 LUFS integrated, peak −4.4 dBFS |
+| Speech | Speech recognition on the MP4 heard every line; 91.7% word match, the differences being transcription style ("Portal.testnet", "DED NFT" for "deed NFT") |
+| On-screen amounts | All 11 sandbox and listing amounts read from the page during the run, as in version 1 |
+| Explorer labels | Each decoded-call label checked in frames to sit on its own row |
+| Silences over 2.5 s | Four, at 1:33, 1:42, 2:01 and 2:27, each while a sandbox sheet or result is on screen |
+
+**Not done, because it needs a person:** listening to the whole video and watching it at full speed.
+
+---
+
+## Version 1 — 1 November 2026
+
 
 **Status: reviewable export. Not uploaded or submitted.** The founder reviews it, confirms pronunciation by ear, and publishes it.
 

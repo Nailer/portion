@@ -78,7 +78,7 @@ Deployment commands are under [Run it](#run-it), and every local step is in [SET
 - **Live app:** <https://portion-one.vercel.app>
 - **Sandbox, no wallet needed:** <https://portion-one.vercel.app/sandbox>
 - **Evidence page:** <https://portion-one.vercel.app/evidence>
-- **Video:** recorded at 2:54; the public link is added here once it is uploaded
+- **Video (2:56):** <https://youtu.be/rPeJY-nuwrI>, showing the public explorer, a live `verify:chain` run and the sandbox
 - **Pitch deck:** [docs/portion-pitch-deck.pdf](docs/portion-pitch-deck.pdf)
 - **Test data:** test listing 585886 is a disclosed development test and is sold out, so the sandbox is the way to try a purchase
 

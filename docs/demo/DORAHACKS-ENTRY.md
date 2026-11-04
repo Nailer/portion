@@ -1,6 +1,6 @@
-# DoraHacks entry: proposed text — 1 November 2026
+# DoraHacks entry: final text — 4 November 2026
 
-Proposed wording for [Portion's entry](https://dorahacks.io/build/50267). The founder reviews it, changes anything that isn't right, and pastes it in. Nothing here has been submitted.
+**Submitted on 4 November 2026** to [Portion's entry](https://dorahacks.io/build/50267), with the founder's approval: overview, tags, description, links, video and track. The entry was then reopened logged out and every link opened. The description text is below.
 
 ## Fields
 
@@ -8,19 +8,19 @@ Proposed wording for [Portion's entry](https://dorahacks.io/build/50267). The fo
 | --- | --- |
 | Project name | Portion |
 | One-sentence overview | Portion helps operators of earning equipment share revenue with their backers, on a record both sides can check, using Portaldot V3's native assets and EVM. |
-| Track | **Ecosystem DApps** (the entry currently says Multi-Chain & Cross-Chain Infra) |
-| Tags | RWA, DeFi, Solidity, EVM, Portaldot |
-| Team members | Founder to confirm. The entry shows one member, Sukuna, and the deck says "solo builder" |
+| Track | **Ecosystem DApps** (changed from Multi-Chain & Cross-Chain Infra, confirmed in the public builds list) |
+| Tags | Crypto / Web3, RWA, DeFi, Portaldot (the tag picker offers no Solidity or EVM tags) |
+| Team members | Sukuna, solo builder |
 | GitHub | https://github.com/Nailer/portion |
 | Demo link | https://portion-one.vercel.app |
-| Demo video | **Replace the current link.** It points to "Paytrace Monad Metropolis Hackathon Demo Video". Use the new upload of `demo-output/portion-demo.mp4` |
-| Pitch deck | Attach `docs/portion-pitch-deck.pdf`, or link https://github.com/Nailer/portion/blob/main/docs/portion-pitch-deck.pdf once it is pushed |
+| Demo video | https://youtu.be/rPeJY-nuwrI, "Portion Project Portaldot Hackathon Demo Video", unlisted, 2:56, on the founder's channel. Replaced the earlier link to another project's video |
+| Pitch deck | https://github.com/Nailer/portion/blob/main/docs/portion-pitch-deck.pdf, or attach `docs/portion-pitch-deck.pdf` |
 | Network | Portaldot V3 testnet, EVM chain ID 420420777 |
 | Core contract | `0x17501f4510ba4298b618209e105cd47036509706` (block 160,455) |
 | Deployment transaction | `0x6bdc10ea83152665dc6d7007d217ee4648af6fe0d6efd7b3f4f6697911034b70` |
 | Lifecycle transaction | `0x353098afddba251740dcc6f7d39b6a757fc8449d647cbb5ed40666c51e9bf912` (block 165,573) |
 | Explorer | Deployment: https://scanner-testnet-v3.portaldot.dev/#/extrinsics/160455-1 · Lifecycle: https://scanner-testnet-v3.portaldot.dev/#/extrinsics/165573-1 |
-| Check-in form fields | The review found these mis-filled, so check each one: the summary is the overview above, the demo is the app link, the video is the new upload, and the deck is the PDF |
+| Check-in form fields | The review found these mis-filled. The check-in form is no longer editable, so the overview, links and video were corrected on the entry itself |
 
 ## Description
 
@@ -49,7 +49,7 @@ With one signature, a single all-or-nothing batch mints a native NFT deed, store
 
 ### What you can check
 
-**Live on the Portaldot testnet (Core v1).** The contract is deployed, and a full create, buy, deposit, claim and unstake cycle has finalized. Addresses, blocks and hashes are at https://portion-one.vercel.app/evidence. One development account played both roles, signed by a script, so separate-user browser signing is not yet proven.
+**Live on the Portaldot testnet (Core v1).** The contract is deployed, and a full create, buy, deposit, claim and unstake cycle has finalized. Open them in the public explorer: [deployment](https://scanner-testnet-v3.portaldot.dev/#/extrinsics/160455-1), [asset created](https://scanner-testnet-v3.portaldot.dev/#/extrinsics/165551-1), [buy, deposit, claim and unstake](https://scanner-testnet-v3.portaldot.dev/#/extrinsics/165573-1). The test asset, 585886, is listed and sold out at https://portion-one.vercel.app/listing/585886. One development account played both roles, signed by a script, so separate-user browser signing is not yet proven.
 
 **Browser sandbox (Core v2).** Listing 585886 is sold out, and Core v2 is not deployed. So https://portion-one.vercel.app/sandbox runs the compiled Core v2 bytecode in a browser EVM, with fictional roles and pretend money. Anyone can try it without a wallet: create an offer, fund it, see the contract refuse an unapproved release, approve, release, deposit, claim, default, slash, refund and pause. Nothing in the sandbox reaches Portaldot.
 
@@ -77,7 +77,7 @@ Built during the Hacker House window. Third-party dependencies are listed in the
 
 ## Video description for the upload
 
-> Portion helps operators of earning equipment share revenue with their backers, on a record both sides can check. This demo shows the live Portaldot testnet contract and a clearly labelled browser sandbox running Core v2 with pretend funds.
+> Portion helps operators of earning equipment share revenue with their backers, on a record both sides can check. This demo shows a real test asset on the Portaldot testnet, its transactions in the public Portaldot explorer, a read-only check that the live contract matches the source, and a clearly labelled browser sandbox running Core v2 with pretend funds.
 >
 > App: https://portion-one.vercel.app
 > Code: https://github.com/Nailer/portion

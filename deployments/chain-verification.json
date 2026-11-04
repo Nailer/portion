@@ -1,10 +1,10 @@
 {
-  "checkedAt": "2026-11-02T22:11:10.494Z",
+  "checkedAt": "2026-11-04T10:24:51.299Z",
   "rpc": "https://test-evm-rpc-v3.portaldot.dev",
   "ws": "wss://test-node-v3.portaldot.dev",
   "contract": "0x17501f4510Ba4298b618209E105cD47036509706",
   "chainId": 420420777,
-  "latestBlock": 297480,
+  "latestBlock": 319065,
   "runtimeBytes": 4832,
   "runtimeCodeHash": "0xf4209552bb2eb92c768f6faffab50437e8040d63266d8c6495627da046171535",
   "codeSource": "compiled from contracts/src with forge",
