@@ -2,6 +2,8 @@
 
 ## Version 2 — 4 November 2026
 
+**Live site changed after the video, 11 November 2026.** The production deploy of `5296300` adds the reviewer's revenue and asset checks. In the sandbox, releasing Riverside's second tranche now also needs the reviewer to verify revenue first (tour 4), so that step no longer goes through exactly as shown at 2:00–2:34.
+
 **Status: uploaded and submitted.** Public link: https://youtu.be/rPeJY-nuwrI (unlisted, 2:56, on the founder's channel). It replaces version 1 below, at the founder's request: same voice, same sandbox section, plus the public Portaldot explorer and a live run of the read-only verifier, so the video shows a working project on chain and not only an interface. The founder listens to it and publishes it.
 
 | | |
