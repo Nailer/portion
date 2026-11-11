@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { contentHash, type EscrowView, type ListingView } from '@portion/sdk';
+import { ASSET_CHECK_VALIDITY, contentHash, type EscrowView, type ListingView } from '@portion/sdk';
 import { usd, span } from '../lib/format';
 import type { EscrowAction, Intent } from '../lib/backend';
+import { releaseBlock } from '../lib/escrow-rules';
 
 const HASH = /^0x[0-9a-f]{64}$/i;
 const PHASE_COPY: Record<EscrowView['phase'], { title: string; body: string }> = {
   Pending: { title: 'Waiting for independent review', body: 'No one can buy until the named reviewer records that it has checked the asset evidence.' },
   Funding: { title: 'Raising: payments are held by the contract', body: 'Nothing reaches the operator yet. If the target is missed, every buyer can take their full payment back.' },
-  Active: { title: 'Funded: money is released in approved tranches', body: 'Each tranche needs evidence, the reviewer’s approval and one period in which large holders can challenge it.' },
+  Active: { title: 'Funded: money is released in approved tranches', body: 'Each tranche needs evidence, the reviewer’s approval and one period in which large holders can challenge it. After the first, the reviewer must also have checked the operator’s revenue, and every release needs the reviewer to have confirmed the asset in the last 90 days.' },
   Refunding: { title: 'Refunds open', body: 'Money the operator never received is returned to buyers in proportion to what they paid. Money already released cannot be recovered.' },
 };
 
@@ -15,10 +16,12 @@ const PHASE_COPY: Record<EscrowView['phase'], { title: string; body: string }> =
 export function escrowTiming(e: EscrowView, forSale: number, cadence: number, now: number) {
   const p = e.proposal;
   const expiresAt = p ? p.proposedAt + 3 * cadence : 0;
+  const blockedBy = releaseBlock(e, now);
   return {
     canFinalize: e.phase === 'Funding' && (now > e.deadline || forSale === 0),
     releaseAt: p && p.approvedAt ? p.approvedAt + cadence : null,
-    canRelease: !!p && !p.challenged && p.approvedAt > 0 && now >= p.approvedAt + cadence && now <= expiresAt,
+    canRelease: !!p && !p.challenged && p.approvedAt > 0 && now >= p.approvedAt + cadence && now <= expiresAt && !blockedBy,
+    blockedBy,
     canLapse: !!p && (p.challenged || now > expiresAt),
     expiresAt,
   };
@@ -58,6 +61,8 @@ export function EscrowPanel({ l, me, now, act, refundable, stake, sample = false
       <div className="fact"><small>Released to the operator</small><b>{usd(e.released, 6)}</b></div>
       <div className="fact"><small>Still held by the contract</small><b>{usd(e.escrowed, 6)}</b></div>
       <div className="fact"><small>Independent reviewer</small><b><code title={e.reviewer}>{e.reviewer.slice(0, 8)}…{e.reviewer.slice(-4)}</code></b></div>
+      {e.phase !== 'Pending' && <div className="fact"><small>Asset last confirmed by the reviewer</small><b>{e.assetCheckedAt ? `${new Date(e.assetCheckedAt * 1000).toLocaleDateString()} · ${now <= e.assetCheckedAt + ASSET_CHECK_VALIDITY ? `valid ${span(e.assetCheckedAt + ASSET_CHECK_VALIDITY - now)} more` : 'out of date'}` : 'Never'}</b></div>}
+      {e.activated && <div className="fact"><small>Operator revenue checked by the reviewer</small><b>{usd(e.verifiedRevenue, 6)} of {usd(e.reportedRevenue, 6)}</b></div>}
     </div>
 
     <h3>Release schedule</h3>
@@ -70,6 +75,10 @@ export function EscrowPanel({ l, me, now, act, refundable, stake, sample = false
     {e.lapses > 0 && e.phase === 'Active' && <p className="notice">{e.lapses} tranche request failed. One more failure opens refunds of the unreleased money.</p>}
     {e.proposal && <p className="note">
       Evidence <code>{e.proposal.evidence.slice(0, 12)}…</code>. {t.releaseAt ? (now < t.releaseAt ? `Release possible in ${span(t.releaseAt - now)}.` : 'The challenge window has passed.') : 'The reviewer has not approved it.'} The request expires {now < t.expiresAt ? `in ${span(t.expiresAt - now)}` : 'now'}.
+    </p>}
+    {e.phase === 'Active' && e.proposal && t.blockedBy && <p className="notice">
+      {t.blockedBy === 'asset' ? 'No tranche can be released until the reviewer confirms the asset again: the last confirmation is more than 90 days old.'
+        : 'This tranche cannot be released until the reviewer verifies the operator’s reported revenue against evidence. If it is never verified, the request lapses, and two failures return the unreleased money to buyers.'}
     </p>}
 
     <div className="escrow-actions" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
@@ -89,6 +98,15 @@ export function EscrowPanel({ l, me, now, act, refundable, stake, sample = false
       <EvidenceInput id="attest-ev" value={evidence} onChange={setEvidence} sample={sample} />
       <button className="btn primary sm" disabled={!HASH.test(evidence)} onClick={() => run('attest', true)}>Attest and open the sale</button>
       <p className="hint">Your address and this hash are recorded permanently. Attest only to what you checked.</p>
+    </div>}
+    {isReviewer && (e.phase === 'Funding' || e.phase === 'Active') && <div style={{ marginTop: 16 }}>
+      <h3>Ongoing checks</h3>
+      <EvidenceInput id="check-ev" value={evidence} onChange={setEvidence} sample={sample} />
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <button className="btn ghost sm" disabled={!HASH.test(evidence)} onClick={() => run('confirmAsset', true)}>Confirm the asset</button>
+        {e.activated && e.reportedRevenue > e.verifiedRevenue && <button className="btn primary sm" disabled={!HASH.test(evidence)} onClick={() => act({ kind: 'escrow', fn: 'verifyRevenue', id: l.id, evidence, upTo: e.reportedRevenue })}>Verify revenue up to {usd(e.reportedRevenue, 6)}</button>}
+      </div>
+      <p className="hint">Confirm the asset after a site visit or inspection. Verify revenue only once meter readings, invoices or bank records show the asset really earned what the operator deposited. Your address and the evidence hash are recorded permanently.</p>
     </div>}
     {isOperator && e.phase === 'Active' && !e.proposal && e.nextTranche < e.tranches.length && <div style={{ marginTop: 16 }}>
       <h3>Request tranche {e.nextTranche + 1}</h3>

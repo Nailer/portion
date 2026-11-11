@@ -38,6 +38,14 @@ const TOURS: Tour[] = [
     { title: 'Let the deadline pass', body: 'Skip past the funding deadline you chose.', skip: 31 * DAY },
     { who: 'buyerA', title: 'Settle, then refund', body: 'Settle the raise: the target was missed, so refunds open. Take your money back in full; the shares return to the operator.', to: '/' },
   ] },
+  { id: 'verify', title: '4. See the reviewer check revenue and the asset', lede: 'Reset the sandbox first. Riverside Solar Canopy has paid revenue twice, but the reviewer has checked only the first deposit. No more escrow reaches the operator until the rest is verified.', steps: [
+    { who: 'operator', title: 'Request the second tranche', body: 'Attach any file as evidence.', to: '/listing/100001' },
+    { who: 'reviewer', title: 'Approve the tranche', body: 'Approval starts the one-week challenge window.', to: '/listing/100001' },
+    { title: 'Wait out the challenge window', body: 'Time in the sandbox only moves when you skip it.', skip: WEEK + DAY },
+    { who: 'operator', title: 'Pay in revenue, then try to release', body: 'Pay in at least the stated minimum, then try “Sandbox: try to release it now”. The contract refuses: the operator’s reported revenue has not all been verified.', to: '/listing/100001' },
+    { who: 'reviewer', title: 'Verify the revenue', body: 'Under “Ongoing checks”, attach the evidence you checked, such as meter readings or bank records, and verify revenue up to the reported total. Only its hash is recorded.', to: '/listing/100001' },
+    { who: 'operator', title: 'Release the tranche', body: 'Now the release goes through. If the reviewer never verifies, the request lapses, and two failures return the unreleased money to buyers.', to: '/listing/100001' },
+  ] },
 ];
 
 export function Sandbox() {
@@ -101,7 +109,7 @@ export function Sandbox() {
           </li>)}</ol>
         </article>)}
         <article className="sandbox-tour">
-          <h3>4. Pause new money</h3>
+          <h3>5. Pause new money</h3>
           <p>The guardian, fixed when the contract is deployed, can stop new money for at most seven days and must then wait seven more before pausing again. Claims, refunds, deposits and challenges never stop.</p>
           {sandbox && controls ? <div className="sandbox-actions">
             <span className="note" role="status">{paused ? `Paused until ${new Date(pausedUntil! * 1000).toLocaleString()}.` : 'Not paused.'}</span>

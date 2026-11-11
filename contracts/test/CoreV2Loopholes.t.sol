@@ -190,6 +190,16 @@ contract PortionCoreV2Test is LoopholeBase {
         vm.prank(operator); core.propose(ASSET, EV);
         vm.prank(rev); core.approve(ASSET);
     }
+    function _verifyAllRevenue() private {
+        uint256 revenue = core.listing(ASSET).revenue;
+        vm.prank(rev); core.verifyRevenue(ASSET, revenue, keccak256("meter and bank records"));
+    }
+    /// Funds the listing and releases its first tranche, which may build the asset and needs no revenue yet.
+    function _firstTrancheReleased() private {
+        _active(60, 40);
+        _approveTranche(); _skip(7 days); _deposit(operator, MIN);
+        core.release(ASSET);
+    }
 
     // ── C1 ──────────────────────────────────────────────────────────────────
     function test_C1_minimumMustAnnualiseToTwoPercentOfOffer() public {
@@ -345,6 +355,7 @@ contract PortionCoreV2Test is LoopholeBase {
         assertEq(pay.balanceOf(treasury) - fees, 5e6 + 0, "1% of the tranche; the deposit fee was taken earlier");
         assertEq(core.escrowed(ASSET), 500e6);
         _approveTranche(); _skip(7 days); _deposit(operator, MIN);
+        _verifyAllRevenue();
         core.release(ASSET);
         assertEq(core.escrowed(ASSET), 0);
         vm.prank(operator); vm.expectRevert(PortionCoreV2.Invalid.selector); core.propose(ASSET, EV);
@@ -508,6 +519,91 @@ contract PortionCoreV2Test is LoopholeBase {
         PortionCoreV2.Terms memory t = _terms(MIN, 1);
         t.tranches[1] = 4999;
         vm.prank(operator); vm.expectRevert(PortionCoreV2.Invalid.selector); core.create(t);
+    }
+
+    // ── T1: revenue verification ────────────────────────────────────────────
+    /// After the first tranche, no escrowed money reaches the operator until the reviewer has checked its revenue.
+    function test_T1_laterTrancheNeedsVerifiedRevenue() public {
+        _firstTrancheReleased();
+        _approveTranche(); _skip(7 days); _deposit(operator, MIN);
+        vm.expectRevert(PortionCoreV2.Protected.selector); core.release(ASSET);
+        _verifyAllRevenue();
+        uint256 before = pay.balanceOf(operator);
+        core.release(ASSET);
+        assertEq(pay.balanceOf(operator) - before, 495e6, "released only after the check");
+    }
+    /// Revenue reported after the last check is unverified again, and a check made before the last release does not count.
+    function test_T1_eachReleaseNeedsAFreshCheckOfAllRevenue() public {
+        _active(30, 30);
+        _deposit(operator, MIN);
+        _verifyAllRevenue();
+        _approveTranche(); _skip(7 days); _deposit(operator, MIN);
+        core.release(ASSET);
+        _approveTranche(); _skip(7 days); _deposit(operator, MIN);
+        vm.expectRevert(PortionCoreV2.Protected.selector); core.release(ASSET);
+        uint256 almost = core.listing(ASSET).revenue - 1;
+        vm.prank(rev); core.verifyRevenue(ASSET, almost, EV);
+        vm.expectRevert(PortionCoreV2.Protected.selector); core.release(ASSET);
+        _verifyAllRevenue();
+        core.release(ASSET);
+    }
+    /// Only the named reviewer can verify, never beyond what the operator deposited, and never backwards.
+    function test_T1_onlyTheReviewerVerifiesAndCannotOverstate() public {
+        _active(60, 40);
+        _deposit(operator, MIN);
+        uint256 revenue = core.listing(ASSET).revenue;
+        vm.prank(operator); vm.expectRevert(PortionCoreV2.Unauthorized.selector); core.verifyRevenue(ASSET, revenue, EV);
+        vm.prank(alice); vm.expectRevert(PortionCoreV2.Unauthorized.selector); core.verifyRevenue(ASSET, revenue, EV);
+        vm.prank(rev); vm.expectRevert(PortionCoreV2.Invalid.selector); core.verifyRevenue(ASSET, revenue + 1, EV);
+        vm.prank(rev); vm.expectRevert(PortionCoreV2.Invalid.selector); core.verifyRevenue(ASSET, revenue, bytes32(0));
+        _verifyAllRevenue();
+        vm.prank(rev); vm.expectRevert(PortionCoreV2.Invalid.selector); core.verifyRevenue(ASSET, revenue, EV);
+        assertEq(core.listing(ASSET).verifiedRevenue, revenue);
+    }
+    /// Third-party deposits are not operator revenue, so they cannot stand in for verified earnings.
+    function test_T1_thirdPartyDepositsDoNotCountAsRevenue() public {
+        _firstTrancheReleased();
+        _verifyAllRevenue();
+        _approveTranche(); _skip(7 days); _deposit(dave, MIN);
+        uint256 over = core.listing(ASSET).revenue + 1;
+        vm.prank(rev); vm.expectRevert(PortionCoreV2.Invalid.selector); core.verifyRevenue(ASSET, over, EV);
+        vm.expectRevert(PortionCoreV2.Protected.selector); core.release(ASSET);
+    }
+    /// If the reviewer will not confirm the revenue, tranches lapse and, after two failures, buyers get the unreleased money back.
+    function test_T1_unverifiedRevenueEndsInRefunds() public {
+        _firstTrancheReleased();
+        for (uint256 i; i < 2; i++) {
+            _approveTranche(); _skip(7 days); _deposit(operator, MIN);
+            vm.expectRevert(PortionCoreV2.Protected.selector); core.release(ASSET);
+            _skip(14 days + 1); _deposit(operator, MIN);
+            core.lapse(ASSET);
+        }
+        assertEq(uint8(core.listing(ASSET).phase), uint8(PortionCoreV2.Phase.Refunding));
+        uint256 before = pay.balanceOf(alice);
+        vm.prank(alice); core.refund(ASSET);
+        assertEq(pay.balanceOf(alice) - before, 300e6, "alice paid 60% and gets 60% of the unreleased 500 back");
+    }
+
+    // ── T2: the asset must be re-confirmed ──────────────────────────────────
+    /// A confirmation of the asset lasts 90 days. After that no tranche is released until the reviewer confirms it again.
+    function test_T2_staleAssetCheckStopsReleases() public {
+        _active(100, 0);
+        for (uint256 week; week < 13; week++) { _skip(7 days); _deposit(operator, MIN); }
+        _approveTranche(); _skip(7 days); _deposit(operator, MIN);
+        vm.expectRevert(PortionCoreV2.Protected.selector); core.release(ASSET);
+        vm.prank(alice); vm.expectRevert(PortionCoreV2.Unauthorized.selector); core.confirmAsset(ASSET, EV);
+        vm.prank(rev); core.confirmAsset(ASSET, keccak256("site visit, photos and meter serial"));
+        core.release(ASSET);
+        assertEq(core.listing(ASSET).nextTranche, 1);
+    }
+    /// The reviewer cannot confirm a listing that is closed, refunding or not yet reviewed.
+    function test_T2_confirmationNeedsALiveListing() public {
+        vm.prank(operator); core.create(_terms(MIN, 1));
+        vm.prank(rev); vm.expectRevert(PortionCoreV2.Invalid.selector); core.confirmAsset(ASSET, EV);
+        vm.prank(rev); core.attest(ASSET, EV);
+        vm.prank(rev); vm.expectRevert(PortionCoreV2.Invalid.selector); core.confirmAsset(ASSET, bytes32(0));
+        vm.prank(operator); core.cancel(ASSET);
+        vm.prank(rev); vm.expectRevert(PortionCoreV2.Invalid.selector); core.confirmAsset(ASSET, EV);
     }
 
     // ── Regressions of v1 behaviour ─────────────────────────────────────────

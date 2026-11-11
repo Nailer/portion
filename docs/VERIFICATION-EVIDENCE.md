@@ -18,7 +18,7 @@ If a recorded transaction is left out, the recomputed totals stop matching and t
 
 These run random call sequences and check properties that must hold after any of them. They are in `contracts/test/PortionCore.invariant.t.sol` and `PortionCoreV2.invariant.t.sol`, and CI runs them on every push at a smaller size.
 
-Result on 2 November: **3,000 random sequences of 64 calls for each of the 15 properties, all passing**. To rerun, from `contracts/`:
+Result on 2 November: **3,000 random sequences of 64 calls for each of the 15 properties, all passing**. On 11 November, after T1 and T2 were added, the 9 Core v2 properties passed **1,000 sequences of 64 calls each** (seed 2026). To rerun, from `contracts/`:
 
 ```bash
 FOUNDRY_INVARIANT_RUNS=3000 FOUNDRY_INVARIANT_DEPTH=64 forge test --match-contract InvariantTest --fuzz-seed 2026
@@ -36,10 +36,12 @@ FOUNDRY_INVARIANT_RUNS=3000 FOUNDRY_INVARIANT_DEPTH=64 forge test --match-contra
 | Defaulted listings never take new money | ✓ | |
 | Purchase money leaves only as a tranche or a refund, and refunds never exceed the pool | | ✓ |
 | An operator or reviewer never holds stake in the listing | | ✓ |
+| After the first tranche, escrow reaches the operator only on fully verified revenue and a reviewer check of the asset under 90 days old (T1, T2; added 11 November) | | ✓ |
+| The reviewer never verifies more revenue than the operator deposited (T1; added 11 November) | | ✓ |
 
 ### Do the tests catch bugs?
 
-Ten bugs were injected one at a time into a separate copy of the contracts, and all ten were caught. Earlier runs missed three v2 bugs, which showed that random calls rarely reached a tranche release and never tried staking as the operator. The tests were improved and the whole set rerun.
+Ten bugs were injected one at a time into a separate copy of the contracts, and all ten were caught. On 11 November three more were added for the new T1 and T2 checks, and all three were caught; the first run missed the asset check, so guided releases now sometimes jump months ahead before trying. Earlier runs missed three v2 bugs, which showed that random calls rarely reached a tranche release and never tried staking as the operator. The tests were improved and the whole set rerun.
 
 | Injected bug | Caught |
 | --- | --- |
@@ -53,6 +55,9 @@ Ten bugs were injected one at a time into a separate copy of the contracts, and 
 | v2: the refund pool ignores money already released | ✓ |
 | v2: a slash pays the bond to the treasury | ✓ |
 | v2: the operator may stake | ✓ |
+| v2: the revenue check before a later tranche removed (T1, 11 November) | ✓ |
+| v2: the 90-day asset check removed (T2, 11 November) | ✓ |
+| v2: the reviewer may verify more than was deposited (T1, 11 November) | ✓ |
 
 This is a small hand-picked set, not a full mutation test. It shows these tests can fail, not that they catch everything.
 

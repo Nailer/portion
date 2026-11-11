@@ -1,6 +1,7 @@
 // The sandbox backend: the same interface the live app uses, answered by the real Core v2 bytecode running in this
 // browser (see chain.ts). Every page and dialog works unchanged; only where the money lives differs. Accounts are
 // labelled roles with pretend balances, time moves only when the visitor skips it, and nothing reaches Portaldot.
+import { releaseBlock } from '../lib/escrow-rules';
 import { coreDocument, coreListingView, refundableOf, validateControls, type CoreRecord, type Deployment, type ListingView, type PlanStep, type PositionView } from '@portion/sdk';
 import { assetErc20Address, h160ToFallbackSs58, ss58ToH160 } from '@portion/sdk/addresses';
 import { contentHash, MAX_DOC_BYTES } from '@portion/sdk/storage';
@@ -11,7 +12,8 @@ import { SandboxChain, SANDBOX_PUSD_ID, TREASURY, DEPLOYER, labelAddress, loadOp
 import solarCover from './cover-solar.png?inline';
 import coldCover from './cover-coldroom.png?inline';
 
-const KEY = 'portion.sandbox.v1';
+// v2: the contract gained revenue verification and asset re-checks, so saves from before cannot replay.
+const KEY = 'portion.sandbox.v2';
 const U = 1_000_000n; // one pUSD
 const DAY = 86_400, WEEK = 7 * DAY;
 const ZERO = '0x0000000000000000000000000000000000000000';
@@ -70,7 +72,9 @@ function seed(genesis: number) {
     { op: 'call', from: who('operator'), fn: 'propose', args: [100_001, evidence('Sandbox invoice: canopy frame and panels (fictional)')] },
     { op: 'call', from: who('reviewer'), fn: 'approve', args: [100_001] });
   skip(6 * DAY);
-  ops.push({ op: 'call', from: who('operator'), fn: 'deposit', args: [100_001, 45n * U], approve: [{ asset: SANDBOX_PUSD_ID, amount: (45n * U).toString() }] });
+  ops.push({ op: 'call', from: who('operator'), fn: 'deposit', args: [100_001, 45n * U], approve: [{ asset: SANDBOX_PUSD_ID, amount: (45n * U).toString() }] },
+    // The reviewer checks the first deposit against (fictional) meter readings. The second deposit is left for the visitor to verify.
+    { op: 'call', from: who('reviewer'), fn: 'verifyRevenue', args: [100_001, 45n * U - 45n * U / 200n, evidence('Sandbox meter readings and bank statement, week 1 (fictional)')] });
   skip(DAY + DAY / 2);
   ops.push({ op: 'call', from: who('buyerA'), fn: 'release', args: [100_001] });
   skip(5 * DAY);
@@ -264,7 +268,7 @@ export class SandboxBackend implements Backend {
       }
       case 'escrow': {
         const id = intent.id, ev = intent.evidence ?? '';
-        const needsEvidence = intent.fn === 'attest' || intent.fn === 'propose';
+        const needsEvidence = intent.fn === 'attest' || intent.fn === 'propose' || intent.fn === 'confirmAsset' || intent.fn === 'verifyRevenue';
         if (needsEvidence && !/^0x[0-9a-f]{64}$/i.test(ev)) throw new UserError('Attach the evidence file first. Only its hash is recorded.');
         const copy: Record<string, [string, string]> = {
           attest: ['Record your review', 'Opens the sale. Your address and evidence hash are recorded on-chain.'],
@@ -277,12 +281,22 @@ export class SandboxBackend implements Backend {
           release: ['Release the tranche', 'Pays the approved share of escrow to the operator, less the 1% sale fee.'],
           lapse: ['Clear the failed tranche', 'A second failure opens refunds of unreleased money.'],
           noticeWindDown: ['Give notice of wind-down', 'Holders get two periods to respond before the listing can close.'],
+          confirmAsset: ['Confirm the asset', 'Records that you checked the asset still exists and works. Releases stop once this is 90 days old.'],
+          verifyRevenue: ['Verify the reported revenue', 'Records that the operator’s deposits match the asset’s real earnings, as shown by your evidence.'],
         };
         const [title, detail] = copy[intent.fn];
+        if (intent.fn === 'verifyRevenue') {
+          if (!intent.upTo) throw new UserError('There is no new revenue to verify.');
+          return this.action(title, [step(intent.fn, title, detail)], [call(intent.fn, [id, intent.upTo, ev])]);
+        }
         if (intent.fn !== 'release') return this.action(title, [step(intent.fn, title, detail)], [call(intent.fn, needsEvidence ? [id, ev] : [id])]);
         // The contract gives one error for every release rule, so say which rule applies to this tranche.
-        const proposal = (await this.listing(id)).escrow?.proposal;
-        return this.action(title, [step(intent.fn, title, detail)], [call(intent.fn, [id])]).catch((error: Error) => { throw new UserError(proposal && !proposal.approvedAt ? 'The contract refused the release: the named reviewer has not approved this tranche. (contract error: Protected)' : proposal ? 'The contract refused the release: the challenge window has not ended. (contract error: Protected)' : error.message); });
+        const escrow = (await this.listing(id)).escrow, proposal = escrow?.proposal;
+        const reason = !proposal ? null : !proposal.approvedAt ? 'the named reviewer has not approved this tranche'
+          : escrow && releaseBlock(escrow, this.now()) === 'asset' ? 'the reviewer has not confirmed the asset in the last 90 days'
+          : escrow && releaseBlock(escrow, this.now()) === 'revenue' ? 'the reviewer has not yet verified the operator’s reported revenue'
+          : 'the challenge window has not ended';
+        return this.action(title, [step(intent.fn, title, detail)], [call(intent.fn, [id])]).catch((error: Error) => { throw new UserError(reason ? `The contract refused the release: ${reason}. (contract error: Protected)` : error.message); });
       }
       case 'guardian': {
         const [title, detail] = intent.fn === 'pause'

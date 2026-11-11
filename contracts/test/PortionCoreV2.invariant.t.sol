@@ -22,6 +22,8 @@ contract PortionCoreV2Handler is Test {
     uint256 public treasuryFees;
     uint256 public roundings;
     uint256 public stakeChanges;
+    /// @dev Set if escrow ever reaches the operator without the T1 revenue check or the T2 asset check.
+    bool public releasedUnchecked;
 
     constructor(PortionCoreV2 core_, address operator_, address reviewer_, address guardian_, address[3] memory holders_, uint32[2] memory assets_) {
         core = core_;
@@ -49,8 +51,10 @@ contract PortionCoreV2Handler is Test {
         try core.finalize(asset) { returnedShares[asset] += unsold; } catch {}
     }
 
-    function releaseTranche(uint256 which, bytes32 evidence) external {
+    /// @dev `gap` sometimes jumps months ahead first, so releases are tried against an out-of-date asset check.
+    function releaseTranche(uint256 which, bytes32 evidence, bool verify, uint256 gap) external {
         uint32 asset = _asset(which);
+        vm.warp(vm.getBlockTimestamp() + bound(gap, 0, 120 days));
         PortionCoreV2.Listing memory l = core.listing(asset);
         vm.prank(operator);
         try core.propose(asset, evidence) {} catch {}
@@ -63,9 +67,15 @@ contract PortionCoreV2Handler is Test {
             allocated[asset] += l.minimum - l.minimum / 200;
             roundings++;
         } catch {}
-        uint256 before = core.listing(asset).released;
+        if (verify) {
+            uint256 revenue = core.listing(asset).revenue;
+            vm.prank(reviewer);
+            try core.verifyRevenue(asset, revenue, keccak256("records")) {} catch {}
+        }
+        PortionCoreV2.Listing memory pre = core.listing(asset);
         try core.release(asset) {
-            treasuryFees += (core.listing(asset).released - before) / 100;
+            treasuryFees += (core.listing(asset).released - pre.released) / 100;
+            _checkRelease(pre);
         } catch {}
     }
 
@@ -122,7 +132,28 @@ contract PortionCoreV2Handler is Test {
         PortionCoreV2.Listing memory l = core.listing(asset);
         try core.release(asset) {
             treasuryFees += (core.listing(asset).released - l.released) / 100;
+            _checkRelease(l);
         } catch {}
+    }
+
+    /// @dev Records a release that broke T1 or T2, judged from the listing just before the call.
+    function _checkRelease(PortionCoreV2.Listing memory l) private {
+        bool stale = vm.getBlockTimestamp() > l.assetCheckedAt + core.ASSET_CHECK_VALIDITY();
+        bool unverified = l.nextTranche > 0 && (l.revenue == 0 || l.verifiedRevenue < l.revenue || l.revenueCheckedAt <= l.releasedAt);
+        if (stale || unverified) releasedUnchecked = true;
+    }
+
+    function verifyRevenue(uint256 which, uint256 upTo, bool all) external {
+        uint32 asset = _asset(which);
+        PortionCoreV2.Listing memory l = core.listing(asset);
+        upTo = all ? l.revenue : bound(upTo, 0, l.revenue + 1);
+        vm.prank(reviewer);
+        try core.verifyRevenue(asset, upTo, keccak256("records")) {} catch {}
+    }
+
+    function confirmAsset(uint256 which) external {
+        vm.prank(reviewer);
+        try core.confirmAsset(_asset(which), keccak256("site visit")) {} catch {}
     }
 
     function lapse(uint256 which) external {
@@ -336,6 +367,19 @@ contract PortionCoreV2InvariantTest is StdInvariant, Test {
     /// The treasury receives exactly 1% of released tranches and 0.5% of deposits, and never a slashed bond.
     function invariant_treasuryReceivesExactlyTheFees() public view {
         assertEq(pay.balanceOf(treasury), handler.treasuryFees());
+    }
+
+    /// After the first tranche, escrow reaches the operator only on fully verified revenue and a recent asset check.
+    function invariant_releasesNeedVerifiedRevenueAndAsset() public view {
+        assertFalse(handler.releasedUnchecked());
+    }
+
+    /// The reviewer can never verify more revenue than the operator deposited.
+    function invariant_verifiedRevenueNeverExceedsRevenue() public view {
+        for (uint256 i; i < assets.length; i++) {
+            PortionCoreV2.Listing memory l = core.listing(assets[i]);
+            assertLe(l.verifiedRevenue, l.revenue);
+        }
     }
 
     /// An operator or reviewer cannot hold stake in the listing.

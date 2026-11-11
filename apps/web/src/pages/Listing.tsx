@@ -55,6 +55,8 @@ function describe(a: ActivityRow): string {
     case 'Staked': return `${d.amount ?? ''} shares staked`.trim();
     case 'Unstaked': return `${d.amount} shares unstaked`;
     case 'Reviewed': return 'The named reviewer attested and opened the sale';
+    case 'AssetConfirmed': return 'The named reviewer confirmed the asset still exists and works';
+    case 'RevenueVerified': return `The named reviewer verified operator revenue up to ${usd(d.upTo)} against evidence`;
     case 'FundingSettled': return d.activated ? `Raise settled: target met with ${usd(d.raised)} held in escrow` : 'Raise settled: target missed, full refunds opened';
     case 'TrancheProposed': return `Operator requested tranche ${Number(d.tranche) + 1}`;
     case 'TrancheApproved': return `Reviewer approved tranche ${Number(d.tranche) + 1}; challenge window open`;
