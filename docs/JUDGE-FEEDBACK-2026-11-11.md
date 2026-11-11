@@ -49,7 +49,7 @@ T1 and T2 make every later release wait for a **named person's recorded check**.
 > - **Revenue must be verified before more money flows.** After the first tranche, which may pay to build the asset, no tranche is released until the reviewer has checked the operator's reported revenue against evidence such as meter readings or bank statements, and recorded that check on chain. If the reviewer will not verify, requests lapse and buyers get the unreleased money back.
 > - **The asset must be re-confirmed.** The reviewer must confirm the asset still exists and works at least every 90 days, for example after a site visit, or releases stop.
 >
-> It is covered by 7 new tests, 2 new invariants and 3 deliberately injected bugs, all caught. You can try it without a wallet in the sandbox (tour 4): https://portion-one.vercel.app/sandbox. Code: [PR LINK]
+> It is covered by 7 new tests, 2 new invariants and 3 deliberately injected bugs, all caught. You can try it without a wallet in the sandbox (tour 4): https://portion-one.vercel.app/sandbox. Code: https://github.com/Nailer/portion/pull/57
 >
 > What this does not solve yet: it relies on a named reviewer being honest. Our next steps are a slashable reviewer bond with a 2-of-3 quorum, then revenue evidence that needs no trusted person, such as signed meter readings or payment-provider attestations. Core v2 also still needs testnet deployment, which requires more test tokens, and an external audit.
 >
