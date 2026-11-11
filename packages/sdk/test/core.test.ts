@@ -92,7 +92,7 @@ describe('Core v2 adapter', async () => {
   const v2row = { ...row, saleOpen: undefined, phase: 2n, activated: true, reviewer, recovery: '0x' + '00'.repeat(20), pendingOperator: '0x' + '00'.repeat(20),
     pendingAfter: 0n, deadline: BigInt(now + 86_400), minSold: 50n, raised: 1_000n, released: 500n, refundPool: 0n, refunded: 0n,
     nextTranche: 1n, lapses: 0n, proposalOpen: false, evidence: '0x' + '00'.repeat(32), proposedAt: 0n, approvedAt: 0n, challenged: false,
-    otherDeposits: 7n, reserve: 0n, windDownAfter: 0n };
+    otherDeposits: 7n, reserve: 0n, windDownAfter: 0n, revenue: 0n, verifiedRevenue: 0n, revenueCheckedAt: 0n, releasedAt: 0n, assetCheckedAt: 0n };
   function v2fixture(overrides: Record<string, unknown> = {}, extra: Record<string, unknown> = {}) {
     const source = { catalog: async () => [{ assetId: 777, docHash: hash, createdAt: 50, block: 10, txHash: hash }], document: async () => doc };
     const call = vi.fn(() => ({ method: {} }));

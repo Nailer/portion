@@ -19,6 +19,10 @@
 
    Money already released cannot be recovered.
 7. **Revenue.** Deposits, claims, staking, default and slash work as in v1, with the C1–C4 changes below.
+7a. **Ongoing verification (T1, T2), added 11 November 2026 after judge feedback.** Escrow keeps reaching the operator only while the named reviewer keeps checking:
+   - **T1, revenue.** After the first tranche, which may pay to build the asset, a tranche is released only when the reviewer has called `verifyRevenue`, recording that the operator's deposits up to that total match the asset's real earnings in the evidence it checked, such as meter readings or bank statements. All operator revenue must be verified, with a check made since the previous release. Third-party deposits never count.
+   - **T2, the asset.** The reviewer confirms the asset still exists and works with `attest` and then `confirmAsset`, for example after a site visit. No tranche is released on a confirmation older than 90 days.
+   - If the reviewer will not verify, the tranche request expires, and two failures return the unreleased money to buyers.
 8. **Pause.** A guardian address fixed at deployment (intended to be a multisig) can stop new money for at most seven days, and must wait seven more before pausing again. During a pause, creating, attesting, buying, proposing and releasing stop. Claims, unstaking, refunds, deposits, challenges and slashes never stop.
 
 ## What changed, finding by finding
@@ -91,7 +95,7 @@ Each fix was undone in turn by an injected bug, to check that at least one v2 te
 
 ## Size and deployment cost
 
-Runtime code is **13,308 bytes**, against 4,832 for v1. That is 54% of the 24,576-byte EVM limit.
+Runtime code is **14,033 bytes** with the T1 and T2 checks (13,308 before them), against 4,832 for v1. That is 57% of the 24,576-byte EVM limit.
 
 Portaldot charges a storage deposit of **0.06 tPOT per byte of code**. Deploying is checked by:
 
@@ -103,11 +107,11 @@ The command is read-only by default, and it never touches `deployments/portaldot
 
 | | tPOT |
 | --- | --- |
-| Code-only deposit, 13,308 bytes × 0.06 | 798 |
-| Upper estimate (v1's measured deposit was 1.385× its code-only figure) | 1,106 |
+| Code-only deposit, 14,033 bytes × 0.06 | 842 |
+| Upper estimate (v1's measured deposit was 1.385× its code-only figure) | 1,166 |
 | Operating floor that is never spent | 40 |
 | Deployer free balance at block 238,201 | 44.83 |
-| **Needed from the organisers** | **about 800 to 1,110**, with a margin on top |
+| **Needed from the organisers** | **about 840 to 1,170**, with a margin on top |
 
 Once funded, the same command measures the exact deposit, and `--execute` deploys. Execution refuses unless the measured deposit, the fee and the 40 tPOT floor are all covered. It then verifies the deployed code byte for byte, along with the payment token and guardian, and writes `deployments/portaldot-testnet-v2.json`.
 
@@ -134,6 +138,7 @@ v2, like v1, has no upgrade path, by design. A future version is a new contract.
 ## Limits that remain
 
 - **C2 is narrowed, not closed.** An operator can stake, or a reviewer can buy, through another address they control. Only identity checks outside the contract can stop that (review item M3).
+- **Verification is by a named person, not proof.** T1 and T2 make every later release wait for the reviewer's recorded check of the revenue and the asset, and its evidence hash is public. They cannot make the evidence true. Checks that need no trusted person, such as signed meter readings or payment-rail attestations, are future work.
 - **The reviewer is trusted.** The contract records who attested and approved; it cannot know whether they checked anything. An operator and reviewer acting together can release escrow, and the only remaining check is a challenge from holders with at least 10% of sold shares. Choosing and naming reviewers is an operating process (review item M4).
 - **The 2% floor is a placeholder.** An operator can deposit exactly the minimum while earning more.
 - **Refunds follow the original payer.** If shares were transferred after purchase, a refund still goes to whoever paid.

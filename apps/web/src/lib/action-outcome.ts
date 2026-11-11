@@ -24,6 +24,8 @@ export function actionOutcome(intent: Intent | undefined, listingId?: number, es
         propose: 'Your tranche request is recorded. The named reviewer must approve it next.', approve: 'The tranche is approved and the one-period challenge window has started.',
         challenge: 'This tranche request is challenged and will not be released.', release: 'The tranche was paid to the operator, less the 1% fee.',
         lapse: 'The failed request is cleared. A second failure opens refunds of unreleased money.', noticeWindDown: 'Notice is recorded. Holders have two periods to respond before the listing can close.',
+        confirmAsset: 'Your check of the asset is recorded. Tranches can be released for the next 90 days.',
+        verifyRevenue: 'Your check of the reported revenue is recorded. The next approved tranche can now be released.',
       };
       return { changed: changed[intent.fn], next: [asset(intent.id), PORTFOLIO] };
     }

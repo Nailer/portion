@@ -71,7 +71,18 @@ export interface EscrowView {
   otherDeposits: bigint;
   reserve: bigint;
   windDownAfter: number;
+  /** Operator deposits, the only ones that count as revenue. */
+  reportedRevenue: bigint;
+  /** How much of that revenue the reviewer has checked against evidence. Later tranches need all of it checked. */
+  verifiedRevenue: bigint;
+  revenueCheckedAt: number;
+  releasedAt: number;
+  /** The reviewer's last confirmation that the asset exists and works. Releases stop once it is ASSET_CHECK_VALIDITY old. */
+  assetCheckedAt: number;
 }
+
+/** Core v2: how long the reviewer's confirmation of the asset lasts, in seconds. Mirrors the contract constant. */
+export const ASSET_CHECK_VALIDITY = 90 * 86_400;
 
 export interface ListingView {
   id: number;

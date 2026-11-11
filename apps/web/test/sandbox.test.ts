@@ -87,6 +87,44 @@ describe('browser sandbox', { timeout: 120_000 }, () => {
     expect((await act(role('buyerB'), { kind: 'escrow', fn: 'refund', id })).ok).toBe(true);
   });
 
+  it('releases a later tranche only after the reviewer verifies the operator revenue', async () => {
+    const { backend, role, act } = await start();
+    const id = 100_001;
+    // The seed released the first tranche and verified only the first of two deposits.
+    let e = (await backend.listing(id)).escrow!;
+    expect(e.verifiedRevenue).toBeGreaterThan(0n);
+    expect(e.verifiedRevenue).toBeLessThan(e.reportedRevenue);
+    expect((await act(role('operator'), { kind: 'escrow', fn: 'propose', id, evidence: ev('invoice 2') })).ok).toBe(true);
+    expect((await act(role('reviewer'), { kind: 'escrow', fn: 'approve', id })).ok).toBe(true);
+    await backend.sandbox.skip(WEEK + DAY);
+    expect((await act(role('operator'), { kind: 'deposit', id, amount: 30n * U })).ok).toBe(true);
+    await expect(backend.prepare({ kind: 'escrow', fn: 'release', id }, role('operator').passport)).rejects.toThrow(/not yet verified the operator.*Protected/);
+    e = (await backend.listing(id)).escrow!;
+    // Only the named reviewer may verify, and only up to what the operator deposited.
+    await expect(backend.prepare({ kind: 'escrow', fn: 'verifyRevenue', id, evidence: ev('records'), upTo: e.reportedRevenue }, role('buyerA').passport)).rejects.toThrow();
+    expect((await act(role('reviewer'), { kind: 'escrow', fn: 'verifyRevenue', id, evidence: ev('meter and bank records'), upTo: e.reportedRevenue })).ok).toBe(true);
+    expect((await act(role('buyerA'), { kind: 'escrow', fn: 'release', id })).ok).toBe(true);
+    e = (await backend.listing(id)).escrow!;
+    expect(e.nextTranche).toBe(2);
+    expect(e.escrowed).toBe(0n);
+    expect((await backend.activity({ listing: id })).map(a => a.kind)).toContain('RevenueVerified');
+  });
+
+  it('stops releases when the reviewer has not confirmed the asset for 90 days', async () => {
+    const { backend, role, act } = await start();
+    const id = 100_001;
+    for (let week = 0; week < 13; week++) { await backend.sandbox.skip(WEEK); expect((await act(role('operator'), { kind: 'deposit', id, amount: 30n * U })).ok).toBe(true); }
+    expect((await act(role('operator'), { kind: 'escrow', fn: 'propose', id, evidence: ev('invoice 2') })).ok).toBe(true);
+    expect((await act(role('reviewer'), { kind: 'escrow', fn: 'approve', id })).ok).toBe(true);
+    await backend.sandbox.skip(WEEK + DAY);
+    expect((await act(role('operator'), { kind: 'deposit', id, amount: 30n * U })).ok).toBe(true);
+    const e = (await backend.listing(id)).escrow!;
+    expect((await act(role('reviewer'), { kind: 'escrow', fn: 'verifyRevenue', id, evidence: ev('records'), upTo: e.reportedRevenue })).ok).toBe(true);
+    await expect(backend.prepare({ kind: 'escrow', fn: 'release', id }, role('operator').passport)).rejects.toThrow(/confirmed the asset in the last 90 days.*Protected/);
+    expect((await act(role('reviewer'), { kind: 'escrow', fn: 'confirmAsset', id, evidence: ev('site visit') })).ok).toBe(true);
+    expect((await act(role('operator'), { kind: 'escrow', fn: 'release', id })).ok).toBe(true);
+  });
+
   it('refunds every buyer in full when a raise misses its target', async () => {
     const { backend, role, act } = await start();
     const id = 100_002;

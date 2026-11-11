@@ -63,6 +63,10 @@ contract PortionCoreV2 {
         uint256 proposedAt;      // C5
         uint256 approvedAt;      // C5
         bool challenged;         // C5
+        uint256 verifiedRevenue; // T1: operator revenue the reviewer has checked against evidence
+        uint256 revenueCheckedAt; // T1
+        uint256 releasedAt;      // T1: time of the last tranche release
+        uint256 assetCheckedAt;  // T2: the reviewer's last confirmation that the asset exists and works
     }
     struct Stake { uint256 amount; uint256 debt; uint256 owed; }
     struct Terms {
@@ -90,6 +94,8 @@ contract PortionCoreV2 {
     uint256 public constant MAX_TRANCHES = 12;
     /// @dev C8: longest pause, and the minimum gap before the guardian may pause again.
     uint256 public constant MAX_PAUSE = 7 days;
+    /// @dev T2: how long the reviewer's confirmation of the asset lasts. No tranche is released on an older one.
+    uint256 public constant ASSET_CHECK_VALIDITY = 90 days;
     uint256 private constant YEAR = 365 days;
     uint256 private constant SCALE = 1e18;
 
@@ -134,6 +140,8 @@ contract PortionCoreV2 {
     event OperatorProposed(uint32 indexed asset, address indexed proposed, uint256 after_, bool byRecovery);
     event OperatorChanged(uint32 indexed asset, address indexed previous, address indexed next);
     event PauseChanged(uint256 pausedUntil);
+    event AssetConfirmed(uint32 indexed asset, address indexed reviewer, bytes32 evidence);
+    event RevenueVerified(uint32 indexed asset, address indexed reviewer, uint256 upTo, bytes32 evidence);
 
     constructor(address token, address treasury_, address guardian_, uint16 prefix) {
         if (token == address(0) || treasury_ == address(0)) revert Invalid();
@@ -278,6 +286,7 @@ contract PortionCoreV2 {
         if (msg.sender != l.reviewer) revert Unauthorized();
         if (l.phase != Phase.Pending || l.closedAt != 0 || evidence == bytes32(0)) revert Invalid();
         l.phase = Phase.Funding;
+        l.assetCheckedAt = block.timestamp;
         emit Reviewed(asset, msg.sender, evidence);
     }
     /// @dev C5: purchase money is held by the contract. Shares are staked for the buyer and stay locked until the raise settles.
@@ -375,11 +384,17 @@ contract PortionCoreV2 {
         if (l.challenged || l.approvedAt == 0 || block.timestamp < l.approvedAt + l.cadence
             || block.timestamp > l.proposedAt + 3 * l.cadence || health(asset) >= 2) revert Protected();
         uint8 index = l.nextTranche;
+        // T2: money reaches the operator only while the reviewer's last check of the asset is recent.
+        if (block.timestamp > l.assetCheckedAt + ASSET_CHECK_VALIDITY) revert Protected();
+        // T1: the first tranche may build the asset. Every later one needs operator revenue, all of it checked by the
+        // reviewer, with a check made since the previous release.
+        if (index > 0 && (l.revenue == 0 || l.verifiedRevenue < l.revenue || l.revenueCheckedAt <= l.releasedAt)) revert Protected();
         bool last = index + 1 == _tranches[asset].length;
         // The last tranche takes the remainder so rounding never strands or invents a unit.
         uint256 amount = last ? l.raised - l.released : l.raised * _tranches[asset][index] / 10_000;
         uint256 fee = amount / 100;
         l.released += amount;
+        l.releasedAt = block.timestamp;
         l.nextTranche = index + 1;
         l.lapses = 0;
         l.proposalOpen = false;
@@ -387,6 +402,27 @@ contract PortionCoreV2 {
         if (fee > 0) paymentToken.safeTransfer(treasury, fee);
         emit TrancheReleased(asset, index, amount, fee);
     }
+    // ── Ongoing verification (T1, T2) ───────────────────────────────────────
+    /// @notice T2: the named reviewer confirms the asset still exists and works, for example after a site visit.
+    ///         Releases stop if this is older than ASSET_CHECK_VALIDITY.
+    function confirmAsset(uint32 asset, bytes32 evidence) external guarded {
+        Listing storage l = _get(asset);
+        if (msg.sender != l.reviewer) revert Unauthorized();
+        if ((l.phase != Phase.Funding && l.phase != Phase.Active) || l.closedAt != 0 || evidence == bytes32(0)) revert Invalid();
+        l.assetCheckedAt = block.timestamp;
+        emit AssetConfirmed(asset, msg.sender, evidence);
+    }
+    /// @notice T1: the named reviewer records that the operator's deposits, up to `upTo` in total, match the asset's
+    ///         real earnings, checked against evidence such as meter readings or bank statements.
+    function verifyRevenue(uint32 asset, uint256 upTo, bytes32 evidence) external guarded {
+        Listing storage l = _get(asset);
+        if (msg.sender != l.reviewer) revert Unauthorized();
+        if (!l.activated || evidence == bytes32(0) || upTo <= l.verifiedRevenue || upTo > l.revenue) revert Invalid();
+        l.verifiedRevenue = upTo;
+        l.revenueCheckedAt = block.timestamp;
+        emit RevenueVerified(asset, msg.sender, upTo, evidence);
+    }
+
     /// @notice Clears an expired or challenged tranche proposal. The second failure opens refunds.
     ///         A proposal that a pause overlapped does not count as a failure.
     function lapse(uint32 asset) external guarded {

@@ -234,6 +234,7 @@ export class LiveBackend implements Backend {
           attest: () => c.planAttest(id, ev), finalize: () => c.planFinalize(id), refund: () => c.planRefund(id), cancel: () => c.planCancel(id),
           propose: () => c.planPropose(id, ev), approve: () => c.planApprove(id), challenge: () => c.planChallenge(id),
           release: () => c.planRelease(id), lapse: () => c.planLapse(id), noticeWindDown: () => c.planNoticeWindDown(id),
+          confirmAsset: () => c.planConfirmAsset(id, ev), verifyRevenue: () => c.planVerifyRevenue(id, intent.upTo ?? 0n, ev),
         } as const;
         const plan = plans[intent.fn]();
         return this.wrap(plan.steps[0].title, plan, who);

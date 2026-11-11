@@ -44,6 +44,8 @@ export function escrowView(l: any, tranches: unknown[]): EscrowView {
     escrowed: raised - released - refunded, tranches: tranches.map(number), nextTranche: number(l.nextTranche), lapses: number(l.lapses),
     proposal: l.proposalOpen ? { evidence: String(l.evidence), proposedAt: number(l.proposedAt), approvedAt: number(l.approvedAt), challenged: Boolean(l.challenged) } : null,
     otherDeposits: BigInt(l.otherDeposits), reserve: BigInt(l.reserve), windDownAfter: number(l.windDownAfter),
+    reportedRevenue: BigInt(l.revenue), verifiedRevenue: BigInt(l.verifiedRevenue), revenueCheckedAt: number(l.revenueCheckedAt),
+    releasedAt: number(l.releasedAt), assetCheckedAt: number(l.assetCheckedAt),
   };
 }
 
@@ -187,6 +189,15 @@ export class CoreClient extends PortionClient {
     return this.v2Call('propose', [id, evidence], 'Request the next tranche', 'The reviewer must approve, then holders have one period to challenge.');
   }
   planApprove(id: number) { return this.v2Call('approve', [id], 'Approve the tranche', 'Starts the one-period challenge window.'); }
+  planConfirmAsset(id: number, evidence: string) {
+    if (!HEX32.test(evidence)) throw new Error('Attach the hash of your check of the asset, for example site visit notes.');
+    return this.v2Call('confirmAsset', [id, evidence], 'Confirm the asset', 'Records that you checked the asset still exists and works. Releases stop once this is 90 days old.');
+  }
+  planVerifyRevenue(id: number, upTo: bigint, evidence: string) {
+    if (!HEX32.test(evidence)) throw new Error('Attach the hash of the records you checked, for example meter readings or bank statements.');
+    if (upTo <= 0n) throw new Error('There is no new revenue to verify.');
+    return this.v2Call('verifyRevenue', [id, upTo, evidence], 'Verify the reported revenue', 'Records that the operator’s deposits up to this total match the asset’s real earnings, as shown by your evidence.');
+  }
   planChallenge(id: number) { return this.v2Call('challenge', [id], 'Challenge the tranche', 'Needs at least 10% of sold shares staked. Two failed tranches return the unreleased money to buyers.'); }
   planRelease(id: number) { return this.v2Call('release', [id], 'Release the tranche', 'Pays the approved share of escrow to the operator, less the 1% sale fee.'); }
   planLapse(id: number) { return this.v2Call('lapse', [id], 'Clear the failed tranche', 'A second failure opens refunds of unreleased money.'); }
